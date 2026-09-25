@@ -10,13 +10,17 @@ interface IBlog {
   status: "draft" | "published";
 }
 
-interface ListBlogsParams {
-  skip?: number;
-  limit?: number;
-  filter?: Record<string, any>;
+interface AppError extends Error {
+  status?: number;
 }
 
-const createBlog = async (req: Request, res: Response) => {
+const createError = (message: string, status = 500): AppError => {
+  const err = new Error(message) as AppError;
+  err.status = status;
+  return err;
+};
+
+const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = req.body;
 
@@ -25,53 +29,60 @@ const createBlog = async (req: Request, res: Response) => {
     }
 
     const newBlog = await blog.create(data);
-    return newBlog;
+
     res.json({
       result: newBlog,
       message: "Blog Added",
       meta: null,
     });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
 
-const BlogDetailById = async (id: string) => {
+const BlogDetailById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const Blog = await blog
-      .findById(id)
+      .findById(req.params.id)
       .populate("author", ["_id", "name", "email"])
       .populate("category", ["_id", "title"]);
 
     if (!Blog) {
-      throw { message: "Blog not found" };
+      throw createError("Blog not found", 404);
     }
-    return Blog;
+
+    res.json({
+      result: Blog,
+      message: "Blog detail fetched",
+      meta: null,
+    });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
 
-const BlogDetailBySlug = async (slug: string) => {
+const BlogDetailBySlug = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const Blog = await blog
-      .findOne({ slug })
+      .findOne({ slug: req.params.slug })
       .populate("author", ["_id", "name", "email"])
       .populate("category", ["_id", "title"]);
 
     if (!Blog) {
-      throw { message: "Blog not found" };
+      throw createError("Blog not found", 404);
     }
-    return Blog;
+
+    res.json({
+      result: Blog,
+      message: "Blog detail fetched",
+      meta: null,
+    });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
-const ListAllBlogs = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+
+const ListAllBlogs = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
@@ -107,7 +118,7 @@ const ListAllBlogs = async (
   }
 };
 
-const AllBlogsFiltering = async (req: Request) => {
+const AllBlogsFiltering = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const query = req.query;
     const queryObj = { ...query };
@@ -133,37 +144,65 @@ const AllBlogsFiltering = async (req: Request) => {
       allBlogs = allBlogs.skip(skip).limit(limitNum);
       const BlogCount = await blog.countDocuments();
       if (skip >= BlogCount) {
-        throw { message: "This pages does not exist" };
+        throw createError("This page does not exist", 404);
       }
     }
-    return allBlogs;
+
+    const result = await allBlogs;
+
+    res.json({
+      result,
+      message: "Blogs filtered",
+      meta: null,
+    });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
 
-const BlogUpdateById = async (id: string, data: IBlog) => {
+const BlogUpdateById = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const data: IBlog = req.body;
+
     if (data.title) {
       data.slug = slugify(data.title);
     }
+
     const BlogUpdate = await blog.findByIdAndUpdate(
-      id,
+      req.params.id,
       { $set: data },
       { new: true },
     );
-    return BlogUpdate;
+
+    if (!BlogUpdate) {
+      throw createError("Blog not found", 404);
+    }
+
+    res.json({
+      result: BlogUpdate,
+      message: "Blog updated",
+      meta: null,
+    });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
 
-const BlogDeleteById = async (id: string) => {
+const BlogDeleteById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const BlogDelete = await blog.findByIdAndDelete(id);
-    return BlogDelete;
+    const BlogDelete = await blog.findByIdAndDelete(req.params.id);
+
+    if (!BlogDelete) {
+      throw createError("Blog not found", 404);
+    }
+
+    res.json({
+      result: BlogDelete,
+      message: "Blog deleted",
+      meta: null,
+    });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
 
