@@ -16,7 +16,17 @@ interface ListBlogsParams {
   filter?: Record<string, any>;
 }
 
-const createBlog = async (req: Request, res: Response) => {
+interface AppError extends Error {
+  status?: number;
+}
+
+const createError = (message: string, status = 500): AppError => {
+  const err = new Error(message) as AppError;
+  err.status = status;
+  return err;
+};
+
+const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = req.body;
 
@@ -25,14 +35,14 @@ const createBlog = async (req: Request, res: Response) => {
     }
 
     const newBlog = await blog.create(data);
-    return newBlog;
+
     res.json({
       result: newBlog,
       message: "Blog Added",
       meta: null,
     });
   } catch (exception) {
-    throw exception;
+    next(exception);
   }
 };
 
@@ -44,7 +54,7 @@ const BlogDetailById = async (id: string) => {
       .populate("category", ["_id", "title"]);
 
     if (!Blog) {
-      throw { message: "Blog not found" };
+      throw createError("Blog not found", 404);
     }
     return Blog;
   } catch (exception) {
@@ -60,13 +70,14 @@ const BlogDetailBySlug = async (slug: string) => {
       .populate("category", ["_id", "title"]);
 
     if (!Blog) {
-      throw { message: "Blog not found" };
+      throw createError("Blog not found", 404);
     }
     return Blog;
   } catch (exception) {
     throw exception;
   }
 };
+
 const ListAllBlogs = async (
   req: Request,
   res: Response,
@@ -133,7 +144,7 @@ const AllBlogsFiltering = async (req: Request) => {
       allBlogs = allBlogs.skip(skip).limit(limitNum);
       const BlogCount = await blog.countDocuments();
       if (skip >= BlogCount) {
-        throw { message: "This pages does not exist" };
+        throw createError("This page does not exist", 404);
       }
     }
     return allBlogs;
@@ -152,6 +163,11 @@ const BlogUpdateById = async (id: string, data: IBlog) => {
       { $set: data },
       { new: true },
     );
+
+    if (!BlogUpdate) {
+      throw createError("Blog not found", 404);
+    }
+
     return BlogUpdate;
   } catch (exception) {
     throw exception;
@@ -161,6 +177,11 @@ const BlogUpdateById = async (id: string, data: IBlog) => {
 const BlogDeleteById = async (id: string) => {
   try {
     const BlogDelete = await blog.findByIdAndDelete(id);
+
+    if (!BlogDelete) {
+      throw createError("Blog not found", 404);
+    }
+
     return BlogDelete;
   } catch (exception) {
     throw exception;
