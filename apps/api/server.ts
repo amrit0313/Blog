@@ -3,14 +3,20 @@ import cors from "cors";
 import authRoutes from "./module/auth/auth.route";
 import blogRoutes from "./module/blog/blog.route";
 import { connectDB } from "./config/db";
+import errorHandler from "./services/errorHandler"
 
 const app = express();
 const PORT = 5000;
 app.use(cors());
-
 app.use(express.json());
-//app.use("/api/auth", authRoutes);
+app.use(express.urlencoded({ extended: true })); 
+app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
+
+
+
+
+app.use(errorHandler);
 
 const startServer = async () => {
   await connectDB();
