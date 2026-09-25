@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./module/auth/auth.route";
 import blogRoutes from "./module/blog/blog.route";
+import categoryRoutes from "./module/categories/category.routes";
 import { connectDB } from "./config/db";
 import errorHandler from "./services/errorHandler"
 
@@ -12,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
-
+app.use("/api/category",categoryRoutes)
 
 
 
