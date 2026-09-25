@@ -37,25 +37,22 @@ export const authenticateToken = (
     return res.status(401).json({ message: "unauthorized" });
   }
 };
+export const authorizeUser = (role: string) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
-export const authorizeUser = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-  role: string,
-) => {
-  try {
-    if (!req.user) {
-      return res.status(401).json({ message: "unauthorized" });
-    }
-    if (req.user.role === role) {
+      if (req.user.role !== role) {
+        return res
+          .status(403)
+          .json({ message: "Not authorized for this content" });
+      }
+
       next();
-    } else {
-      return res
-        .status(403)
-        .json({ message: "Not authorized for this content" });
+    } catch (err) {
+      return res.status(500).json({ message: "Internal Server Error" });
     }
-  } catch (err) {
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
+  };
 };

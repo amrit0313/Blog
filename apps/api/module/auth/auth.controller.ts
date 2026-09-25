@@ -50,7 +50,7 @@ const loginUser = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({ message: "Fill up the credentials" });
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+passwordHash");
     if (!user) return res.status(400).json({ message: "User not found" });
     const isVerified = bcrypt.compare(password, user?.passwordHash);
     if (!isVerified) {
