@@ -1,8 +1,8 @@
-import { User } from "../user/user.model";
+import { User } from "../../user/user.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getEnvConfig } from "../config/env.config";
+import { getEnvConfig } from "../../config/env.config";
 
 export const addUser = async (req: Request, res: Response) => {
   try {

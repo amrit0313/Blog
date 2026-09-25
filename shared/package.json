@@ -1,18 +1,5 @@
 {
   "name": "shared",
   "version": "0.1.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev": "concurrently \"npm run dev -w frontend\" \"npm run dev -w backend\"",
-    "build": "npm run build -w frontend && npm run build -w backend",
-    "lint": "npm run lint -ws"
-  },
-  "devDependencies": {
-    "concurrently": "^10.0.5",
-    "typescript": "^5"
-  }
+  "private": true
 }
