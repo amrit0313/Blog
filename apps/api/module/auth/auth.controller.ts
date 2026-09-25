@@ -1,10 +1,10 @@
-import { User } from "../../user/user.model";
+import { User } from "../user/user.model";
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getEnvConfig } from "../../config/env.config";
 
-export const addUser = async (req: Request, res: Response) => {
+const addUser = async (req: Request, res: Response) => {
   try {
     const { JWT_SECRET } = getEnvConfig();
     if (!JWT_SECRET) {
@@ -26,17 +26,21 @@ export const addUser = async (req: Request, res: Response) => {
     });
     const payload = {
       id: user._id,
+      name: user.name,
       email: user.email,
       role: user.role,
     };
     const token = jwt.sign(payload, JWT_SECRET);
+    return res
+      .status(201)
+      .json({ message: "user created successfully", payload, token });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+const loginUser = async (req: Request, res: Response) => {
   try {
     const { JWT_SECRET } = getEnvConfig();
     if (!JWT_SECRET) {
@@ -54,13 +58,29 @@ export const loginUser = async (req: Request, res: Response) => {
     }
     const payload = {
       id: user._id,
+      name: user.name,
       email: user.email,
       role: user.role,
     };
     const token = jwt.sign(payload, JWT_SECRET);
-    return res.status(200).json({ payload, token });
+    return res
+      .status(200)
+      .json({ message: "Logged in successfully", payload, token });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+const getCurrentUser = (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(400).json({ message: "unauthorized" });
+    return res.status(200).json({ message: "current user fetched", user });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export { addUser, loginUser, getCurrentUser };
