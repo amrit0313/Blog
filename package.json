@@ -3,5 +3,14 @@
   "workspaces": [
     "apps/*",
     "shared"
-  ]
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w frontend\" \"npm run dev -w api\"",
+    "build": "npm run build -w frontend && npm run build -w api",
+    "lint": "npm run lint -ws"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "typescript": "^5"
+  }
 }
