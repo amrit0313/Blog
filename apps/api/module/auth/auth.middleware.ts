@@ -25,11 +25,37 @@ export const authenticateToken = (
     ) {
       return res.status(401).json({ message: "unauthorized" });
     }
-    req.user = { id: decoded.id, email: decoded.email };
-    console.log(req.user);
+    req.user = {
+      id: decoded.id,
+      name: decoded.name,
+      email: decoded.email,
+      role: decoded.role,
+    };
 
-    return next();
+    next();
   } catch {
     return res.status(401).json({ message: "unauthorized" });
+  }
+};
+
+export const authorizeUser = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  role: string,
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "unauthorized" });
+    }
+    if (req.user.role === role) {
+      next();
+    } else {
+      return res
+        .status(403)
+        .json({ message: "Not authorized for this content" });
+    }
+  } catch (err) {
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
