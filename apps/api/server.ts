@@ -1,15 +1,17 @@
 import express from "express";
 import cors from "cors";
 import authRoutes from "./module/auth/auth.route";
-import userRoutes from "./module/user/user.route";
+import blogRoutes from "./module/blog/blog.route";
+import { Response } from "express";
 import { connectDB } from "./config/db";
 
 const app = express();
-const PORT = Number(process.env.PORT ?? 3001);
+const PORT = 5000;
 app.use(cors());
+
 app.use(express.json());
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/blog", blogRoutes);
 
 const startServer = async () => {
   await connectDB();
