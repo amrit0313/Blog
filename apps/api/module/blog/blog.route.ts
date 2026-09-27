@@ -1,19 +1,39 @@
 import express from "express";
 import bodyValidator from "../../services/validator.middleware";
 import { CreateBlogValidation } from "./blog.validations";
-import {createBlog,ListAllBlogs,BlogDetailById,BlogDetailBySlug,BlogUpdateById,BlogDeleteById, UnpublishBlogById} from "./blog.controller";
+import {
+  createBlog,
+  ListAllBlogs,
+  GetMyBlogs,
+  BlogDetailById,
+  BlogDetailBySlug,
+  BlogUpdateById,
+  BlogDeleteById,
+  UnpublishBlogById,
+} from "./blog.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
 import { upload } from "../../middlewares/fileupload.middleware";
-
 
 const router = express.Router();
 
 router.get("", ListAllBlogs);
-router.post("/create", authenticateToken,upload.single("image"),bodyValidator(CreateBlogValidation), createBlog);
+router.get("/me", authenticateToken, GetMyBlogs);
+router.post(
+  "/create",
+  authenticateToken,
+  upload.single("image"),
+  bodyValidator(CreateBlogValidation),
+  createBlog,
+);
 router.get("/:id", BlogDetailById);
 router.get("/slug/:slug", BlogDetailBySlug);
-router.put("/:id", authenticateToken,BlogUpdateById);
-router.delete("/:id", authenticateToken ,BlogDeleteById);
-router.patch("/:id/unpublish", authenticateToken, authorizeUser("admin"), UnpublishBlogById);
+router.put("/:id", authenticateToken, BlogUpdateById);
+router.delete("/:id", authenticateToken, BlogDeleteById);
+router.patch(
+  "/:id/unpublish",
+  authenticateToken,
+  authorizeUser("admin"),
+  UnpublishBlogById,
+);
 
 export default router;

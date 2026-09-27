@@ -1,3 +1,5 @@
+import { apiRequest } from "./api";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export interface Blog {
@@ -38,9 +40,35 @@ export interface ApiResponse<T> {
   meta: null;
 }
 
-/**
- * Fetch all blogs from the API
- */
+export interface BlogAuthor {
+  id?: string;
+  _id?: string;
+  name?: string;
+  email?: string;
+}
+
+export interface BlogCategory {
+  id?: string;
+  _id?: string;
+  title?: string;
+}
+
+export interface BlogSummary {
+  _id: string;
+  title: string;
+  description?: string;
+  author?: BlogAuthor;
+  category?: BlogCategory;
+  status?: "draft" | "published" | string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface BlogListResponse {
+  message?: string;
+  result?: BlogSummary[];
+}
+
 export async function getBlogs(): Promise<BlogsResponse> {
   const res = await fetch(`${API_URL}/api/blog`, { cache: "no-store" });
 
@@ -51,9 +79,6 @@ export async function getBlogs(): Promise<BlogsResponse> {
   return res.json();
 }
 
-/**
- * Fetch a single blog by ID
- */
 export async function getBlogById(id: string): Promise<ApiResponse<Blog>> {
   const res = await fetch(`${API_URL}/api/blog/${id}`, { cache: "no-store" });
 
@@ -64,9 +89,6 @@ export async function getBlogById(id: string): Promise<ApiResponse<Blog>> {
   return res.json();
 }
 
-/**
- * Create a new blog
- */
 export async function createBlog(data: FormData): Promise<ApiResponse<Blog>> {
   const res = await fetch(`${API_URL}/api/blog/create`, {
     method: "POST",
@@ -80,12 +102,9 @@ export async function createBlog(data: FormData): Promise<ApiResponse<Blog>> {
   return res.json();
 }
 
-/**
- * Update a blog by ID
- */
 export async function updateBlog(
   id: string,
-  data: FormData
+  data: FormData,
 ): Promise<ApiResponse<Blog>> {
   const res = await fetch(`${API_URL}/api/blog/${id}`, {
     method: "PUT",
@@ -99,9 +118,6 @@ export async function updateBlog(
   return res.json();
 }
 
-/**
- * Delete a blog by ID
- */
 export async function deleteBlog(id: string): Promise<ApiResponse<Blog>> {
   const res = await fetch(`${API_URL}/api/blog/${id}`, {
     method: "DELETE",
@@ -114,9 +130,6 @@ export async function deleteBlog(id: string): Promise<ApiResponse<Blog>> {
   return res.json();
 }
 
-/**
- * Unpublish a blog by ID (admin only)
- */
 export async function unpublishBlog(id: string): Promise<ApiResponse<Blog>> {
   const res = await fetch(`${API_URL}/api/blog/${id}/unpublish`, {
     method: "PATCH",
@@ -129,9 +142,6 @@ export async function unpublishBlog(id: string): Promise<ApiResponse<Blog>> {
   return res.json();
 }
 
-/**
- * Fetch all users from the API
- */
 export async function getUsers(): Promise<User[]> {
   const res = await fetch(`${API_URL}/api/user`, { cache: "no-store" });
 
@@ -143,9 +153,6 @@ export async function getUsers(): Promise<User[]> {
   return data.result || data;
 }
 
-/**
- * Fetch a single user by ID
- */
 export async function getUserById(id: string): Promise<ApiResponse<User>> {
   const res = await fetch(`${API_URL}/api/user/${id}`, { cache: "no-store" });
 
@@ -156,9 +163,6 @@ export async function getUserById(id: string): Promise<ApiResponse<User>> {
   return res.json();
 }
 
-/**
- * Update current user profile
- */
 export async function updateUser(data: {
   name?: string;
   email?: string;
@@ -176,9 +180,6 @@ export async function updateUser(data: {
   return res.json();
 }
 
-/**
- * Get current user profile
- */
 export async function getCurrentUser(): Promise<ApiResponse<User>> {
   const res = await fetch(`${API_URL}/api/auth/me`, { cache: "no-store" });
 
@@ -188,3 +189,9 @@ export async function getCurrentUser(): Promise<ApiResponse<User>> {
 
   return res.json();
 }
+
+export const blogApi = {
+  myBlogs() {
+    return apiRequest<BlogListResponse>("/blog/me", { method: "GET" });
+  },
+};

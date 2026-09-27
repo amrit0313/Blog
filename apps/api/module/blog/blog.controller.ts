@@ -7,8 +7,8 @@ interface IBlog {
   content: string;
   slug: string;
   category: string;
-  status: "draft" | "published | unpublished";
-   image?: string;
+  status: "draft" | "published" | "unpublished";
+  image?: string;
 }
 
 interface AppError extends Error {
@@ -29,9 +29,10 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       data.slug = slugify(data.title);
     }
 
-      if (req.file) {
-      data.image = req.file.path; 
+    if (req.file) {
+      data.image = req.file.path;
     }
+
     const newBlog = await blog.create(data);
 
     res.json({
@@ -44,7 +45,11 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-const BlogDetailById = async (req: Request, res: Response, next: NextFunction) => {
+const BlogDetailById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const Blog = await blog
       .findById(req.params.id)
@@ -56,8 +61,7 @@ const BlogDetailById = async (req: Request, res: Response, next: NextFunction) =
     }
 
     if (Blog.status === "draft") {
-      const isAuthor =
-        req.user && req.user.id === Blog.author?._id?.toString();
+      const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
 
       if (!isAuthor) {
         throw createError("Blog not found", 404);
@@ -74,7 +78,11 @@ const BlogDetailById = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const BlogDetailBySlug = async (req: Request, res: Response, next: NextFunction) => {
+const BlogDetailBySlug = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const Blog = await blog
       .findOne({ slug: req.params.slug })
@@ -86,8 +94,7 @@ const BlogDetailBySlug = async (req: Request, res: Response, next: NextFunction)
     }
 
     if (Blog.status === "draft") {
-      const isAuthor =
-        req.user && req.user.id === Blog.author?._id?.toString();
+      const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
 
       if (!isAuthor) {
         throw createError("Blog not found", 404);
@@ -107,7 +114,7 @@ const BlogDetailBySlug = async (req: Request, res: Response, next: NextFunction)
 const ListAllBlogs = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const page = Number(req.query.page) || 1;
@@ -154,7 +161,12 @@ const ListAllBlogs = async (
     next(exception);
   }
 };
-const AllBlogsFiltering = async (req: Request, res: Response, next: NextFunction) => {
+
+const AllBlogsFiltering = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const query = req.query;
     const queryObj = { ...query };
@@ -206,14 +218,19 @@ const AllBlogsFiltering = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-const BlogUpdateById = async (req: Request, res: Response, next: NextFunction) => {
+const BlogUpdateById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const data: IBlog = req.body;
 
     if (data.title) {
       data.slug = slugify(data.title);
     }
-      if (req.file) {
+
+    if (req.file) {
       data.image = req.file.path;
     }
 
@@ -237,7 +254,11 @@ const BlogUpdateById = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const UnpublishBlogById = async (req: Request, res: Response, next: NextFunction) => {
+const UnpublishBlogById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     if (!req.user || req.user.role !== "admin") {
       throw createError("Not authorized for this action", 403);
@@ -245,7 +266,7 @@ const UnpublishBlogById = async (req: Request, res: Response, next: NextFunction
 
     const BlogUnpublish = await blog.findByIdAndUpdate(
       req.params.id,
-      { $set: { status: "unpublish" } },
+      { $set: { status: "unpublished" } },
       { new: true },
     );
 
@@ -263,7 +284,11 @@ const UnpublishBlogById = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-const BlogDeleteById = async (req: Request, res: Response, next: NextFunction) => {
+const BlogDeleteById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const BlogDelete = await blog.findByIdAndDelete(req.params.id);
 
@@ -281,6 +306,29 @@ const BlogDeleteById = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
+const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw createError("Unauthorized", 401);
+    }
+
+    const data = await blog
+      .find({ author: userId })
+      .populate("author", ["_id", "name", "email"])
+      .populate("category", ["_id", "title"])
+      .sort({ _id: "desc" });
+
+    res.json({
+      result: data,
+      message: "User blogs fetched",
+      meta: { total: data.length },
+    });
+  } catch (exception) {
+    next(exception);
+  }
+};
+
 export {
   createBlog,
   BlogDetailById,
@@ -290,4 +338,5 @@ export {
   BlogUpdateById,
   UnpublishBlogById,
   BlogDeleteById,
+  GetMyBlogs,
 };

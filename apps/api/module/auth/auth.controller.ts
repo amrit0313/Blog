@@ -55,6 +55,7 @@ const loginUser = async (req: Request, res: Response) => {
     if (!user) return res.status(400).json({ message: "User not found" });
 
     const isVerified = await bcrypt.compare(password, user.passwordHash);
+
     if (!isVerified) {
       return res.status(400).json({ message: "Credentials doesn't match" });
     }
