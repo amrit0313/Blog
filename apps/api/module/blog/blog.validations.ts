@@ -5,7 +5,8 @@ const CreateBlogValidation = joi.object({
   description: joi.string().required(),
   author: joi.string().required(),
   category: joi.string().required(),
-  status: joi.string().valid("draft", "published").required(),
+  status: joi.string().valid("draft", "published","unpublished").required(),
+    image: joi.string().optional()
 });
 
 const UpdateBlogValidation = joi.object({
@@ -13,7 +14,8 @@ const UpdateBlogValidation = joi.object({
   description: joi.string().required(),
   author: joi.string().required(),
   category: joi.string().required(),
-  status: joi.string().valid("draft", "published").required(),
+  status: joi.string().valid("draft", "published","unpublished").required(),
+  image:joi.string().optional()
 });
 
 export { CreateBlogValidation, UpdateBlogValidation };
