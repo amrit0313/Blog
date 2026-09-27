@@ -69,6 +69,11 @@ a:hover {
   color: #b92535;
 }
 
+.bg-primary,
+.bg-primary:hover {
+  color: var(--primary-foreground);
+}
+
 button,
 [role="button"] {
   cursor: pointer;
