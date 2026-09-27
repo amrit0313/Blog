@@ -20,7 +20,7 @@ export default function Home() {
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Button
-              href="/main/blogs"
+              href="/blogs"
               className="rounded-md px-6 py-3 font-semibold no-underline shadow-sm"
             >
               Browse Blogs
@@ -45,7 +45,7 @@ export default function Home() {
             generations.
           </p>
           <Link
-            href="/main/blogs"
+            href="/blogs"
             className="relative mt-8 inline-flex font-semibold no-underline"
           >
             Read the latest <span className="ml-2">-&gt;</span>

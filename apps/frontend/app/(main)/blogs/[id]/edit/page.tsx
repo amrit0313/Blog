@@ -3,20 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as yup from "yup";
-import Button from "../../../../components/ui/Button";
+import Button from "../../../../../components/ui/Button";
 import {
   Form,
   FormField,
   Input,
   Textarea,
   Select,
-} from "../../../../components/dashboard/form";
-import { blogApi } from "../../../../lib/blog";
-import { categoryApi, type Category } from "../../../../lib/category";
-import { ApiError } from "../../../../lib/api";
-import { useAuth } from "../../../../context/AuthContext";
+} from "../../../../../components/dashboard/form";
+import { blogApi, type Blog } from "../../../../../lib/blog";
+import { categoryApi, type Category } from "../../../../../lib/category";
+import { ApiError } from "../../../../../lib/api";
 
-const createBlogSchema = yup.object({
+const editBlogSchema = yup.object({
   title: yup
     .string()
     .trim()
@@ -34,9 +33,14 @@ const createBlogSchema = yup.object({
     .required(),
 });
 
-export default function CreateBlogPage() {
+export default function EditBlogPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const [id, setId] = useState<string>("");
+  const [blog, setBlog] = useState<Blog | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -44,19 +48,44 @@ export default function CreateBlogPage() {
   const [image, setImage] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    categoryApi
-      .list()
-      .then((res) => setCategories(res.result ?? []))
-      .catch(() => setCategories([]));
-  }, []);
+    params.then((p) => setId(p.id));
+  }, [params]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchData = async () => {
+      try {
+        const [blogRes, categoryRes] = await Promise.all([
+          blogApi.getById(id),
+          categoryApi.list(),
+        ]);
+        const fetchedBlog = blogRes.result;
+        setBlog(fetchedBlog);
+        setTitle(fetchedBlog.title);
+        console.log(title)
+        setDescription(fetchedBlog.description);
+        setCategory(fetchedBlog.category?._id ?? "");
+        setStatus(fetchedBlog.status === "published" ? "published" : "draft");
+        setCategories(categoryRes.result ?? []);
+      } catch {
+        setError("Failed to load blog. Please try again later.");
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   const validate = async () => {
     try {
-      await createBlogSchema.validate(
+      await editBlogSchema.validate(
         { title, description, category, status },
         { abortEarly: false }
       );
@@ -90,31 +119,53 @@ export default function CreateBlogPage() {
       formData.append("description", description);
       formData.append("category", category);
       formData.append("status", status);
-      if (user?.id) formData.append("author", user.id);
       if (image) formData.append("image", image);
 
-      const res = await blogApi.create(formData);
-      router.push(`/blogs/${res.result._id}`);
+      await blogApi.update(id, formData);
+      router.push(`/blogs/${id}`);
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.message
-          : "Failed to create blog. Please try again."
+          : "Failed to update blog. Please try again."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <p className="text-muted-foreground">Loading blog...</p>
+      </div>
+    );
+  }
+
+  if (error && !blog) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground">{error}</h1>
+          <Button
+            variant="outline"
+            className="mt-6"
+            onClick={() => router.back()}
+          >
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-12 lg:px-8">
       <div className="mb-8">
-        <p className="eyebrow">Write</p>
-        <h1 className="mt-2 text-3xl font-bold text-foreground">
-          Create New Blog
-        </h1>
+
+        <h1 className="mt-2 text-3xl font-bold text-foreground">Edit Blog</h1>
         <p className="mt-2 text-muted-foreground">
-          Share your story with the community.
+          Update your blog post below.
         </p>
       </div>
 
@@ -124,12 +175,6 @@ export default function CreateBlogPage() {
             {error}
           </div>
         )}
-
-        <FormField label="Author" htmlFor="author">
-          <div className="flex h-[38px] items-center rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground">
-            {authLoading ? "Loading..." : user?.name ?? "Unknown"}
-          </div>
-        </FormField>
 
         <FormField
           label="Title"
@@ -195,6 +240,19 @@ export default function CreateBlogPage() {
         </div>
 
         <FormField label="Cover Image" htmlFor="image">
+          {blog?.image && !image && (
+            <div className="mb-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={blog.image}
+                alt="Current cover"
+                className="aspect-video w-full rounded-md border border-border object-cover"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Current cover image
+              </p>
+            </div>
+          )}
           <input
             id="image"
             type="file"
@@ -204,12 +262,12 @@ export default function CreateBlogPage() {
           />
           {image && (
             <p className="mt-2 text-sm text-muted-foreground">
-              Selected: {image.name}
+              New image selected: {image.name}
             </p>
           )}
         </FormField>
 
-        <div className="flex items-center justify-end gap-3 border-t border-border pt-6 px-4 sm:px-4">
+        <div className="flex items-center justify-end gap-3 border-t border-border pt-6">
           <Button
             type="button"
             variant="outline"
@@ -219,7 +277,7 @@ export default function CreateBlogPage() {
             Cancel
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create Blog"}
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </Form>
