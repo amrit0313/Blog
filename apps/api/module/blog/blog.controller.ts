@@ -226,7 +226,7 @@ const BlogUpdateById = async (
   next: NextFunction,
 ) => {
   try {
-    const data: IBlog = req.body;
+    const data = req.body;
 
     if (data.title) {
       data.slug = slugify(data.title);
