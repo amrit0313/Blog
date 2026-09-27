@@ -1,8 +1,11 @@
 import axios, { AxiosRequestConfig } from "axios";
 import type {
   AuthResponse,
+  ForgotPasswordCredentials,
   LoginCredentials,
+  MessageResponse,
   RegisterCredentials,
+  ResetPasswordCredentials,
 } from "../types/auth";
 
 export const TOKEN_STORAGE_KEY = "nepalcanblog_token";
@@ -122,15 +125,15 @@ export const authApi = {
     return apiRequest<AuthResponse>("/auth/me", { method: "POST" });
   },
 
-  forgotPassword(credentials: any) {
-    return apiRequest("/auth/forgot-password", {
+  forgotPassword(credentials: ForgotPasswordCredentials) {
+    return apiRequest<MessageResponse>("/auth/forgot-password", {
       method: "POST",
       data: credentials,
     });
   },
 
-  resetPassword(credentials: any) {
-    return apiRequest("/auth/reset-password", {
+  resetPassword(credentials: ResetPasswordCredentials) {
+    return apiRequest<MessageResponse>("/auth/reset-password", {
       method: "POST",
       data: credentials,
     });

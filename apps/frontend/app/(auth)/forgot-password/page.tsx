@@ -1,15 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import Button from "../../../components/ui/Button";
 import Navbar from "../../../components/navbar/Navbar";
-import { useAuth } from "../../../context/AuthContext";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { authApi } from "../../../lib/api";
+import { getErrorMessage } from "../../../lib/toast";
+import { toast } from "sonner";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
 
   const [error, setError] = useState("");
@@ -31,12 +29,16 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      await authApi.forgotPassword({email: email.trim()});
+      const response = await authApi.forgotPassword({ email: email.trim() });
+      toast.success(
+        response?.message ?? "Password reset instructions have been sent.",
+      );
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to log in. Please try again.",
+      toast.error(
+        getErrorMessage(
+          submitError,
+          "Unable to send password reset instructions.",
+        ),
       );
     } finally {
       setIsSubmitting(false);
@@ -51,7 +53,7 @@ export default function LoginPage() {
           <div className="mb-8 text-center">
             <h1 className="mt-3 text-3xl">Enter you email</h1>
             <p className="mt-3">
-              We'll send you reset link on the mail you provide.
+              We&apos;ll send you a reset link to the email you provide.
             </p>
           </div>
 

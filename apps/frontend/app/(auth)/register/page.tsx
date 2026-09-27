@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Button from "../../../components/ui/Button";
 import Navbar from "../../../components/navbar/Navbar";
 import { useAuth } from "../../../context/AuthContext";
+import { getErrorMessage } from "../../../lib/toast";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -45,10 +47,8 @@ export default function RegisterPage() {
       });
       router.push("/blogs");
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to create your account. Please try again.",
+      toast.error(
+        getErrorMessage(submitError, "Unable to create your account."),
       );
     } finally {
       setIsSubmitting(false);

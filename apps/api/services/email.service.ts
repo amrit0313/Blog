@@ -63,7 +63,7 @@ export async function sendResetMail(
 
     return { success: true, data };
   } catch (err) {
-    console.error("Unexpected error:", err);
+    // console.error("Unexpected error:", err);
     return { success: false, error: err };
   }
 }

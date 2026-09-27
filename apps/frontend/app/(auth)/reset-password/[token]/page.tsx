@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import Button from "../../../../components/ui/Button";
 import Navbar from "../../../../components/navbar/Navbar";
 import { authApi } from "../../../../lib/api";
+import { getErrorMessage } from "../../../../lib/toast";
+import { toast } from "sonner";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -37,17 +39,16 @@ export default function ResetPasswordPage() {
 
     setIsSubmitting(true);
     try {
-      await authApi.resetPassword({
+      const response = await authApi.resetPassword({
         email: email.trim(),
         password,
         token,
       });
+      toast.success(response?.message ?? "Password reset successfully.");
       router.push("/login?reset=success");
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to reset your password. Please try again.",
+      toast.error(
+        getErrorMessage(submitError, "Unable to reset your password."),
       );
     } finally {
       setIsSubmitting(false);

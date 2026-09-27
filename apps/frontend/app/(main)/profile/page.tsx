@@ -255,8 +255,8 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center gap-4 card mt-6 p-8 text-center sm:p-10">
               <h3 className="text-2xl">No blogs yet</h3>
               <p className="mx-auto mt-3 max-w-md leading-7">
-                You haven't published any blogs yet. Start writing and share
-                your ideas with the community.
+                You haven&apos;t published any blogs yet. Start writing and
+                share your ideas with the community.
               </p>
               <Button
                 href="/main/blogs/create"

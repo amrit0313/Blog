@@ -20,6 +20,7 @@ import type {
   LoginCredentials,
   RegisterCredentials,
 } from "../types/auth";
+import { toast } from "sonner";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -105,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storeToken(response.token);
     const nextUser = toUser(response);
     setUser(nextUser);
+    toast.success(response.message ?? "Login successful.");
     return nextUser;
   }
 
@@ -117,12 +119,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storeToken(response.token);
     const nextUser = toUser(response);
     setUser(nextUser);
+    toast.success(response.message ?? "Registration successful.");
     return nextUser;
   }
 
   function logout() {
     clearStoredToken();
     setUser(null);
+    toast.success("Logged out successfully.");
   }
 
   return (

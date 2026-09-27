@@ -6,6 +6,8 @@ import Navbar from "../../../components/navbar/Navbar";
 import { useAuth } from "../../../context/AuthContext";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../../lib/toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,11 +37,7 @@ export default function LoginPage() {
       await login({ email: email.trim(), password });
       router.push("/blogs");
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "Unable to log in. Please try again.",
-      );
+      toast.error(getErrorMessage(submitError, "Unable to log in."));
     } finally {
       setIsSubmitting(false);
     }
