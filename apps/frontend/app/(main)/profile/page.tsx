@@ -10,11 +10,9 @@ import {
   FaInstagram,
 } from "react-icons/fa";
 import Button from "../../../components/ui/Button";
-import Footer from "../../../components/footer/Footer";
-import Navbar from "../../../components/navbar/Navbar";
 import { useAuth } from "../../../context/AuthContext";
 import { ApiError } from "../../../lib/api";
-import { blogApi, BlogSummary } from "../../../lib/blog";
+import { blogApi, type Blog } from "../../../lib/blog";
 import { profileApi, ProfileData } from "../../../lib/profile";
 
 function formatDate(value?: string) {
@@ -56,7 +54,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [blogs, setBlogs] = useState<BlogSummary[]>([]);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
   const [blogsLoading, setBlogsLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
@@ -127,7 +125,7 @@ export default function ProfilePage() {
   if (isAuthLoading || (!isAuthenticated && !profileError)) {
     return (
       <>
-        <Navbar />
+
         <main className="flex min-h-[60vh] flex-1 items-center justify-center px-6 py-16">
           <p>Loading your profile...</p>
         </main>
@@ -146,7 +144,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <Navbar />
+
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
         <section className="card flex flex-col gap-6 p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
@@ -249,7 +247,7 @@ export default function ProfilePage() {
             </div>
             {!blogsLoading && !blogsError && blogs.length > 0 && (
               <Button
-                href="/main/blogs/create"
+                href="/blogs/create"
                 className="rounded-md px-4 py-2 no-underline"
               >
                 Start Writing
@@ -274,7 +272,7 @@ export default function ProfilePage() {
                 share your ideas with the community.
               </p>
               <Button
-                href="/main/blogs/create"
+                href="/blogs/create"
                 className="mt-6 rounded-md px-5 py-3 no-underline w-40"
               >
                 Start Writing
@@ -309,7 +307,7 @@ export default function ProfilePage() {
                         "Recently"}
                     </span>
                     <Link
-                      href={`/main/blogs/${blog._id}`}
+                      href={`/blogs/${blog._id}`}
                       className="font-semibold no-underline hover:underline"
                     >
                       Read blog
@@ -321,7 +319,7 @@ export default function ProfilePage() {
           )}
         </section>
       </main>
-      <Footer />
+
     </div>
   );
 }

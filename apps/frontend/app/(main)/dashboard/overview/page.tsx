@@ -14,15 +14,8 @@ import Table, {
   TableCell,
 } from "../../../../components/dashboard/table";
 import Modal from "../../../../components/dashboard/modal";
-import {
-  getBlogs,
-  getUsers,
-  deleteBlog,
-  updateBlog,
-  type Blog,
-  type User,
-} from "../../../../lib/blog";
-
+import { blogApi, type Blog } from "../../../../lib/blog";
+//import { userApi, type User } from "../../../../lib/profile";
 type FilterTab = "all" | "published" | "draft";
 
 export default function OverviewPage() {
@@ -41,8 +34,8 @@ export default function OverviewPage() {
       try {
         setError(null);
         const [blogsData, usersData] = await Promise.all([
-          getBlogs(),
-          getUsers(),
+          blogApi.list({ limit: 100 }),
+          userApi.list(),
         ]);
 
         // Use first user as placeholder current user
@@ -325,7 +318,7 @@ export default function OverviewPage() {
         </Table>
       </Card>
 
-      {/* Profile Section */}
+
       {user && (
         <Card padding="md">
           <h2 className="font-semibold text-foreground mb-4">Profile</h2>

@@ -150,12 +150,14 @@ const ListAllBlogs = async (
       .skip(skip);
 
     res.status(200).json({
-      success: true,
-      blogs: data,
-      totalBlogs: count,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-      limit,
+      result: data,
+      message: "Blogs fetched",
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalBlogs: count,
+        limit,
+      },
     });
   } catch (exception) {
     next(exception);
