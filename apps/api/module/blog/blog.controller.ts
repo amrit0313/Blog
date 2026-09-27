@@ -7,7 +7,8 @@ interface IBlog {
   content: string;
   slug: string;
   category: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "unpublished";
+  image?: string;
 }
 
 interface AppError extends Error {
@@ -26,6 +27,10 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
 
     if (data.title) {
       data.slug = slugify(data.title);
+    }
+
+    if (req.file) {
+      data.image = req.file.path;
     }
 
     const newBlog = await blog.create(data);
@@ -55,6 +60,14 @@ const BlogDetailById = async (
       throw createError("Blog not found", 404);
     }
 
+    if (Blog.status === "draft") {
+      const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
+
+      if (!isAuthor) {
+        throw createError("Blog not found", 404);
+      }
+    }
+
     res.json({
       result: Blog,
       message: "Blog detail fetched",
@@ -80,6 +93,14 @@ const BlogDetailBySlug = async (
       throw createError("Blog not found", 404);
     }
 
+    if (Blog.status === "draft") {
+      const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
+
+      if (!isAuthor) {
+        throw createError("Blog not found", 404);
+      }
+    }
+
     res.json({
       result: Blog,
       message: "Blog detail fetched",
@@ -100,30 +121,41 @@ const ListAllBlogs = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    let filter: Record<string, any> = {};
+    const filter: Record<string, any> = {};
+
     if (req.query.search) {
-      filter = {
-        title: new RegExp(String(req.query.search), "i"),
-      };
+      filter.title = new RegExp(String(req.query.search), "i");
+    }
+
+    if (req.user) {
+      filter.$or = [
+        { status: "published" },
+        {
+          status: "draft",
+          author: req.user.id,
+        },
+      ];
+    } else {
+      filter.status = "published";
     }
 
     const count = await blog.countDocuments(filter);
+
     const data = await blog
       .find(filter)
       .populate("author", ["_id", "name", "email"])
       .populate("category", ["_id", "title"])
-      .sort({ _id: "desc" })
+      .sort({ _id: -1 })
       .limit(limit)
       .skip(skip);
 
-    res.json({
-      result: data,
-      message: "product list all",
-      meta: {
-        currentPage: page,
-        total: count,
-        limit: limit,
-      },
+    res.status(200).json({
+      success: true,
+      blogs: data,
+      totalBlogs: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      limit,
     });
   } catch (exception) {
     next(exception);
@@ -142,14 +174,24 @@ const AllBlogsFiltering = async (
     excludeFields.forEach((el) => delete queryObj[el]);
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    let allBlogs = blog.find(JSON.parse(queryStr));
+    const parsedQuery = JSON.parse(queryStr);
+
+    if (req.user) {
+      parsedQuery.$or = [
+        { status: "published" },
+        { status: "draft", author: req.user.id },
+      ];
+    } else {
+      parsedQuery.status = "published";
+    }
+
+    let allBlogs = blog.find(parsedQuery);
 
     if (query.fields) {
       const fields = (query.fields as string).split(",").join(" ");
       allBlogs = allBlogs.select(fields);
     }
 
-    //Pagination
     const page = query.page;
     const limit = query.limit;
     const pageNum = Number(page) || 1;
@@ -158,7 +200,7 @@ const AllBlogsFiltering = async (
 
     if (query.page) {
       allBlogs = allBlogs.skip(skip).limit(limitNum);
-      const BlogCount = await blog.countDocuments();
+      const BlogCount = await blog.countDocuments(parsedQuery);
       if (skip >= BlogCount) {
         throw createError("This page does not exist", 404);
       }
@@ -188,6 +230,10 @@ const BlogUpdateById = async (
       data.slug = slugify(data.title);
     }
 
+    if (req.file) {
+      data.image = req.file.path;
+    }
+
     const BlogUpdate = await blog.findByIdAndUpdate(
       req.params.id,
       { $set: data },
@@ -201,6 +247,36 @@ const BlogUpdateById = async (
     res.json({
       result: BlogUpdate,
       message: "Blog updated",
+      meta: null,
+    });
+  } catch (exception) {
+    next(exception);
+  }
+};
+
+const UnpublishBlogById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (!req.user || req.user.role !== "admin") {
+      throw createError("Not authorized for this action", 403);
+    }
+
+    const BlogUnpublish = await blog.findByIdAndUpdate(
+      req.params.id,
+      { $set: { status: "unpublished" } },
+      { new: true },
+    );
+
+    if (!BlogUnpublish) {
+      throw createError("Blog not found", 404);
+    }
+
+    res.json({
+      result: BlogUnpublish,
+      message: "Blog unpublished",
       meta: null,
     });
   } catch (exception) {
@@ -260,6 +336,7 @@ export {
   ListAllBlogs,
   AllBlogsFiltering,
   BlogUpdateById,
+  UnpublishBlogById,
   BlogDeleteById,
   GetMyBlogs,
 };

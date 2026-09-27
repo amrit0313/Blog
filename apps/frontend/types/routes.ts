@@ -25,6 +25,14 @@ export const ROUTES = {
     USERS: "/admin/users",
     BLOGS: "/admin/blogs",
   },
+
+  DASHBOARD: {
+    HOME: "/dashboard",
+    OVERVIEW: "/dashboard/overview",
+    MY_BLOGS: "/dashboard/my-blogs",
+    ANALYTICS: "/dashboard/analytics",
+    SETTINGS: "/dashboard/settings",
+  },
 } as const;
 
 
