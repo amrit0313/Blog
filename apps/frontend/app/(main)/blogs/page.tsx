@@ -1,5 +1,6 @@
-import { getBlogs, BlogsResponse } from "../../lib/blogs";
+import { blogApi, type Blog } from "../../../lib/blog";
 import BlogGrid from "../../../components/ui/bloggrid";
+import { ApiError } from "../../../lib/api";
 
 export default async function BlogsPage({
   searchParams,
@@ -10,36 +11,59 @@ export default async function BlogsPage({
   const limit = 9;
   const currentPage = Math.max(1, Number(pageParam) || 1);
 
-  let data: BlogsResponse;
+  let blogs: Blog[];
+  let totalPages: number;
+
   try {
-    data = await getBlogs(currentPage, limit);
-  } catch {
+    const response = await blogApi.list({ page: currentPage, limit });
+    blogs = response.result;
+    totalPages = response.meta.totalPages;
+  } catch (error) {
+    console.error("Failed to load blogs:", error);
+
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : "Something went wrong while loading blogs.";
+
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground">Unable to load blogs</h1>
-          <p className="mt-2 text-muted-foreground">
-            Please make sure the API server is running on port 5000.
-          </p>
+          <p className="mt-2 text-muted-foreground">{message}</p>
         </div>
       </div>
     );
   }
 
-  const { blogs, totalPages } = data;
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-          <p className="eyebrow">Our Blog</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">
+      <div className="relative overflow-hidden border-b border-border">
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-8 lg:py-8">
+         
+          <h1 className="mt-4 text-4xl font-bold tracking-tight text-center text-primary sm:text-5xl">
             Latest Articles
           </h1>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
+          <p className="mt-4  text-center  sm:text-lg">
             Discover stories, insights, and updates from our community of writers.
           </p>
+
+          <div className="mt-8 flex items-center gap-6 text-sm text-center text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-foreground">
+                {totalPages > 0 ? `${totalPages}+` : "0"}
+              </span>
+              <span>pages</span>
+            </div>
+            <span className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-foreground">{blogs.length}</span>
+              <span>on this page</span>
+            </div>
+          </div>
         </div>
       </div>
 

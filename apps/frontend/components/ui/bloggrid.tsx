@@ -2,29 +2,7 @@
 import Link from "next/link";
 import Card from "../dashboard/card";
 import { HiCalendar, HiUser, HiTag, HiArrowRight } from "react-icons/hi2";
-
-interface BlogAuthor {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-interface BlogCategory {
-  _id: string;
-  title: string;
-}
-
-interface Blog {
-  _id: string;
-  title: string;
-  description: string;
-  author: BlogAuthor;
-  category: BlogCategory;
-  status: "draft" | "published" | "unpublished";
-  image?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Blog } from "../../lib/blog";
 
 interface BlogGridProps {
   blogs: Blog[];

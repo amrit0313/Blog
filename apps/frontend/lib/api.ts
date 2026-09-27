@@ -34,7 +34,7 @@ function getApiBaseUrl() {
     throw new ApiError("Authentication service is not configured.", 0);
   }
 
-  return baseUrl.replace(/\/$/, "");
+  return `${baseUrl.replace(/\/$/, "")}/api`;
 }
 
 api.interceptors.request.use((config) => {
