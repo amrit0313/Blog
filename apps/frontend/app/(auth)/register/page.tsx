@@ -43,7 +43,7 @@ export default function RegisterPage() {
         email: email.trim(),
         password,
       });
-      router.push("/main/blogs");
+      router.push("/blogs");
     } catch (submitError) {
       setError(
         submitError instanceof Error

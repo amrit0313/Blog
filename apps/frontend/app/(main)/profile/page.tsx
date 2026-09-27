@@ -10,6 +10,7 @@ import {
   FaInstagram,
 } from "react-icons/fa";
 import Button from "../../../components/ui/Button";
+import Avatar from "../../../components/avatar";
 import Footer from "../../../components/footer/Footer";
 import Navbar from "../../../components/navbar/Navbar";
 import { useAuth } from "../../../context/AuthContext";
@@ -27,11 +28,6 @@ function formatDate(value?: string) {
         month: "short",
         day: "numeric",
       });
-}
-
-function getAvatarUrl(avatar?: string) {
-  if (!avatar) return null;
-  return `http://localhost:5000/uploads/profiles/${avatar}`;
 }
 
 function getExternalHref(value: string) {
@@ -139,7 +135,6 @@ export default function ProfilePage() {
 
   const profileUser = profile?.user ?? user;
   const displayName = profileUser?.name ?? "Your profile";
-  const avatarUrl = getAvatarUrl(profile?.avatar);
   const socialLinks = profile?.socialLinks
     ? Object.entries(profile.socialLinks).filter(([, value]) => Boolean(value))
     : [];
@@ -151,21 +146,11 @@ export default function ProfilePage() {
         <section className="card flex flex-col gap-6 p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-5">
-              {avatarUrl ? (
-                <div
-                  className="h-20 w-20 shrink-0 rounded-full border bg-cover bg-center"
-                  style={{ backgroundImage: `url(${avatarUrl})` }}
-                  role="img"
-                  aria-label={`${displayName} avatar`}
-                />
-              ) : (
-                <div
-                  className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl font-bold text-secondary-foreground"
-                  aria-hidden="true"
-                >
-                  {displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
+              <Avatar
+                src={profile?.avatar}
+                name={displayName}
+                className="h-20 w-20 text-2xl"
+              />
               <div>
                 <p className="eyebrow">Profile</p>
                 <h1 className="mt-1 text-3xl">{displayName}</h1>
@@ -270,8 +255,8 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center gap-4 card mt-6 p-8 text-center sm:p-10">
               <h3 className="text-2xl">No blogs yet</h3>
               <p className="mx-auto mt-3 max-w-md leading-7">
-                You haven't published any blogs yet. Start writing and
-                share your ideas with the community.
+                You haven't published any blogs yet. Start writing and share
+                your ideas with the community.
               </p>
               <Button
                 href="/main/blogs/create"

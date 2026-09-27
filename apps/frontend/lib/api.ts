@@ -117,9 +117,22 @@ export const authApi = {
       data: credentials,
     });
   },
-
   // The current Express API exposes the authenticated-user check as POST /auth/me.
   currentUser() {
     return apiRequest<AuthResponse>("/auth/me", { method: "POST" });
+  },
+
+  forgotPassword(credentials: any) {
+    return apiRequest("/auth/forgot-password", {
+      method: "POST",
+      data: credentials,
+    });
+  },
+
+  resetPassword(credentials: any) {
+    return apiRequest("/auth/reset-password", {
+      method: "POST",
+      data: credentials,
+    });
   },
 };
