@@ -33,7 +33,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login({ email: email.trim(), password });
-      router.push("/main/blogs");
+      router.push("/profile");
     } catch (submitError) {
       setError(
         submitError instanceof Error
