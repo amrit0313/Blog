@@ -15,7 +15,7 @@ export async function sendResetMail(
     const { data, error } = await resend.emails.send({
       from: "onboarding@resend.dev",
       to: userEmail,
-      subject: `Welcome to our app, ${name}!`,
+      subject: `Reset you password, ${name}!`,
       html: `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; color: #333;">
     <h2 style="color: #dc2626; margin-bottom: 16px;">

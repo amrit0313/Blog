@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import authRoutes from "./module/auth/auth.route";
 import blogRoutes from "./module/blog/blog.route";
 import profileRoutes from "./module/profile/profile.route";
@@ -8,10 +9,16 @@ import categoryRoutes from "./module/categories/category.routes";
 import { connectDB } from "./config/db";
 import errorHandler from "./services/errorHandler";
 import path from "path";
+const PORT = 5000;
 
 const app = express();
-const PORT = 5000;
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);

@@ -25,7 +25,19 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
+
+let refreshPromise: Promise<string | null> | null = null;
+
+function tokenExpiresSoon(token: string) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1])) as { exp?: number };
+    return Boolean(payload.exp && payload.exp * 1000 - Date.now() <= 30_000);
+  } catch {
+    return false;
+  }
+}
 
 function getApiBaseUrl() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -47,6 +59,74 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+async function refreshAccessToken() {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post<{ token?: string }>(`${getApiBaseUrl()}/auth/refresh`, undefined, {
+        withCredentials: true,
+      })
+      .then((response) => {
+        if (!response.data.token) return null;
+        storeToken(response.data.token);
+        return response.data.token;
+      })
+      .catch(() => {
+        clearStoredToken();
+        return null;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+
+api.interceptors.request.use(async (config) => {
+  const token = getStoredToken();
+  const isRefreshRequest = config.url?.endsWith("/auth/refresh");
+
+  if (token && !isRefreshRequest && tokenExpiresSoon(token)) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      config.headers.set("Authorization", `Bearer ${refreshedToken}`);
+    }
+  }
+
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config as
+      | (AxiosRequestConfig & { _retry?: boolean })
+      | undefined;
+    const isRefreshRequest = originalRequest?.url?.endsWith("/auth/refresh");
+
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isRefreshRequest &&
+      getStoredToken()
+    ) {
+      originalRequest._retry = true;
+      const refreshedToken = await refreshAccessToken();
+
+      if (refreshedToken) {
+        originalRequest.headers = {
+          ...originalRequest.headers,
+          Authorization: `Bearer ${refreshedToken}`,
+        };
+        return api.request(originalRequest);
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export function getStoredToken() {
   if (typeof window === "undefined") return null;
