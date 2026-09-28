@@ -16,8 +16,9 @@ export default async function BlogsPage({
 
   try {
     const response = await blogApi.list({ page: currentPage, limit });
-    console.log(response)
+    console.log(response);
     blogs = response.result;
+    console.log(blogs);
     totalPages = response.meta.totalPages;
   } catch (error) {
     console.error("Failed to load blogs:", error);
