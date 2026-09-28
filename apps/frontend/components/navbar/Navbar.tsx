@@ -107,7 +107,7 @@ export default function Navbar() {
             className="hidden items-center gap-3 text-sm font-medium lg:flex"
             aria-label="Primary navigation"
           >
-            <Link href="/main/blogs" className="hover:text-primary">
+            <Link href="/blogs" className="hover:text-primary">
               Explore
             </Link>
             <Button
@@ -165,14 +165,14 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/main/blogs"
+              href="/blogs"
               onClick={closeMenu}
               className="rounded-md px-3 py-3 hover:bg-secondary hover:text-primary"
             >
               Explore
             </Link>
             <Link
-              href="/main/blogs/create"
+              href="/blogs/create"
               onClick={closeMenu}
               className="rounded-md px-3 py-3 hover:bg-secondary hover:text-primary"
             >
@@ -203,7 +203,7 @@ export default function Navbar() {
             aria-label="Mobile navigation"
           >
             <Link
-              href="/main/blogs"
+              href="/blogs"
               onClick={closeMenu}
               className="rounded-md px-3 py-3 hover:bg-secondary hover:text-primary"
             >

@@ -25,9 +25,14 @@ router.post(
   bodyValidator(CreateBlogValidation),
   createBlog,
 );
-router.get("/:id", authenticateToken,  BlogDetailById);
+router.get("/:id", authenticateToken, BlogDetailById);
 router.get("/slug/:slug", BlogDetailBySlug);
-router.put("/:id", authenticateToken,upload.single("image"), BlogUpdateById);
+router.put(
+  "/:id",
+  authenticateToken,
+  blogUpload.single("image"),
+  BlogUpdateById,
+);
 router.delete("/:id", authenticateToken, BlogDeleteById);
 router.patch(
   "/:id/unpublish",

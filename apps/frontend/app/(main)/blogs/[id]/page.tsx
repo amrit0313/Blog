@@ -41,7 +41,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   }, [params]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || authLoading) return;
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const fetchBlog = async () => {
       try {
@@ -60,7 +65,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     };
 
     fetchBlog();
-  }, [id]);
+  }, [id, authLoading, user]);
 
   const isAuthor = user && blog && user.id === blog.author?._id;
 
@@ -82,6 +87,24 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-bold text-foreground">
+            Sign in to read this story
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Log in to access the full blog details and join the conversation.
+          </p>
+          <Link href="/login" className="mt-6 inline-block">
+            <Button>Log in to continue</Button>
+          </Link>
+        </div>
       </div>
     );
   }

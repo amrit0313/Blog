@@ -9,8 +9,8 @@ import { nextTick } from "node:process";
 
 const addUser = async (req: Request, res: Response) => {
   try {
-    const { JWT_SECRET } = getEnvConfig();
-    if (!JWT_SECRET) {
+    const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
+    if (!JWT_SECRET || !REFRESH_SECRET) {
       return res.status(500).json({ message: "JWT secret is not configured" });
     }
     const { name, email, password } = req.body;
@@ -33,7 +33,16 @@ const addUser = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
     };
-    const token = jwt.sign(payload, JWT_SECRET);
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
+    const refresh = jwt.sign(user._id, REFRESH_SECRET, { expiresIn: "7d" });
+    res.cookie("refreshToken", refresh, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/auth/refresh",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res
       .status(201)
       .json({ message: "user created successfully", payload, token });
@@ -45,8 +54,8 @@ const addUser = async (req: Request, res: Response) => {
 
 const loginUser = async (req: Request, res: Response) => {
   try {
-    const { JWT_SECRET } = getEnvConfig();
-    if (!JWT_SECRET) {
+    const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
+    if (!JWT_SECRET || !REFRESH_SECRET) {
       return res.status(500).json({ message: "JWT secret is not configured" });
     }
     const { email, password } = req.body;
@@ -69,7 +78,20 @@ const loginUser = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
     };
-    const token = jwt.sign(payload, JWT_SECRET);
+    const userid = payload.id
+    console.log("1", payload);
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
+    const refresh = jwt.sign({userid}, REFRESH_SECRET, { expiresIn: "7d" });
+    console.log("2", payload);
+
+    res.cookie("refreshToken", refresh, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/auth/refresh",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res
       .status(200)
       .json({ message: "Logged in successfully", payload, token });
@@ -147,4 +169,47 @@ const resetPassword = async (
   }
 };
 
-export { addUser, loginUser, getCurrentUser, forgetPassword, resetPassword };
+const refresh = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
+  const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "Token not provided" });
+  }
+
+  if (!REFRESH_SECRET) {
+    return res.status(401).json({ message: "Server error" });
+  }
+
+  const payload = jwt.verify(refreshToken, REFRESH_SECRET);
+  const user = await User.findById(payload);
+  if (!user) return res.status(401).json({ message: "User not found" });
+  const userData = {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+  const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
+  const refresh = jwt.sign(userData.id, REFRESH_SECRET, { expiresIn: "7d" });
+  res.cookie("refreshToken", refresh, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/auth/refresh",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.json({
+    token,
+  });
+};
+
+export {
+  addUser,
+  loginUser,
+  getCurrentUser,
+  forgetPassword,
+  resetPassword,
+  refresh,
+};
