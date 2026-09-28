@@ -5,6 +5,7 @@ import blogRoutes from "./module/blog/blog.route";
 import profileRoutes from "./module/profile/profile.route";
 import adminRoutes from "./module/admin/admin.route";
 import categoryRoutes from "./module/categories/category.routes";
+import userRoutes from "./module/user/user.route";
 import { connectDB } from "./config/db";
 import errorHandler from "./services/errorHandler"
 
@@ -12,16 +13,14 @@ const app = express();
 const PORT = 5000;
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
 app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/uploads", express.static("uploads"));
-app.use(express.urlencoded({ extended: true })); 
-app.use("/api/auth", authRoutes);
-app.use("/api/blog", blogRoutes);
-app.use("/api/category",categoryRoutes)
-
+app.use("/api/user", userRoutes)
+app.use("/api/category", categoryRoutes);
 
 
 app.use(errorHandler);

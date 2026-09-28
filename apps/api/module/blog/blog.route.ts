@@ -17,6 +17,7 @@ import { upload } from "../../middlewares/fileupload.middleware";
 const router = express.Router();
 
 router.get("", ListAllBlogs);
+
 router.get("/me", authenticateToken, GetMyBlogs);
 router.post("/create",authenticateToken,upload.single("image"),bodyValidator(CreateBlogValidation),createBlog);
 router.get("/:id", BlogDetailById);

@@ -43,7 +43,7 @@ export default async function BlogsPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+
       <div className="relative overflow-hidden border-b border-border">
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8 lg:py-8">
           <h1 className="mt-4 text-4xl font-bold tracking-tight text-center text-primary sm:text-5xl">

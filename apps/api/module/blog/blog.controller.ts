@@ -126,7 +126,6 @@ const ListAllBlogs = async (
     if (req.query.search) {
       filter.title = new RegExp(String(req.query.search), "i");
     }
-
     if (req.user) {
       filter.$or = [
         { status: "published" },
@@ -333,6 +332,49 @@ const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const AdminListAllBlogs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = {};
+
+    if (req.query.search) {
+      filter.title = new RegExp(String(req.query.search), "i");
+    }
+  
+
+    const count = await blog.countDocuments(filter);
+
+    const data = await blog
+      .find(filter)
+      .populate("author", ["_id", "name", "email"])
+      .populate("category", ["_id", "title"])
+      .sort({ _id: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    res.status(200).json({
+      result: data,
+      message: "Blogs fetched",
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalBlogs: count,
+        limit,
+      },
+    });
+  } catch (exception) {
+    next(exception);
+  }
+};
+
+
 export {
   createBlog,
   BlogDetailById,
@@ -343,4 +385,5 @@ export {
   UnpublishBlogById,
   BlogDeleteById,
   GetMyBlogs,
+  AdminListAllBlogs
 };
