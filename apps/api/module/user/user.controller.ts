@@ -67,7 +67,7 @@ const deleteUser = async (req: Request, res: Response) => {
     if (deleteUser){
         return res.status(200).json({ message: "User deleted successfully" });
 
-  }return res.status(400).json({ message: "Couldn't delete user outif" });
+  }return res.status(400).json({ message: "Couldn't delete user " });
   } catch (err) {
     return res.status(500).json({ message: "Internal server error" });
   }

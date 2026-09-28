@@ -34,8 +34,11 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      await login({ email: email.trim(), password });
-      router.push("/profile");
+      const user = await login({ email: email.trim(), password });
+      if (user.role === "admin") {
+        router.push("/admin");
+      } else router.push("/profile")
+      console.log(user.role);
     } catch (submitError) {
       toast.error(getErrorMessage(submitError, "Unable to log in."));
     } finally {

@@ -1,20 +1,66 @@
 // app/admin/blogs/page.tsx
 "use client";
 import { useEffect, useState } from "react";
-import { Box, Button, Chip, Typography } from "@mui/material";
+import { useRouter } from "next/navigation";
+import {
+  Box, Button, Chip, Typography,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+} from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { toast } from "sonner";
 import { blogApi, type Blog } from "../../../lib/blog";
+import { adminApi } from "../../../lib/admin";
 
 export default function AdminBlogsPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<Blog[]>([]);
   const [rowCount, setRowCount] = useState(0);
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize:10 });
   const [loading, setLoading] = useState(true);
+  const [unpublishTarget, setUnpublishTarget] = useState<Blog | null>(null);
+  const [unpublishing, setUnpublishing] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Blog | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleConfirmUnpublish() {
+    if (!unpublishTarget) return;
+    setUnpublishing(true);
+    try {
+      await adminApi.unpublishBlog(unpublishTarget._id);
+      toast.success("Blog unpublished");
+      setRows((prev) =>
+        prev.map((b) =>
+          b._id === unpublishTarget._id ? { ...b, status: "unpublished" } : b
+        )
+      );
+      setUnpublishTarget(null);
+    } catch {
+      toast.error("Failed to unpublish blog.");
+    } finally {
+      setUnpublishing(false);
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await adminApi.deleteBlog(deleteTarget._id);
+      toast.success("Blog deleted");
+      setRows((prev) => prev.filter((b) => b._id !== deleteTarget._id));
+      setRowCount((prev) => prev - 1);
+      setDeleteTarget(null);
+    } catch {
+      toast.error("Failed to delete blog.");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     setLoading(true);
-    blogApi
-      .list({ page: paginationModel.page + 1, limit: paginationModel.pageSize })
+    adminApi
+      .listAllBlogs({ page: paginationModel.page + 1, limit: paginationModel.pageSize })
       .then((res) => {
         setRows(res.result);
         setRowCount(res.meta.totalBlogs);
@@ -39,10 +85,14 @@ export default function AdminBlogsPage() {
       field: "actions", headerName: "Actions", width: 200, sortable: false,
       renderCell: (p) => (
         <Box sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}>
-          <Button size="small" href={`/dashboard/blogs/${p.row._id}/edit`}>Edit</Button>
-          <Button size="small" color="error" onClick={() => console.log("delete", p.row._id)}>
-            Delete
+          <Button
+            size="small"
+            disabled={p.row.status !== "published"}
+            onClick={() => setUnpublishTarget(p.row)}
+          >
+            Unpublish
           </Button>
+          <Button size="small" color="error" onClick={() => setDeleteTarget(p.row)}>Delete</Button>
         </Box>
       ),
     },
@@ -62,8 +112,62 @@ export default function AdminBlogsPage() {
         onPaginationModelChange={setPaginationModel}
         pageSizeOptions={[10, 20]}
         disableRowSelectionOnClick
-        sx={{ bgcolor: "background.paper" }}
+        onRowClick={(params) => router.push(`/admin/blogs/${params.id}`)}
+        sx={{
+          bgcolor: "background.paper",
+          "& .MuiDataGrid-row": { cursor: "pointer" },
+        }}
       />
+
+      <Dialog
+        open={Boolean(unpublishTarget)}
+        onClose={() => setUnpublishTarget(null)}
+      >
+        <DialogTitle>Unpublish Blog</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to unpublish this blog?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setUnpublishTarget(null)} disabled={unpublishing}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmUnpublish}
+            color="error"
+            variant="contained"
+            disabled={unpublishing}
+          >
+            {unpublishing ? "Unpublishing..." : "Yes, Unpublish"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+      >
+        <DialogTitle>Delete Blog</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this blog?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
+            variant="contained"
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Yes, Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

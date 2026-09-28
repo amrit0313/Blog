@@ -17,6 +17,8 @@ const deleteBlogs = async (req: Request, res: Response) => {
   }
 };
 
+
+
 const addAnotherAdmin = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -38,5 +40,6 @@ const addAnotherAdmin = async (req: Request, res: Response) => {
       .json({ message: "Server error", error: err.message });
   }
 };
+
 
 export { deleteBlogs, addAnotherAdmin };
