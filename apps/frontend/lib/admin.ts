@@ -75,8 +75,15 @@ export const adminApi = {
   },
 
 
-  deleteUser() {
-    return apiRequest<{ message: string }>("/user", { method: "DELETE" });
+  deleteUser(id: string) {
+    return apiRequest<{ message: string }>(`/admin/user/${id}`, { method: "DELETE" });
+  },
+
+  createUser(data: { name: string; email: string; password: string; role: "admin" | "user" }) {
+    return apiRequest<{ message: string; user: AdminUser }>("/admin/user/create", {
+      method: "POST",
+      data,
+    });
   },
 
 

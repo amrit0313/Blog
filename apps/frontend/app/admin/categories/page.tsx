@@ -2,13 +2,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  Box, Button, Chip, Typography, CircularProgress,
+  Box, Button, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, List, ListItem, ListItemText, ListItemSecondaryAction,
-  IconButton,
+  TextField,
 } from "@mui/material";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { toast } from "sonner";
 import { adminApi, type AdminCategory } from "../../../lib/admin";
 
@@ -64,9 +63,48 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  const columns: GridColDef<AdminCategory>[] = [
+    { field: "title", headerName: "Title", flex: 1, minWidth: 200 },
+    {
+      field: "createdAt",
+      headerName: "Created",
+      width: 160,
+      valueFormatter: (v) => (v ? new Date(v).toLocaleDateString() : "—"),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 140,
+      sortable: false,
+      renderCell: (p) => (
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}>
+          <Button
+            size="small"
+            color="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteTarget(p.row);
+            }}
+          >
+            Delete
+          </Button>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+          width: "70%",
+          mx: "auto",
+        }}
+      >
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           Categories
         </Typography>
@@ -79,38 +117,18 @@ export default function AdminCategoriesPage() {
         </Button>
       </Box>
 
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : categories.length === 0 ? (
-        <Typography color="text.secondary">No categories yet.</Typography>
-      ) : (
-        <List sx={{ bgcolor: "background.paper", borderRadius: 1 }}>
-          {categories.map((cat) => (
-            <ListItem
-              key={cat._id}
-              secondaryAction={
-                <IconButton
-                  edge="end"
-                  color="error"
-                  onClick={() => setDeleteTarget(cat)}
-                  aria-label={`Delete ${cat.title}`}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              }
-            >
-              <ListItemText
-                primary={cat.title}
-                secondary={cat.createdAt ? `Created ${new Date(cat.createdAt).toLocaleDateString()}` : undefined}
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
+      <DataGrid
+        rows={categories}
+        columns={columns}
+        getRowId={(r) => r._id}
+        loading={loading}
+        pageSizeOptions={[5, 10]}
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        disableRowSelectionOnClick
+        sx={{ bgcolor: "background.paper", width: "70%", Height: 200, margin: "auto" }}
+      />
 
-      {/* Add Category Dialog */}
+
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Add Category</DialogTitle>
         <DialogContent>
@@ -120,7 +138,9 @@ export default function AdminCategoriesPage() {
             fullWidth
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCreate();
+            }}
             sx={{ mt: 1 }}
           />
         </DialogContent>
@@ -139,10 +159,7 @@ export default function AdminCategoriesPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
-      >
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
         <DialogTitle>Delete Category</DialogTitle>
         <DialogContent>
           <Typography>

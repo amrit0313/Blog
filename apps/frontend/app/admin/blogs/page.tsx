@@ -88,11 +88,23 @@ export default function AdminBlogsPage() {
           <Button
             size="small"
             disabled={p.row.status !== "published"}
-            onClick={() => setUnpublishTarget(p.row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setUnpublishTarget(p.row);
+            }}
           >
             Unpublish
           </Button>
-          <Button size="small" color="error" onClick={() => setDeleteTarget(p.row)}>Delete</Button>
+          <Button
+            size="small"
+            color="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteTarget(p.row);
+            }}
+          >
+            Delete
+          </Button>
         </Box>
       ),
     },

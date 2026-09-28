@@ -42,4 +42,23 @@ const addAnotherAdmin = async (req: Request, res: Response) => {
 };
 
 
-export { deleteBlogs, addAnotherAdmin };
+const deleteUser = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user.role === "admin") {
+      return res.status(400).json({ message: "Cannot delete an admin user" });
+    }
+    await User.findByIdAndDelete(id);
+    return res.status(200).json({ message: "User deleted successfully" });
+  } catch (err: any) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+export { deleteBlogs, addAnotherAdmin, deleteUser };
