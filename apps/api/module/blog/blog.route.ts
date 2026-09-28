@@ -27,7 +27,7 @@ router.post(
 );
 router.get("/:id", authenticateToken,  BlogDetailById);
 router.get("/slug/:slug", BlogDetailBySlug);
-router.put("/:id", authenticateToken, BlogUpdateById);
+router.put("/:id", authenticateToken,upload.single("image"), BlogUpdateById);
 router.delete("/:id", authenticateToken, BlogDeleteById);
 router.patch(
   "/:id/unpublish",

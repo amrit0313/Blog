@@ -8,7 +8,7 @@ export default async function BlogsPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const { page: pageParam } = await searchParams;
-  const limit = 9;
+  const limit = 7;
   const currentPage = Math.max(1, Number(pageParam) || 1);
 
   let blogs: Blog[];
