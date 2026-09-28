@@ -20,3 +20,17 @@ export interface LoginCredentials {
 export interface RegisterCredentials extends LoginCredentials {
   name: string;
 }
+
+export interface ForgotPasswordCredentials {
+  email: string;
+}
+
+export interface ResetPasswordCredentials {
+  email: string;
+  password: string;
+  token: string;
+}
+
+export interface MessageResponse {
+  message?: string;
+}

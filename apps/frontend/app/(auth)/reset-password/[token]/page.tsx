@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Button from "../../../../components/ui/Button";
+import Navbar from "../../../../components/navbar/Navbar";
+import { authApi } from "../../../../lib/api";
+import { getErrorMessage } from "../../../../lib/toast";
 import { toast } from "sonner";
-import Button from "../../../components/ui/Button";
-import Navbar from "../../../components/navbar/Navbar";
-import { useAuth } from "../../../context/AuthContext";
-import { getErrorMessage } from "../../../lib/toast";
 
-export default function RegisterPage() {
+export default function ResetPasswordPage() {
   const router = useRouter();
-  const { register } = useAuth();
-  const [name, setName] = useState("");
+  const { token } = useParams<{ token: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,8 +22,8 @@ export default function RegisterPage() {
     event.preventDefault();
     setError("");
 
-    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
-      setError("Complete all fields to create your account.");
+    if (!email.trim() || !password || !confirmPassword) {
+      setError("Complete all fields to reset your password.");
       return;
     }
 
@@ -40,15 +39,16 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await register({
-        name: name.trim(),
+      const response = await authApi.resetPassword({
         email: email.trim(),
         password,
+        token,
       });
-      router.push("/blogs");
+      toast.success(response?.message ?? "Password reset successfully.");
+      router.push("/login?reset=success");
     } catch (submitError) {
       toast.error(
-        getErrorMessage(submitError, "Unable to create your account."),
+        getErrorMessage(submitError, "Unable to reset your password."),
       );
     } finally {
       setIsSubmitting(false);
@@ -61,10 +61,10 @@ export default function RegisterPage() {
       <main className="flex min-h-full flex-1 items-center justify-center px-6 py-12 sm:py-20">
         <section className="w-full max-w-md">
           <div className="mb-8 text-center">
-            <p className="eyebrow">Join the community</p>
-            <h1 className="mt-3 text-3xl">Create your account</h1>
+            <p className="eyebrow">Account security</p>
+            <h1 className="mt-3 text-3xl">Reset your password</h1>
             <p className="mt-3">
-              Join the community and start sharing your stories.
+              Create a new password to get back to your stories.
             </p>
           </div>
 
@@ -73,27 +73,6 @@ export default function RegisterPage() {
             className="card space-y-5 p-6 sm:p-8"
             noValidate
           >
-            <div>
-              <label
-                htmlFor="name"
-                className="mb-2 block text-sm font-semibold text-foreground"
-              >
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Your name"
-                autoComplete="name"
-                aria-invalid={Boolean(error)}
-                className="w-full px-3 py-3"
-                required
-              />
-            </div>
-
             <div>
               <label
                 htmlFor="email"
@@ -109,7 +88,6 @@ export default function RegisterPage() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
-                aria-invalid={Boolean(error)}
                 className="w-full px-3 py-3"
                 required
               />
@@ -120,7 +98,7 @@ export default function RegisterPage() {
                 htmlFor="password"
                 className="mb-2 block text-sm font-semibold text-foreground"
               >
-                Password
+                New password
               </label>
               <input
                 id="password"
@@ -128,9 +106,8 @@ export default function RegisterPage() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="Create a password"
+                placeholder="Create a new password"
                 autoComplete="new-password"
-                aria-invalid={Boolean(error)}
                 className="w-full px-3 py-3"
                 required
               />
@@ -141,7 +118,7 @@ export default function RegisterPage() {
                 htmlFor="confirm-password"
                 className="mb-2 block text-sm font-semibold text-foreground"
               >
-                Confirm Password
+                Confirm password
               </label>
               <input
                 id="confirm-password"
@@ -149,9 +126,8 @@ export default function RegisterPage() {
                 type="password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Confirm your password"
+                placeholder="Confirm your new password"
                 autoComplete="new-password"
-                aria-invalid={Boolean(error)}
                 className="w-full px-3 py-3"
                 required
               />
@@ -171,12 +147,12 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               className="w-full rounded-md px-4 py-3 font-semibold shadow-sm"
             >
-              {isSubmitting ? "Creating account..." : "Create Account"}
+              {isSubmitting ? "Resetting password..." : "Reset password"}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm">
-            Already have an account?{" "}
+            Remembered your password?{" "}
             <Link
               href="/login"
               className="font-semibold no-underline hover:underline"

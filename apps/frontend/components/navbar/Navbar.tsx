@@ -3,27 +3,18 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Button from "../ui/Button";
+import Avatar from "../avatar";
 import { useAuth } from "../../context/AuthContext";
 import { profileApi } from "../../lib/profile";
 import Image from "next/image";
 import NepalCanLogo from "../../public/navbar-logo-short-v3 (1).png";
-import { FaCircleUser } from "react-icons/fa6";
-
-function getAvatarUrl(avatar?: string) {
-  if (!avatar) return null;
-  if (/^https?:\/\//i.test(avatar)) return avatar;
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) return null;
-  return `${apiUrl.replace(/\/api\/?$/, "")}/uploads/profiles/${avatar}`;
-}
 
 export default function Navbar() {
   const { isLoading, user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [avatar, setAvatar] = useState<{
     userId: string;
-    url: string | null;
+    value: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -36,12 +27,12 @@ export default function Navbar() {
         if (!cancelled) {
           setAvatar({
             userId: user.id,
-            url: getAvatarUrl(response.profile?.avatar),
+            value: response.profile?.avatar ?? null,
           });
         }
       })
       .catch(() => {
-        if (!cancelled) setAvatar({ userId: user.id, url: null });
+        if (!cancelled) setAvatar({ userId: user.id, value: null });
       });
 
     return () => {
@@ -49,7 +40,8 @@ export default function Navbar() {
     };
   }, [user?.id]);
 
-  const avatarUrl = avatar?.userId === user?.id ? (avatar?.url ?? null) : null;
+  const avatarSource =
+    avatar?.userId === user?.id ? (avatar?.value ?? null) : null;
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -101,16 +93,12 @@ export default function Navbar() {
                 Logout
               </Button>
               <Link href="/profile" aria-label="View profile">
-                {avatarUrl ? (
-                  <span
-                    className="block h-7 w-7 rounded-full border bg-cover bg-center"
-                    style={{ backgroundImage: `url(${avatarUrl})` }}
-                    role="img"
-                    aria-label="Profile avatar"
-                  />
-                ) : (
-                  <FaCircleUser className="h-6 w-6" aria-hidden="true" />
-                )}
+                <Avatar
+                  src={avatarSource}
+                  name={user.name}
+                  fallback="icon"
+                  className="h-7 w-7"
+                />
               </Link>
             </div>
           </nav>

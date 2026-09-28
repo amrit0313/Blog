@@ -1,8 +1,11 @@
 import axios, { AxiosRequestConfig } from "axios";
 import type {
   AuthResponse,
+  ForgotPasswordCredentials,
   LoginCredentials,
+  MessageResponse,
   RegisterCredentials,
+  ResetPasswordCredentials,
 } from "../types/auth";
 
 export const TOKEN_STORAGE_KEY = "nepalcanblog_token";
@@ -117,9 +120,22 @@ export const authApi = {
       data: credentials,
     });
   },
-
   // The current Express API exposes the authenticated-user check as POST /auth/me.
   currentUser() {
     return apiRequest<AuthResponse>("/auth/me", { method: "POST" });
+  },
+
+  forgotPassword(credentials: ForgotPasswordCredentials) {
+    return apiRequest<MessageResponse>("/auth/forgot-password", {
+      method: "POST",
+      data: credentials,
+    });
+  },
+
+  resetPassword(credentials: ResetPasswordCredentials) {
+    return apiRequest<MessageResponse>("/auth/reset-password", {
+      method: "POST",
+      data: credentials,
+    });
   },
 };

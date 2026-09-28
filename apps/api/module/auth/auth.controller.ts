@@ -1,8 +1,11 @@
 import { User } from "../user/user.model";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getEnvConfig } from "../../config/env.config";
+import { sendResetMail } from "../../services/email.service";
+import crypto from "node:crypto";
+import { nextTick } from "node:process";
 
 const addUser = async (req: Request, res: Response) => {
   try {
@@ -87,4 +90,61 @@ const getCurrentUser = (req: Request, res: Response) => {
   }
 };
 
-export { addUser, loginUser, getCurrentUser };
+const forgetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "No email provided" });
+    const user = await User.findOne({ email });
+    if (!user)
+      return res
+        .status(200)
+        .json({ message: "If user exists, reset link was sent" });
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = await bcrypt.hash(token, 10);
+    user.hashedToken = hashedToken;
+    user.save();
+
+    sendResetMail(email, user.name, token);
+    return res.status(200).json({
+      message: "If user exists, reset link has been successfully sent!",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { password, token, email } = req.body;
+    if (!password || !token || !email) {
+      return res
+        .status(400)
+        .json({ message: "Necessary data wasn't provided" });
+    }
+    const user = await User.findOne({ email });
+    if (!user?.hashedToken)
+      return res.status(400).json({ message: "Token not found" });
+    const isVerified = await bcrypt.compare(token, user.hashedToken);
+    if (!isVerified) {
+      return res.status(400).json({ message: "Token didn't match" });
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    user.passwordHash = passwordHash;
+    await user.save();
+    return res
+      .status(200)
+      .json({ message: "Password has been reset successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export { addUser, loginUser, getCurrentUser, forgetPassword, resetPassword };

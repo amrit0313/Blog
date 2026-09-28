@@ -8,6 +8,8 @@ import Footer from "../../../../components/footer/Footer";
 import Navbar from "../../../../components/navbar/Navbar";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileApi, ProfileData } from "../../../../lib/profile";
+import { getErrorMessage } from "../../../../lib/toast";
+import { toast } from "sonner";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -66,11 +68,12 @@ export default function EditProfilePage() {
     if (avatar) formData.append("avatar", avatar);
 
     try {
-      await profileApi.update(formData);
+      const response = await profileApi.update(formData);
+      toast.success(response.message ?? "Profile updated successfully.");
       router.push("/profile");
-    } catch {
-      setError(
-        "Unable to save your profile. Please check your details and try again.",
+    } catch (submitError) {
+      toast.error(
+        getErrorMessage(submitError, "Unable to update your profile."),
       );
     } finally {
       setIsSaving(false);

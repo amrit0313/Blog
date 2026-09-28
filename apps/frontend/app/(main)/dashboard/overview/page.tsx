@@ -14,6 +14,17 @@ import Table, {
   TableCell,
 } from "../../../../components/dashboard/table";
 import Modal from "../../../../components/dashboard/modal";
+import { getErrorMessage } from "../../../../lib/toast";
+import { toast } from "sonner";
+import {
+  getBlogs,
+  getUsers,
+  deleteBlog,
+  updateBlog,
+  type Blog,
+  type User,
+} from "../../../../lib/blog";
+
 import { blogApi, type Blog } from "../../../../lib/blog";
 //import { userApi, type User } from "../../../../lib/profile";
 type FilterTab = "all" | "published" | "draft";
@@ -44,7 +55,11 @@ export default function OverviewPage() {
 
         // Filter blogs by current user
         if (currentUser) {
-          setBlogs(blogsData.blogs.filter((blog) => blog.author?._id === currentUser._id));
+          setBlogs(
+            blogsData.blogs.filter(
+              (blog) => blog.author?._id === currentUser._id,
+            ),
+          );
         } else {
           setBlogs(blogsData.blogs);
         }
@@ -75,7 +90,9 @@ export default function OverviewPage() {
       activeTab === "all" ||
       (activeTab === "published" && blog.status === "published") ||
       (activeTab === "draft" && blog.status === "draft");
-    const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = blog.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
@@ -90,12 +107,13 @@ export default function OverviewPage() {
     if (!selectedBlog) return;
     setActionLoading(true);
     try {
-      await deleteBlog(selectedBlog._id);
+      const response = await deleteBlog(selectedBlog._id);
       setBlogs((prev) => prev.filter((b) => b._id !== selectedBlog._id));
       setDeleteModalOpen(false);
       setSelectedBlog(null);
+      toast.success(response.message ?? "Blog deleted successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete blog");
+      toast.error(getErrorMessage(err, "Unable to delete the blog."));
     } finally {
       setActionLoading(false);
     }
@@ -104,15 +122,17 @@ export default function OverviewPage() {
   const handleToggleStatus = async (blog: Blog) => {
     setActionLoading(true);
     try {
-      const newStatus = blog.status === "published" ? "unpublished" : "published";
+      const newStatus =
+        blog.status === "published" ? "unpublished" : "published";
       const formData = new FormData();
       formData.append("status", newStatus);
       const res = await updateBlog(blog._id, formData);
       setBlogs((prev) =>
-        prev.map((b) => (b._id === blog._id ? res.result : b))
+        prev.map((b) => (b._id === blog._id ? res.result : b)),
       );
+      toast.success(res.message ?? "Blog updated successfully.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update blog");
+      toast.error(getErrorMessage(err, "Unable to update the blog."));
     } finally {
       setActionLoading(false);
     }
@@ -166,19 +186,27 @@ export default function OverviewPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card padding="md">
           <p className="text-sm text-muted-foreground">Total Blogs</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{stats.total}</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">
+            {stats.total}
+          </p>
         </Card>
         <Card padding="md">
           <p className="text-sm text-muted-foreground">Published</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">{stats.published}</p>
+          <p className="mt-1 text-2xl font-bold text-green-600">
+            {stats.published}
+          </p>
         </Card>
         <Card padding="md">
           <p className="text-sm text-muted-foreground">Drafts</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-600">{stats.drafts}</p>
+          <p className="mt-1 text-2xl font-bold text-yellow-600">
+            {stats.drafts}
+          </p>
         </Card>
         <Card padding="md">
           <p className="text-sm text-muted-foreground">Member Since</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{stats.memberSince}</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">
+            {stats.memberSince}
+          </p>
         </Card>
       </div>
 
@@ -187,7 +215,9 @@ export default function OverviewPage() {
         <Card padding="md" className="bg-primary/5 border-primary/20">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-foreground">Continue where you left off</p>
+              <p className="font-medium text-foreground">
+                Continue where you left off
+              </p>
               <p className="text-sm text-muted-foreground">
                 You have a draft: &quot;{firstDraft.title}&quot;
               </p>
@@ -243,7 +273,10 @@ export default function OverviewPage() {
           <TableBody>
             {filteredBlogs.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-8 text-muted-foreground"
+                >
                   No blogs found.
                 </TableCell>
               </TableRow>
@@ -272,8 +305,8 @@ export default function OverviewPage() {
                         blog.status === "published"
                           ? "success"
                           : blog.status === "draft"
-                          ? "warning"
-                          : "default"
+                            ? "warning"
+                            : "default"
                       }
                     >
                       {blog.status}
@@ -358,14 +391,19 @@ export default function OverviewPage() {
             <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={confirmDelete} disabled={actionLoading}>
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+              disabled={actionLoading}
+            >
               {actionLoading ? "Deleting..." : "Delete"}
             </Button>
           </>
         }
       >
         <p className="text-muted-foreground">
-          Are you sure you want to delete &quot;{selectedBlog?.title}&quot;? This action cannot be undone.
+          Are you sure you want to delete &quot;{selectedBlog?.title}&quot;?
+          This action cannot be undone.
         </p>
       </Modal>
     </div>
