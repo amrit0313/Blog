@@ -12,7 +12,7 @@ import {
   UnpublishBlogById,
 } from "./blog.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
-import { upload } from "../../middlewares/fileupload.middleware";
+import { blogUpload } from "../../middlewares/fileupload.middleware";
 
 const router = express.Router();
 
@@ -21,11 +21,11 @@ router.get("/me", authenticateToken, GetMyBlogs);
 router.post(
   "/create",
   authenticateToken,
-  upload.single("image"),
+  blogUpload.single("image"),
   bodyValidator(CreateBlogValidation),
   createBlog,
 );
-router.get("/:id", BlogDetailById);
+router.get("/:id", authenticateToken,  BlogDetailById);
 router.get("/slug/:slug", BlogDetailBySlug);
 router.put("/:id", authenticateToken, BlogUpdateById);
 router.delete("/:id", authenticateToken, BlogDeleteById);
