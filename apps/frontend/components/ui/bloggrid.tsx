@@ -68,7 +68,9 @@ export default function BlogGrid({
               <div className="flex flex-1 flex-col p-4">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <HiTag className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{blog.category?.title ?? "Uncategorized"}</span>
+                  <span className="truncate">
+                    {blog.category?.title ?? "Uncategorized"}
+                  </span>
                 </div>
                 <h2 className="mt-2 line-clamp-1 text-base font-semibold text-foreground group-hover:text-primary">
                   {blog.title}

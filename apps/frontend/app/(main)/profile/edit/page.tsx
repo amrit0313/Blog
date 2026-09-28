@@ -83,7 +83,6 @@ export default function EditProfilePage() {
   if (isAuthLoading || (!isAuthenticated && !error)) {
     return (
       <>
-        <Navbar />
         <main className="flex min-h-[60vh] flex-1 items-center justify-center px-6 py-16">
           <p>Loading your profile...</p>
         </main>
@@ -95,7 +94,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <Navbar />
+
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
         <div className="mb-8">
           <Link

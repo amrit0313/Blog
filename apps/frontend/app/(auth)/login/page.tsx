@@ -35,7 +35,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login({ email: email.trim(), password });
-      router.push("/blogs");
+      router.push("/profile");
     } catch (submitError) {
       toast.error(getErrorMessage(submitError, "Unable to log in."));
     } finally {

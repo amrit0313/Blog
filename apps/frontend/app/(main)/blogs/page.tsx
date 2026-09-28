@@ -16,6 +16,7 @@ export default async function BlogsPage({
 
   try {
     const response = await blogApi.list({ page: currentPage, limit });
+    console.log(response)
     blogs = response.result;
     totalPages = response.meta.totalPages;
   } catch (error) {
@@ -31,7 +32,9 @@ export default async function BlogsPage({
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground">Unable to load blogs</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Unable to load blogs
+          </h1>
           <p className="mt-2 text-muted-foreground">{message}</p>
         </div>
       </div>
@@ -43,12 +46,12 @@ export default async function BlogsPage({
       {/* Header */}
       <div className="relative overflow-hidden border-b border-border">
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8 lg:py-8">
-         
           <h1 className="mt-4 text-4xl font-bold tracking-tight text-center text-primary sm:text-5xl">
             Latest Articles
           </h1>
           <p className="mt-4  text-center  sm:text-lg">
-            Discover stories, insights, and updates from our community of writers.
+            Discover stories, insights, and updates from our community of
+            writers.
           </p>
 
           <div className="mt-8 flex items-center gap-6 text-sm text-center text-muted-foreground">
@@ -60,7 +63,9 @@ export default async function BlogsPage({
             </div>
             <span className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-foreground">{blogs.length}</span>
+              <span className="text-lg font-bold text-foreground">
+                {blogs.length}
+              </span>
               <span>on this page</span>
             </div>
           </div>

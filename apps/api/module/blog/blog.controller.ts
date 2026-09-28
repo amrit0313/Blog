@@ -232,9 +232,11 @@ const BlogUpdateById = async (
       data.slug = slugify(data.title);
     }
 
-    if (req.file) {
-      data.image = req.file.path;
-    }
+
+      if (req.file) {
+  data.image = `uploads/profiles/${req.file.filename}`; 
+}
+
 
     const BlogUpdate = await blog.findByIdAndUpdate(
       req.params.id,
