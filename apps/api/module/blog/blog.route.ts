@@ -12,17 +12,28 @@ import {
   UnpublishBlogById,
 } from "./blog.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
-import { upload } from "../../middlewares/fileupload.middleware";
+import { blogUpload } from "../../middlewares/fileupload.middleware";
 
 const router = express.Router();
 
 router.get("", ListAllBlogs);
 
 router.get("/me", authenticateToken, GetMyBlogs);
-router.post("/create",authenticateToken,upload.single("image"),bodyValidator(CreateBlogValidation),createBlog);
-router.get("/:id", BlogDetailById);
+router.post(
+  "/create",
+  authenticateToken,
+  blogUpload.single("image"),
+  bodyValidator(CreateBlogValidation),
+  createBlog,
+);
+router.get("/:id", authenticateToken, BlogDetailById);
 router.get("/slug/:slug", BlogDetailBySlug);
-router.put("/:id", authenticateToken,upload.single("image"), BlogUpdateById);
+router.put(
+  "/:id",
+  authenticateToken,
+  blogUpload.single("image"),
+  BlogUpdateById,
+);
 router.delete("/:id", authenticateToken, BlogDeleteById);
 router.patch(
   "/:id/unpublish",

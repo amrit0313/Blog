@@ -123,7 +123,6 @@ export default function ProfilePage() {
   if (isAuthLoading || (!isAuthenticated && !profileError)) {
     return (
       <>
-
         <main className="flex min-h-[60vh] flex-1 items-center justify-center px-6 py-16">
           <p>Loading your profile...</p>
         </main>
@@ -135,13 +134,14 @@ export default function ProfilePage() {
 
   const profileUser = profile?.user ?? user;
   const displayName = profileUser?.name ?? "Your profile";
+  const publishedBlogs = blogs.filter((blog) => blog.status === "published");
+  const drafts = blogs.filter((blog) => blog.status === "draft");
   const socialLinks = profile?.socialLinks
     ? Object.entries(profile.socialLinks).filter(([, value]) => Boolean(value))
     : [];
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
         <section className="card flex flex-col gap-6 p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
@@ -232,7 +232,7 @@ export default function ProfilePage() {
               <p className="eyebrow">Writing</p>
               <h2 className="mt-2 text-3xl">Your Blogs</h2>
             </div>
-            {!blogsLoading && !blogsError && blogs.length > 0 && (
+            {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
               <Button
                 href="/blogs/create"
                 className="rounded-md px-4 py-2 no-underline"
@@ -251,12 +251,31 @@ export default function ProfilePage() {
               {blogsError}
             </p>
           )}
-          {!blogsLoading && !blogsError && blogs.length === 0 && (
+          {!blogsLoading && !blogsError && (
+            <Link
+              href="/profile/drafts"
+              className="card mt-6 flex items-center justify-between gap-4 p-6 no-underline transition-colors hover:border-primary"
+            >
+              <div>
+                <p className="eyebrow">Private</p>
+                <h3 className="mt-2 text-2xl">Drafts</h3>
+                <p className="mt-2 text-muted-foreground">
+                  {drafts.length === 0
+                    ? "Your unfinished blogs will appear here."
+                    : `${drafts.length} unpublished ${drafts.length === 1 ? "blog" : "blogs"} waiting for you.`}
+                </p>
+              </div>
+              <span className="shrink-0 font-semibold text-primary">
+                Open drafts &rarr;
+              </span>
+            </Link>
+          )}
+          {!blogsLoading && !blogsError && publishedBlogs.length === 0 && (
             <div className="flex flex-col items-center gap-4 card mt-6 p-8 text-center sm:p-10">
-              <h3 className="text-2xl">No blogs yet</h3>
+              <h3 className="text-2xl">No published blogs yet</h3>
               <p className="mx-auto mt-3 max-w-md leading-7">
-                You haven&apos;t published any blogs yet. Start writing and
-                share your ideas with the community.
+                Publish a blog when you are ready to share your ideas with the
+                community.
               </p>
               <Button
                 href="/blogs/create"
@@ -266,9 +285,9 @@ export default function ProfilePage() {
               </Button>
             </div>
           )}
-          {!blogsLoading && !blogsError && blogs.length > 0 && (
+          {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
             <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {blogs.map((blog) => (
+              {publishedBlogs.map((blog) => (
                 <article key={blog._id} className="card flex flex-col p-6">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="text-xl leading-tight">{blog.title}</h3>
@@ -306,7 +325,6 @@ export default function ProfilePage() {
           )}
         </section>
       </main>
-
     </div>
   );
 }

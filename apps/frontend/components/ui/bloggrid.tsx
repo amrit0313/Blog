@@ -11,6 +11,8 @@ interface BlogGridProps {
   basePath: string;
 }
 
+
+
 export default function BlogGrid({
   blogs,
   currentPage,
@@ -40,7 +42,7 @@ export default function BlogGrid({
                 {blog.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={blog.image}
+                    src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
                     alt={blog.title}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />

@@ -60,7 +60,6 @@ const editUser = async (req: Request, res: Response) => {
 };
 
 const deleteUser = async (req: Request, res: Response) => {
-  console.log(req.user);
 
   try {
     const id = req.user?.id;
