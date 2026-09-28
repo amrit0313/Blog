@@ -18,16 +18,10 @@ const router = express.Router();
 
 router.get("", ListAllBlogs);
 router.get("/me", authenticateToken, GetMyBlogs);
-router.post(
-  "/create",
-  authenticateToken,
-  upload.single("image"),
-  bodyValidator(CreateBlogValidation),
-  createBlog,
-);
+router.post("/create",authenticateToken,upload.single("image"),bodyValidator(CreateBlogValidation),createBlog);
 router.get("/:id", BlogDetailById);
 router.get("/slug/:slug", BlogDetailBySlug);
-router.put("/:id", authenticateToken, BlogUpdateById);
+router.put("/:id", authenticateToken,upload.single("image"), BlogUpdateById);
 router.delete("/:id", authenticateToken, BlogDeleteById);
 router.patch(
   "/:id/unpublish",
