@@ -34,12 +34,17 @@ const addUser = async (req: Request, res: Response) => {
       role: user.role,
     };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
-    const refresh = jwt.sign(user._id, REFRESH_SECRET, { expiresIn: "7d" });
+    const refresh = jwt.sign(
+      { userId: payload.id.toString() },
+      REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
+
     res.cookie("refreshToken", refresh, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/auth/refresh",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -78,17 +83,17 @@ const loginUser = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
     };
-    const userid = payload.id
-    console.log("1", payload);
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
-    const refresh = jwt.sign({userid}, REFRESH_SECRET, { expiresIn: "7d" });
+    const refresh = jwt.sign({ userId: user._id.toString() }, REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
     console.log("2", payload);
 
     res.cookie("refreshToken", refresh, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      path: "/auth/refresh",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -181,8 +186,10 @@ const refresh = async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Server error" });
   }
 
-  const payload = jwt.verify(refreshToken, REFRESH_SECRET);
-  const user = await User.findById(payload);
+  const payload = jwt.verify(refreshToken, REFRESH_SECRET) as {
+    userId: string;
+  };
+  const user = await User.findById(payload.userId);
   if (!user) return res.status(401).json({ message: "User not found" });
   const userData = {
     id: user._id,
@@ -191,12 +198,14 @@ const refresh = async (req: Request, res: Response) => {
     role: user.role,
   };
   const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
-  const refresh = jwt.sign(userData.id, REFRESH_SECRET, { expiresIn: "7d" });
+  const refresh = jwt.sign({ userId: userData.id.toString() }, REFRESH_SECRET, {
+    expiresIn: "7d",
+  });
   res.cookie("refreshToken", refresh, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/auth/refresh",
+    path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 

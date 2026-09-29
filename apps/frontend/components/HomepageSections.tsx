@@ -5,15 +5,7 @@ import Link from "next/link";
 import { Card, Chip, Stack } from "@mui/material";
 import Button from "./ui/Button";
 import type { Blog } from "../lib/blog";
-
-const topics = [
-  "Tech",
-  "Travel",
-  "Culture",
-  "Education",
-  "Business",
-  "Life in Nepal",
-];
+import { Category } from "../lib/category";
 
 function Reveal({
   children,
@@ -57,11 +49,13 @@ interface HomepageSectionsProps {
   blogs: Blog[];
   isAuthLoading: boolean;
   onStartWriting: () => void;
+  categories: Category[];
 }
 
 export default function HomepageSections({
   blogs,
   isAuthLoading,
+  categories,
   onStartWriting,
 }: HomepageSectionsProps) {
   return (
@@ -127,13 +121,13 @@ export default function HomepageSections({
           spacing={1.5}
           sx={{ mt: 3.5, flexWrap: "wrap" }}
         >
-          {topics.map((topic) => (
+          {categories?.map((topic:Category) => (
             <Chip
-              key={topic}
+              key={topic._id}
               component={Link}
               href="/blogs"
               clickable
-              label={topic}
+              label={topic.title}
               className="topic-chip"
               sx={{
                 height: 42,
