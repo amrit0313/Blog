@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box, Button, Chip, Typography, CircularProgress,
-  Card, CardContent, Divider,
+  Card, CardContent, Divider,Dialog,DialogTitle,DialogContent,DialogActions
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import { toast } from "sonner";
 import { blogApi, type Blog } from "../../../../lib/blog";
+import { adminApi } from "../../../../lib/admin";
 import { ApiError } from "../../../../lib/api";
 
 interface AdminBlogDetailPageProps {
@@ -32,6 +36,8 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [id, setId] = useState<string>("");
+  const [action, setAction] = useState<"verify" | "reject" | null>(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     params.then((p) => setId(p.id));
@@ -82,6 +88,27 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
     );
   }
 
+  async function handleAction() {
+    if (!blog || !action) return;
+    setProcessing(true);
+    try {
+      if (action === "verify") {
+        await adminApi.verifyBlog(blog._id);
+        setBlog((prev) => prev ? { ...prev, status: "published" } : prev);
+        toast.success("Blog verified and published.");
+      } else {
+        await adminApi.rejectBlog(blog._id);
+        setBlog((prev) => prev ? { ...prev, status: "rejected" } : prev);
+        toast.success("Blog rejected.");
+      }
+      setAction(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "Failed to process blog.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   if (!blog) return null;
 
   return (
@@ -102,7 +129,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         <Chip
           size="small"
           label={blog.status}
-          color={blog.status === "published" ? "success" : "warning"}
+          color={blog.status === "published" ? "success" : blog.status === "rejected" ? "error" : "warning"}
         />
         <Typography variant="body2" color="text.secondary">
           By {blog.author?.name ?? "Unknown"}
@@ -113,6 +140,27 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
           </Typography>
         )}
       </Box>
+
+      {blog.status === "submitted" && (
+        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<CheckCircleIcon />}
+            onClick={() => setAction("verify")}
+          >
+            Verify
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<CancelIcon />}
+            onClick={() => setAction("reject")}
+          >
+            Reject
+          </Button>
+        </Box>
+      )}
 
       {blog.image && (
         <Box
@@ -148,6 +196,31 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
           </Box>
         </CardContent>
       </Card>
+
+      {/* Verify/Reject Confirmation Dialog */}
+      {action && (
+        <Dialog open onClose={() => setAction(null)}>
+          <DialogTitle>{action === "verify" ? "Verify Blog" : "Reject Blog"}</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to {action} this blog?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAction(null)} disabled={processing}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAction}
+              color={action === "verify" ? "success" : "error"}
+              variant="contained"
+              disabled={processing}
+            >
+              {processing ? "Processing..." : action === "verify" ? "Yes, Verify" : "Yes, Reject"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }

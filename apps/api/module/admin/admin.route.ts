@@ -1,11 +1,11 @@
 import express from "express";
-import { deleteBlogs, addAnotherAdmin } from "./admin.controller";
+import { deleteBlogs, addAnotherAdmin, deleteUser, createUser, verifyBlog, rejectBlog } from "./admin.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
 import { AdminListAllBlogs } from "../blog/blog.controller";
 
 const router = express.Router();
 
-router.delete("/:id", authenticateToken, authorizeUser("admin"), deleteBlogs);
+router.delete("/blog/:id", authenticateToken, authorizeUser("admin"), deleteBlogs);
 router.patch(
   "/:id",
   authenticateToken,
@@ -13,5 +13,9 @@ router.patch(
   addAnotherAdmin,
 );
 router.get('',authenticateToken,authorizeUser("admin"),AdminListAllBlogs)
+router.delete("/user/:id", authenticateToken, authorizeUser("admin"), deleteUser);
+router.post("/user/create", authenticateToken, authorizeUser("admin"), createUser);
+router.patch("/blog/:id/verify", authenticateToken, authorizeUser("admin"), verifyBlog);
+router.patch("/blog/:id/reject", authenticateToken, authorizeUser("admin"), rejectBlog);
 
 export default router;

@@ -15,6 +15,7 @@ import { blogApi } from "../../../../lib/blog";
 import { categoryApi, type Category } from "../../../../lib/category";
 import { ApiError } from "../../../../lib/api";
 import { useAuth } from "../../../../context/AuthContext";
+import { toast } from "sonner";
 
 const createBlogSchema = yup.object({
   title: yup
@@ -29,8 +30,8 @@ const createBlogSchema = yup.object({
     .min(20, "Description should be at least 20 characters"),
   category: yup.string().required("Please select a category"),
   status: yup
-    .mixed<"draft" | "published">()
-    .oneOf(["draft", "published"])
+    .mixed<"draft" | "submitted">()
+    .oneOf(["draft", "submitted"])
     .required(),
 });
 
@@ -40,7 +41,7 @@ export default function CreateBlogPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [status, setStatus] = useState<"draft" | "submitted">("draft");
   const [image, setImage] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +59,7 @@ export default function CreateBlogPage() {
     try {
       await createBlogSchema.validate(
         { title, description, category, status },
-        { abortEarly: false }
+        { abortEarly: false },
       );
       setFieldErrors({});
       return true;
@@ -79,7 +80,6 @@ export default function CreateBlogPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     const isValid = await validate();
     if (!isValid) return;
 
@@ -92,14 +92,16 @@ export default function CreateBlogPage() {
       formData.append("status", status);
       if (user?.id) formData.append("author", user.id);
       if (image) formData.append("image", image);
-
+      console.log(formData);
       const res = await blogApi.create(formData);
-      router.push(`/blogs/${res.result._id}`);
+
+      toast.success("Blog created successfully!");
+      router.push(`/profile`);
     } catch (err) {
       setError(
         err instanceof ApiError
           ? err.message
-          : "Failed to create blog. Please try again."
+          : "Failed to create blog. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -127,7 +129,7 @@ export default function CreateBlogPage() {
 
         <FormField label="Author" htmlFor="author">
           <div className="flex h-[38px] items-center rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground">
-            {authLoading ? "Loading..." : user?.name ?? "Unknown"}
+            {authLoading ? "Loading..." : (user?.name ?? "Unknown")}
           </div>
         </FormField>
 
@@ -186,10 +188,12 @@ export default function CreateBlogPage() {
             <Select
               id="status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as "draft" | "published")}
+              onChange={(e) =>
+                setStatus(e.target.value as "draft" | "submitted")
+              }
             >
               <option value="draft">Draft</option>
-              <option value="published">Published</option>
+              <option value="submitted">Submit</option>
             </Select>
           </FormField>
         </div>

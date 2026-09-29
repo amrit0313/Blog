@@ -75,8 +75,15 @@ export const adminApi = {
   },
 
 
-  deleteUser() {
-    return apiRequest<{ message: string }>("/user", { method: "DELETE" });
+  deleteUser(id: string) {
+    return apiRequest<{ message: string }>(`/admin/user/${id}`, { method: "DELETE" });
+  },
+
+  createUser(data: { name: string; email: string; password: string; role: "admin" | "user" }) {
+    return apiRequest<{ message: string; user: AdminUser }>("/admin/user/create", {
+      method: "POST",
+      data,
+    });
   },
 
 
@@ -143,6 +150,18 @@ export const adminApi = {
   deleteBlogById(id: string) {
     return apiRequest<ApiResponse<AdminBlog>>(`/blog/${id}`, {
       method: "DELETE",
+    });
+  },
+
+  verifyBlog(id: string) {
+    return apiRequest<{ message: string; blog: AdminBlog }>(`/admin/blog/${id}/verify`, {
+      method: "PATCH",
+    });
+  },
+
+  rejectBlog(id: string) {
+    return apiRequest<{ message: string; blog: AdminBlog }>(`/admin/blog/${id}/reject`, {
+      method: "PATCH",
     });
   },
 };
