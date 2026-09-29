@@ -42,6 +42,13 @@ function getLinkLabel(value: string) {
   }
 }
 
+const getDescriptionPreview = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const socialIcons = {
   instagram: FaInstagram,
   facebook: FaFacebookF,
@@ -348,7 +355,9 @@ export default function ProfilePage() {
                     <p className="mt-2 text-sm text-primary">{blog.category.title}</p>
                   )}
                   {blog.description && (
-                    <p className="mt-2 line-clamp-3 text-sm leading-6">{blog.description}</p>
+                    <p className="mt-3 line-clamp-3 leading-6">
+                      {getDescriptionPreview(blog.description)}
+                    </p>
                   )}
                   <div className="mt-auto flex items-center justify-between gap-4 pt-4 text-sm">
                     <span className="text-muted-foreground">

@@ -8,14 +8,20 @@ import {
   Form,
   FormField,
   Input,
-  Textarea,
   Select,
 } from "../../../../components/dashboard/form";
+import RichTextEditor from "../../../../components/RichTextEditor";
 import { blogApi } from "../../../../lib/blog";
 import { categoryApi, type Category } from "../../../../lib/category";
 import { ApiError } from "../../../../lib/api";
 import { useAuth } from "../../../../context/AuthContext";
 import { toast } from "sonner";
+
+const stripHtml = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
 
 const createBlogSchema = yup.object({
   title: yup
@@ -25,9 +31,12 @@ const createBlogSchema = yup.object({
     .max(120, "Title must be 120 characters or fewer"),
   description: yup
     .string()
-    .trim()
     .required("Description is required")
-    .min(20, "Description should be at least 20 characters"),
+    .test(
+      "min-text",
+      "Description should be at least 20 characters",
+      (v) => stripHtml(v ?? "").length >= 20,
+    ),
   category: yup.string().required("Please select a category"),
   status: yup
     .mixed<"draft" | "submitted">()
@@ -43,6 +52,7 @@ export default function CreateBlogPage() {
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<"draft" | "submitted">("draft");
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -54,6 +64,18 @@ export default function CreateBlogPage() {
       .then((res) => setCategories(res.result ?? []))
       .catch(() => setCategories([]));
   }, []);
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreview("");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(image);
+    setImagePreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [image]);
 
   const validate = async () => {
     try {
@@ -154,13 +176,7 @@ export default function CreateBlogPage() {
           required
           error={fieldErrors.description}
         >
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Write your blog content..."
-            rows={8}
-          />
+          <RichTextEditor id="description" onChange={setDescription} />
         </FormField>
 
         <div className="grid gap-6 sm:grid-cols-2">
@@ -189,7 +205,7 @@ export default function CreateBlogPage() {
               id="status"
               value={status}
               onChange={(e) =>
-                setStatus(e.target.value as "draft" | "submitted")
+                setStatus(e.target.value as "draft" | "published")
               }
             >
               <option value="draft">Draft</option>
@@ -206,6 +222,16 @@ export default function CreateBlogPage() {
             onChange={(e) => setImage(e.target.files?.[0] ?? null)}
             className="w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-[#c92f3d]"
           />
+          {imagePreview && (
+            <div className="mt-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview}
+                alt="Selected cover preview"
+                className="aspect-videow-20  h-20 rounded-md border border-border object-center"
+              />
+            </div>
+          )}
           {image && (
             <p className="mt-2 text-sm text-muted-foreground">
               Selected: {image.name}

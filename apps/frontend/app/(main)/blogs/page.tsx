@@ -1,24 +1,31 @@
 import Link from "next/link";
 import { blogApi, type Blog } from "../../../lib/blog";
 import BlogGrid from "../../../components/ui/bloggrid";
+import BlogFilters from "../../../components/ui/blog-filters";
+import { categoryApi, type Category } from "../../../lib/category";
 import { ApiError } from "../../../lib/api";
 
 export default async function BlogsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; category?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, search, category } = await searchParams;
   const limit = 7;
   const currentPage = Math.max(1, Number(pageParam) || 1);
 
   let blogs: Blog[];
   let totalPages: number;
+  let categories: Category[];
 
   try {
-    const response = await blogApi.list({ page: currentPage, limit });
-    blogs = response.result.filter((blog) => blog.status === "published");
+    const [response, categoryResponse] = await Promise.all([
+      blogApi.list({ page: currentPage, limit, search, category }),
+      categoryApi.list(),
+    ]);
+    blogs = response.result;
     totalPages = response.meta.totalPages;
+    categories = categoryResponse.result ?? [];
   } catch (error) {
     console.error("Failed to load blogs:", error);
 
@@ -43,7 +50,6 @@ export default async function BlogsPage({
 
   return (
     <div className="min-h-screen bg-background">
-
       <div className="relative overflow-hidden border-b border-border">
         <div className="relative mx-auto max-w-7xl px-6 lg:px-8 lg:py-8">
           <div className="flex items-center justify-between">
@@ -86,11 +92,14 @@ export default async function BlogsPage({
 
       {/* Blog Grid */}
       <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+        <BlogFilters categories={categories} />
         <BlogGrid
           blogs={blogs}
           currentPage={currentPage}
           totalPages={totalPages}
           basePath="/blogs"
+          search={search}
+          category={category}
         />
       </div>
     </div>
