@@ -26,6 +26,7 @@ export default async function BlogsPage({
     blogs = response.result;
     totalPages = response.meta.totalPages;
     categories = categoryResponse.result ?? [];
+
   } catch (error) {
     console.error("Failed to load blogs:", error);
 

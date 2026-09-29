@@ -11,24 +11,12 @@ import {
 } from "react-icons/fa";
 import Button from "../../../components/ui/Button";
 import Avatar from "../../../components/avatar";
-import Footer from "../../../components/footer/Footer";
-import Navbar from "../../../components/navbar/Navbar";
+import ProfileBlogCard from "../../../components/ProfileBlogCard";
+
 import { useAuth } from "../../../context/AuthContext";
 import { ApiError } from "../../../lib/api";
 import { blogApi, type Blog } from "../../../lib/blog";
 import { profileApi, ProfileData } from "../../../lib/profile";
-
-function formatDate(value?: string) {
-  if (!value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? null
-    : date.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-}
 
 function getExternalHref(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -41,13 +29,6 @@ function getLinkLabel(value: string) {
     return value;
   }
 }
-
-const getDescriptionPreview = (html: string) =>
-  html
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 
 const socialIcons = {
   instagram: FaInstagram,
@@ -251,7 +232,7 @@ export default function ProfilePage() {
             )}
           </div>
 
-            {!blogsLoading && !blogsError && (
+          {!blogsLoading && !blogsError && (
             <Link
               href="/profile/drafts"
               className="card mt-6 flex items-center justify-between gap-4 p-6 no-underline transition-colors hover:border-primary"
@@ -277,28 +258,11 @@ export default function ProfilePage() {
           {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
             <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {publishedBlogs.map((blog) => (
-                <article key={blog._id} className="card flex flex-col p-6">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="text-lg leading-tight">{blog.title}</h4>
-                    <span className="shrink-0 rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
-                      {blog.status}
-                    </span>
-                  </div>
-                  {blog.category?.title && (
-                    <p className="mt-2 text-sm text-primary">{blog.category.title}</p>
-                  )}
-                  {blog.description && (
-                    <p className="mt-2 line-clamp-3 text-sm leading-6">{blog.description}</p>
-                  )}
-                  <div className="mt-auto flex items-center justify-between gap-4 pt-4 text-sm">
-                    <span className="text-muted-foreground">
-                      {formatDate(blog.updatedAt ?? blog.createdAt) ?? "Recently"}
-                    </span>
-                    <Link href={`/blogs/${blog._id}`} className="font-semibold no-underline hover:underline">
-                      Read blog
-                    </Link>
-                  </div>
-                </article>
+                <ProfileBlogCard
+                  key={blog._id}
+                  blog={blog}
+                  statusClassName="bg-green-100 text-green-700"
+                />
               ))}
             </div>
           )}
@@ -311,28 +275,11 @@ export default function ProfilePage() {
           {!blogsLoading && !blogsError && submittedBlogs.length > 0 && (
             <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {submittedBlogs.map((blog) => (
-                <article key={blog._id} className="card flex flex-col p-6">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="text-lg leading-tight">{blog.title}</h4>
-                    <span className="shrink-0 rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-semibold text-yellow-700">
-                      {blog.status}
-                    </span>
-                  </div>
-                  {blog.category?.title && (
-                    <p className="mt-2 text-sm text-primary">{blog.category.title}</p>
-                  )}
-                  {blog.description && (
-                    <p className="mt-2 line-clamp-3 text-sm leading-6">{blog.description}</p>
-                  )}
-                  <div className="mt-auto flex items-center justify-between gap-4 pt-4 text-sm">
-                    <span className="text-muted-foreground">
-                      {formatDate(blog.updatedAt ?? blog.createdAt) ?? "Recently"}
-                    </span>
-                    <Link href={`/blogs/${blog._id}`} className="font-semibold no-underline hover:underline">
-                      Read blog
-                    </Link>
-                  </div>
-                </article>
+                <ProfileBlogCard
+                  key={blog._id}
+                  blog={blog}
+                  statusClassName="bg-yellow-100 text-yellow-700"
+                />
               ))}
             </div>
           )}
@@ -344,30 +291,11 @@ export default function ProfilePage() {
           {!blogsLoading && !blogsError && rejectedBlogs.length > 0 && (
             <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {rejectedBlogs.map((blog) => (
-                <article key={blog._id} className="card flex flex-col p-6">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="text-lg leading-tight">{blog.title}</h4>
-                    <span className="shrink-0 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
-                      {blog.status}
-                    </span>
-                  </div>
-                  {blog.category?.title && (
-                    <p className="mt-2 text-sm text-primary">{blog.category.title}</p>
-                  )}
-                  {blog.description && (
-                    <p className="mt-3 line-clamp-3 leading-6">
-                      {getDescriptionPreview(blog.description)}
-                    </p>
-                  )}
-                  <div className="mt-auto flex items-center justify-between gap-4 pt-4 text-sm">
-                    <span className="text-muted-foreground">
-                      {formatDate(blog.updatedAt ?? blog.createdAt) ?? "Recently"}
-                    </span>
-                    <Link href={`/blogs/${blog._id}`} className="font-semibold no-underline hover:underline">
-                      Read blog
-                    </Link>
-                  </div>
-                </article>
+                <ProfileBlogCard
+                  key={blog._id}
+                  blog={blog}
+                  statusClassName="bg-red-100 text-red-700"
+                />
               ))}
             </div>
           )}
@@ -381,7 +309,7 @@ export default function ProfilePage() {
               {blogsError}
             </p>
           )}
-          
+
           {!blogsLoading && !blogsError && publishedBlogs.length === 0 && (
             <div className="flex flex-col items-center gap-4 card mt-6 p-8 text-center sm:p-10">
               <h3 className="text-2xl">No published blogs yet</h3>
@@ -397,7 +325,7 @@ export default function ProfilePage() {
               </Button>
             </div>
           )}
-         
+
         </section>
       </main>
     </div>
