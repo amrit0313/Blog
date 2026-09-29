@@ -205,7 +205,7 @@ export default function CreateBlogPage() {
               id="status"
               value={status}
               onChange={(e) =>
-                setStatus(e.target.value as "draft" | "published")
+                setStatus(e.target.value as "draft" | "submitted")
               }
             >
               <option value="draft">Draft</option>

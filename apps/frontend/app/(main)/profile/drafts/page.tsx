@@ -7,6 +7,7 @@ import Button from "../../../../components/ui/Button";
 import { useAuth } from "../../../../context/AuthContext";
 import { ApiError } from "../../../../lib/api";
 import { blogApi, type Blog } from "../../../../lib/blog";
+import * as yup from "yup";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -18,6 +19,13 @@ function formatDate(value: string) {
         day: "numeric",
       });
 }
+
+const getDescriptionPreview = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 export default function DraftsPage() {
   const router = useRouter();
@@ -37,10 +45,13 @@ export default function DraftsPage() {
     blogApi
       .myBlogs()
       .then((response) => {
-        if (!cancelled)
-          setDrafts(
-            (response.result ?? []).filter((blog) => blog.status === "draft"),
+        if (!cancelled) {
+          // No schema validation needed here for GET requests
+          const drafts = (response.result ?? []).filter(
+            (blog) => blog.status === "draft",
           );
+          setDrafts(drafts);
+        }
       })
       .catch((requestError) => {
         if (!cancelled) {
@@ -137,7 +148,7 @@ export default function DraftsPage() {
                 </div>
                 {draft.description && (
                   <p className="mt-3 line-clamp-3 leading-6 text-muted-foreground">
-                    {draft.description}
+                    {getDescriptionPreview(draft.description)}
                   </p>
                 )}
                 <div className="mt-auto flex items-center justify-between gap-3 pt-6 text-sm">
