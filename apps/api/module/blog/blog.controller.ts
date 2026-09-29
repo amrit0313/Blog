@@ -34,13 +34,15 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (!data.title || !data.category || !data.description) {
-      return res.status(400).json({ message: "Invalide request" });
+      return res.status(400).json({ message: "Invalid request" });
     }
+
+
     const newBlog = await blog.create(data);
 
     res.json({
       result: newBlog,
-      message: "Blog Added",
+      message: "Blog submitted for review",
       meta: null,
     });
   } catch (exception) {
@@ -356,7 +358,9 @@ const AdminListAllBlogs = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = {
+      status: { $ne: "draft" },
+    };
 
     if (req.query.search) {
       filter.title = new RegExp(String(req.query.search), "i");

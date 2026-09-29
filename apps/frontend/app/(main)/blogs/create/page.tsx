@@ -15,6 +15,7 @@ import { blogApi } from "../../../../lib/blog";
 import { categoryApi, type Category } from "../../../../lib/category";
 import { ApiError } from "../../../../lib/api";
 import { useAuth } from "../../../../context/AuthContext";
+import { toast } from "sonner";
 
 const stripHtml = (html: string) =>
   html
@@ -38,8 +39,8 @@ const createBlogSchema = yup.object({
     ),
   category: yup.string().required("Please select a category"),
   status: yup
-    .mixed<"draft" | "published">()
-    .oneOf(["draft", "published"])
+    .mixed<"draft" | "submitted">()
+    .oneOf(["draft", "submitted"])
     .required(),
 });
 
@@ -49,7 +50,7 @@ export default function CreateBlogPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [status, setStatus] = useState<"draft" | "submitted">("draft");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -101,7 +102,6 @@ export default function CreateBlogPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     const isValid = await validate();
     if (!isValid) return;
 
@@ -114,9 +114,11 @@ export default function CreateBlogPage() {
       formData.append("status", status);
       if (user?.id) formData.append("author", user.id);
       if (image) formData.append("image", image);
-
+      console.log(formData);
       const res = await blogApi.create(formData);
-      router.push(`/blogs/${res.result._id}`);
+
+      toast.success("Blog created successfully!");
+      router.push(`/profile`);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -207,7 +209,7 @@ export default function CreateBlogPage() {
               }
             >
               <option value="draft">Draft</option>
-              <option value="published">Published</option>
+              <option value="submitted">Submit</option>
             </Select>
           </FormField>
         </div>

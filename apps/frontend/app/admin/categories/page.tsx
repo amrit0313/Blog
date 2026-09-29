@@ -2,13 +2,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  Box, Button, Chip, Typography, CircularProgress,
+  Box, Button, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, List, ListItem, ListItemText, ListItemSecondaryAction,
-  IconButton,
+  TextField,
 } from "@mui/material";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { toast } from "sonner";
 import { adminApi, type AdminCategory } from "../../../lib/admin";
 
@@ -20,6 +20,9 @@ export default function AdminCategoriesPage() {
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editTarget, setEditTarget] = useState<AdminCategory | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     adminApi
@@ -31,7 +34,7 @@ export default function AdminCategoriesPage() {
       .catch(() => toast.error("Failed to load categories."))
       .finally(() => setLoading(false));
   }, []);
-
+ 
   async function handleCreate() {
     if (!newTitle.trim()) return;
     setCreating(true);
@@ -64,9 +67,82 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  function openEdit(category: AdminCategory) {
+    setEditTarget(category);
+    setEditTitle(category.title ?? "");
+  }
+
+  async function handleEdit() {
+    if (!editTarget || !editTitle.trim()) return;
+    setEditing(true);
+    try {
+      await adminApi.updateCategory(editTarget._id, { title: editTitle.trim() });
+      setCategories((prev) =>
+        prev.map((c) =>
+          c._id === editTarget._id ? { ...c, title: editTitle.trim() } : c
+        )
+      );
+      toast.success("Category updated.");
+      setEditTarget(null);
+    } catch {
+      toast.error("Failed to update category.");
+    } finally {
+      setEditing(false);
+    }
+  }
+
+  const columns: GridColDef<AdminCategory>[] = [
+    { field: "title", headerName: "Title", flex: 1, minWidth: 200 },
+    {
+      field: "createdAt",
+      headerName: "Created",
+      width: 160,
+      valueFormatter: (v) => (v ? new Date(v).toLocaleDateString() : "—"),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 180,
+      sortable: false,
+      renderCell: (p) => (
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}>
+          <Button
+            size="small"
+            startIcon={<EditIcon />}
+            onClick={(e) => {
+              e.stopPropagation();
+              openEdit(p.row);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            size="small"
+            color="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteTarget(p.row);
+            }}
+          >
+            Delete
+          </Button>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+          width: "70%",
+          mx: "auto",
+        }}
+      >
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           Categories
         </Typography>
@@ -79,49 +155,31 @@ export default function AdminCategoriesPage() {
         </Button>
       </Box>
 
-      {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-          <CircularProgress />
-        </Box>
-      ) : categories.length === 0 ? (
-        <Typography color="text.secondary">No categories yet.</Typography>
-      ) : (
-        <List sx={{ bgcolor: "background.paper", borderRadius: 1 }}>
-          {categories.map((cat) => (
-            <ListItem
-              key={cat._id}
-              secondaryAction={
-                <IconButton
-                  edge="end"
-                  color="error"
-                  onClick={() => setDeleteTarget(cat)}
-                  aria-label={`Delete ${cat.title}`}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              }
-            >
-              <ListItemText
-                primary={cat.title}
-                secondary={cat.createdAt ? `Created ${new Date(cat.createdAt).toLocaleDateString()}` : undefined}
-              />
-            </ListItem>
-          ))}
-        </List>
-      )}
+      <DataGrid
+        rows={categories}
+        columns={columns}
+        getRowId={(r) => r._id}
+        loading={loading}
+        pageSizeOptions={[5, 10]}
+        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+        disableRowSelectionOnClick
+        sx={{ bgcolor: "background.paper", width: "70%", Height: 200, margin: "auto" }}
+      />
 
-      {/* Add Category Dialog */}
+
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Add Category</DialogTitle>
         <DialogContent>
+          <label htmlFor="newCategoryTitle">Category Title</label>
           <TextField
             autoFocus
-            label="Category Title"
             fullWidth
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-            sx={{ mt: 1 }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleCreate();
+            }}
+            sx={{ mt: 1}}
           />
         </DialogContent>
         <DialogActions>
@@ -138,11 +196,39 @@ export default function AdminCategoriesPage() {
         </DialogActions>
       </Dialog>
 
+
+      <Dialog open={Boolean(editTarget)} onClose={() => setEditTarget(null)}>
+        <DialogTitle>Edit Category</DialogTitle>
+        <DialogContent>
+          <label htmlFor="newCategoryTitle">New Title</label>
+
+          <TextField
+            autoFocus
+            fullWidth
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleEdit();
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditTarget(null)} disabled={editing}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEdit}
+            variant="contained"
+            disabled={editing || !editTitle.trim()}
+          >
+            {editing ? "Saving..." : "Save"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
-      >
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
         <DialogTitle>Delete Category</DialogTitle>
         <DialogContent>
           <Typography>
