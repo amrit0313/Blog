@@ -30,9 +30,12 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (req.file) {
-      data.image = req.file.path;
+      data.image = req.file.filename;
     }
 
+    if (!data.title || !data.category || !data.description) {
+      return res.status(400).json({ message: "Invalide request" });
+    }
     const newBlog = await blog.create(data);
 
     res.json({
@@ -51,6 +54,7 @@ const BlogDetailById = async (
   next: NextFunction,
 ) => {
   try {
+    const blogId = req.params.id;
     const Blog = await blog
       .findById(req.params.id)
       .populate("author", ["_id", "name", "email"])
@@ -62,7 +66,6 @@ const BlogDetailById = async (
 
     if (Blog.status === "draft") {
       const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
-
       if (!isAuthor) {
         throw createError("Blog not found", 404);
       }
@@ -231,11 +234,9 @@ const BlogUpdateById = async (
       data.slug = slugify(data.title);
     }
 
-
-      if (req.file) {
-  data.image = `uploads/profiles/${req.file.filename}`; 
-}
-
+    if (req.file) {
+      data.image = `uploads/profiles/${req.file.filename}`;
+    }
 
     const BlogUpdate = await blog.findByIdAndUpdate(
       req.params.id,

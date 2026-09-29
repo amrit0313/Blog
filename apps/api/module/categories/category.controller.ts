@@ -75,7 +75,6 @@ const CategoryUpdateById = async (req: Request, res: Response, next: NextFunctio
     if (data.title) {
       (data as any).slug = slugify(data.title);
     }
-    console.log(data.title)
     const CategoryUpdate = await category.findByIdAndUpdate(
       req.params.id,
       { $set: data },

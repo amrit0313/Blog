@@ -16,7 +16,6 @@ export default async function BlogsPage({
 
   try {
     const response = await blogApi.list({ page: currentPage, limit });
-    console.log(response)
     blogs = response.result;
     totalPages = response.meta.totalPages;
   } catch (error) {

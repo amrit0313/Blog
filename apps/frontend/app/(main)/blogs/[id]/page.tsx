@@ -41,7 +41,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   }, [params]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || authLoading) return;
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const fetchBlog = async () => {
       try {
@@ -60,7 +65,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     };
 
     fetchBlog();
-  }, [id]);
+  }, [id, authLoading, user]);
 
   const isAuthor = user && blog && user.id === blog.author?._id;
 
@@ -86,13 +91,32 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <h1 className="text-2xl font-bold text-foreground">
+            Sign in to read this story
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Log in to access the full blog details and join the conversation.
+          </p>
+          <Link href="/login" className="mt-6 inline-block">
+            <Button>Log in to continue</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-6">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground">{error}</h1>
           <p className="mt-2 text-muted-foreground">
-            The blog you&apos;re looking for doesn&apos;t exist or has been removed.
+            The blog you&apos;re looking for doesn&apos;t exist or has been
+            removed.
           </p>
           <Link href="/blogs" className="mt-6 inline-block">
             <Button variant="outline">Back to Blogs</Button>
@@ -106,7 +130,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   return (
     <article className="mx-auto w-full max-w-4xl px-6 py-12 lg:px-8">
-     
       <header className="mb-8">
         <Link
           href="/blogs"
@@ -167,15 +190,13 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         )}
       </header>
 
-
       {blog.image && (
         <img
-          src={blog.image}
+          src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
           alt={blog.title}
           className="mb-8 aspect-video w-full rounded-lg border border-border object-cover"
         />
       )}
-
 
       <div className="prose prose-neutral max-w-none">
         <p className="whitespace-pre-wrap text-lg leading-relaxed text-foreground">
@@ -185,9 +206,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
       <footer className="mt-12 border-t border-border pt-6">
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
-          <span>
-            Last updated: {formatDate(blog.updatedAt) ?? "Unknown"}
-          </span>
+          <span>Last updated: {formatDate(blog.updatedAt) ?? "Unknown"}</span>
           <Link href="/blogs">
             <Button variant="outline">More Blogs</Button>
           </Link>
@@ -220,7 +239,8 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         }
       >
         <p className="text-muted-foreground">
-          Are you sure you want to delete &quot;{blog.title}&quot;? This action cannot be undone.
+          Are you sure you want to delete &quot;{blog.title}&quot;? This action
+          cannot be undone.
         </p>
       </Modal>
     </article>

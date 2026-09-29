@@ -35,7 +35,6 @@ const createOrUpdateProfile = async (req: Request, res: Response) => {
 const getProfile = async (req: Request, res: Response) => {
   try {
     const user = req.user?.id;
-    console.log(req?.user);
     const profile = await Profile.findOne({ user }).populate(
       "user",
       "id name email",
