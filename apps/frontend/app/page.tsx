@@ -89,7 +89,7 @@ export default function Home() {
         </div>
       </section>
       <HomepageSections
-      isAuthLoading={isAuthLoading}
+        isAuthLoading={isAuthLoading}
         blogs={blogs}
         categories={categories}
         onStartWriting={() =>

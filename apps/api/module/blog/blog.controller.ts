@@ -1,7 +1,7 @@
 import slugify from "slugify";
 import blog from "./blog.model";
 import { Request, Response, NextFunction } from "express";
-
+import categoryModel from "../categories/category.model";
 interface IBlog {
   title: string;
   content: string;
@@ -113,6 +113,7 @@ const BlogDetailBySlug = async (
     next(exception);
   }
 };
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const ListAllBlogs = async (
   req: Request,
@@ -120,36 +121,49 @@ const ListAllBlogs = async (
   next: NextFunction,
 ) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
     const skip = (page - 1) * limit;
+    console.log(req.query);
 
     const filter: Record<string, any> = {};
 
-    if (req.query.search) {
-      filter.title = new RegExp(String(req.query.search), "i");
+    if (typeof req.query.search === "string" && req.query.search.trim()) {
+      filter.title = new RegExp(escapeRegex(req.query.search.trim()), "i");
     }
+
+    if (typeof req.query.category === "string" && req.query.category.trim()) {
+      console.log(req.query.category);
+      const matched = await categoryModel
+        .find({
+          title: new RegExp(`^${escapeRegex(req.query.category.trim())}$`, "i"),
+        })
+        .select("_id")
+        .lean();
+
+      filter.category = { $in: matched.map((c) => c._id) };
+    }
+
     if (req.user) {
       filter.$or = [
         { status: "published" },
-        {
-          status: "draft",
-          author: req.user.id,
-        },
+        { status: "draft", author: req.user.id },
       ];
     } else {
       filter.status = "published";
     }
 
-    const count = await blog.countDocuments(filter);
-
-    const data = await blog
-      .find(filter)
-      .populate("author", ["_id", "name", "email"])
-      .populate("category", ["_id", "title"])
-      .sort({ _id: -1 })
-      .limit(limit)
-      .skip(skip);
+    const [count, data] = await Promise.all([
+      blog.countDocuments(filter),
+      blog
+        .find(filter)
+        .populate("author", ["_id", "name"])
+        .populate("category", ["_id", "title"])
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
 
     res.status(200).json({
       result: data,
@@ -165,7 +179,6 @@ const ListAllBlogs = async (
     next(exception);
   }
 };
-
 const AllBlogsFiltering = async (
   req: Request,
   res: Response,
@@ -235,7 +248,7 @@ const BlogUpdateById = async (
     }
 
     if (req.file) {
-      data.image = `uploads/profiles/${req.file.filename}`;
+      data.image = req.file.filename;
     }
 
     const BlogUpdate = await blog.findByIdAndUpdate(
@@ -348,7 +361,6 @@ const AdminListAllBlogs = async (
     if (req.query.search) {
       filter.title = new RegExp(String(req.query.search), "i");
     }
-  
 
     const count = await blog.countDocuments(filter);
 
@@ -375,7 +387,6 @@ const AdminListAllBlogs = async (
   }
 };
 
-
 export {
   createBlog,
   BlogDetailById,
@@ -386,5 +397,5 @@ export {
   UnpublishBlogById,
   BlogDeleteById,
   GetMyBlogs,
-  AdminListAllBlogs
+  AdminListAllBlogs,
 };

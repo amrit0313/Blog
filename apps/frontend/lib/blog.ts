@@ -44,11 +44,17 @@ export interface ApiResponse<T> {
 
 export const blogApi = {
   // GET /api/blog
-  list(params?: { page?: number; limit?: number; search?: string }) {
+  list(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+  }) {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.search) query.set("search", params.search);
+    if (params?.category) query.set("category", params.category);
 
     const qs = query.toString();
     return apiRequest<BlogListApiResponse>(`/blog${qs ? `?${qs}` : ""}`, {
@@ -83,6 +89,7 @@ export const blogApi = {
 
   // PUT /api/blog/:id (auth required)
   update(id: string, data: FormData) {
+    console.log(data)
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "PUT",
       data,

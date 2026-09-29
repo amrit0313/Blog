@@ -9,16 +9,33 @@ interface BlogGridProps {
   currentPage: number;
   totalPages: number;
   basePath: string;
+  search?: string;
+  category?: string;
 }
 
-
+const getDescriptionPreview = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 export default function BlogGrid({
   blogs,
   currentPage,
   totalPages,
   basePath,
+  search,
+  category,
 }: BlogGridProps) {
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (category) params.set("category", category);
+    params.set("page", String(page));
+    return `${basePath}?${params.toString()}`;
+  };
+
   if (blogs.length === 0) {
     return (
       <div className="py-20 text-center">
@@ -78,7 +95,7 @@ export default function BlogGrid({
                   {blog.title}
                 </h2>
                 <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted-foreground">
-                  {blog.description}
+                  {getDescriptionPreview(blog.description)}
                 </p>
                 <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
                   <div className="flex min-w-0 items-center gap-1.5">
@@ -109,7 +126,7 @@ export default function BlogGrid({
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
           {currentPage > 1 && (
             <Link
-              href={`${basePath}?page=${currentPage - 1}`}
+              href={pageHref(currentPage - 1)}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
             >
               Previous
@@ -118,7 +135,7 @@ export default function BlogGrid({
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <Link
               key={page}
-              href={`${basePath}?page=${page}`}
+              href={pageHref(page)}
               className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                 page === currentPage
                   ? "bg-primary text-primary-foreground"
@@ -130,7 +147,7 @@ export default function BlogGrid({
           ))}
           {currentPage < totalPages && (
             <Link
-              href={`${basePath}?page=${currentPage + 1}`}
+              href={pageHref(currentPage + 1)}
               className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
             >
               Next
