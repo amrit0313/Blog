@@ -165,7 +165,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
       {blog.image && (
         <Box
           component="img"
-          src={blog.image}
+          src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
           alt={blog.title}
           sx={{
             width: "100%",
