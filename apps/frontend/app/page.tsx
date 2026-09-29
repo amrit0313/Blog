@@ -10,21 +10,33 @@ import HomepageSections from "../components/HomepageSections";
 import { blogApi } from "../lib/blog";
 import { useAuth } from "../context/AuthContext";
 import type { Blog } from "../lib/blog";
+import { Category, categoryApi } from "../lib/category";
 
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const findBlogs = async () => {
-    try {
-      const response = await blogApi.list();
-      console.log(response.result);
-      setBlogs(response.result);
-    } catch (err) {
-      console.log("error occurred");
+    const results = await Promise.allSettled([
+      blogApi.list({ page: 1, limit: 6 }),
+      categoryApi.list(),
+    ]);
+
+    const [blogsResult, categoriesResult] = results;
+
+    if (blogsResult.status === "fulfilled") {
+      setBlogs(blogsResult.value.result);
+    } else {
+      console.error("Failed to fetch blogs:", blogsResult.reason);
+    }
+
+    if (categoriesResult.status === "fulfilled") {
+      setCategories(categoriesResult.value.result);
+    } else {
+      console.error("Failed to fetch categories:", categoriesResult.reason);
     }
   };
-
   useEffect(() => {
     findBlogs();
   }, []);
@@ -75,11 +87,11 @@ export default function Home() {
             Read the latest <span className="ml-2">-&gt;</span>
           </Link>
         </div>
-   
       </section>
       <HomepageSections
+      isAuthLoading={isAuthLoading}
         blogs={blogs}
-        isAuthLoading={isAuthLoading}
+        categories={categories}
         onStartWriting={() =>
           router.push(isAuthenticated ? "/blogs/create" : "/login")
         }

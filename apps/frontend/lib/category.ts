@@ -7,7 +7,7 @@ export interface Category {
   updatedAt: string;
 }
 
-interface CategoryListResponse {
+export interface CategoryListResponse {
   result: Category[];
   message: string;
   meta: null;
@@ -21,14 +21,14 @@ export const categoryApi = {
   getById(id: string) {
     return apiRequest<{ result: Category; message: string; meta: null }>(
       `/category/${id}`,
-      { method: "GET" }
+      { method: "GET" },
     );
   },
 
   create(data: { title: string }) {
     return apiRequest<{ result: Category; message: string; meta: null }>(
       "/category/create",
-      { method: "POST", data }
+      { method: "POST", data },
     );
   },
 };

@@ -1,6 +1,6 @@
-import category from './category.model'
-import { Request, Response, NextFunction } from "express"
-import slugify from 'slugify'
+import category from "./category.model";
+import { Request, Response, NextFunction } from "express";
+import slugify from "slugify";
 
 interface ICategory {
   title: string;
@@ -16,7 +16,11 @@ const createError = (message: string, status = 500): AppError => {
   return err;
 };
 
-const createCategory = async (req: Request, res: Response, next: NextFunction) => {
+const createCategory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const data = req.body;
 
@@ -36,9 +40,14 @@ const createCategory = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
-const ListAllCategories = async (req: Request, res: Response, next: NextFunction) => {
+const ListAllCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const data = await category.find().sort({ _id: "desc" });
+    console.log(data);
 
     res.json({
       result: data,
@@ -50,7 +59,11 @@ const ListAllCategories = async (req: Request, res: Response, next: NextFunction
   }
 };
 
-const CategoryDetailById = async (req: Request, res: Response, next: NextFunction) => {
+const CategoryDetailById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const Category = await category.findById(req.params.id);
 
@@ -68,7 +81,11 @@ const CategoryDetailById = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-const CategoryUpdateById = async (req: Request, res: Response, next: NextFunction) => {
+const CategoryUpdateById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const data: ICategory = req.body;
 
@@ -95,7 +112,11 @@ const CategoryUpdateById = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-const CategoryDeleteById = async (req: Request, res: Response, next: NextFunction) => {
+const CategoryDeleteById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const CategoryDelete = await category.findByIdAndDelete(req.params.id);
 
