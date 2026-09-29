@@ -16,7 +16,7 @@ const app = express();
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "https://blog-ncc19.vercel.app/register",
+    origin: ["https://blog-ncc19.vercel.app", "http://localhost:3000", "https://blog-kt2b18nqp-ncc19.vercel.app/"],
     credentials: true,
   }),
 );
