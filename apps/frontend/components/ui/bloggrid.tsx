@@ -27,7 +27,6 @@ export default function BlogGrid({
   basePath,
   search,
   category,
-  author
 }: BlogGridProps) {
   const pageHref = (page: number) => {
     const params = new URLSearchParams();
@@ -74,8 +73,8 @@ export default function BlogGrid({
                 <div className="absolute top-2.5 left-2.5">
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${blog.status === "published"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-yellow-100 text-yellow-700"
                       }`}
                   >
                     {blog.status === "published" ? "Published" : "Draft"}
@@ -137,8 +136,8 @@ export default function BlogGrid({
               key={page}
               href={pageHref(page)}
               className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${page === currentPage
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border bg-card text-foreground hover:border-primary hover:text-primary"
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-card text-foreground hover:border-primary hover:text-primary"
                 }`}
             >
               {page}
