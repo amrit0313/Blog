@@ -1,3 +1,4 @@
+import { CookieOptions } from "express";
 import { User } from "../user/user.model";
 import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
@@ -5,11 +6,8 @@ import jwt from "jsonwebtoken";
 import { getEnvConfig } from "../../config/env.config";
 import { sendResetMail } from "../../services/email.service";
 import crypto from "node:crypto";
-const isProd = process.env.NODE_ENV === "production";
-import { CookieOptions } from "express";
 
 const isProd = process.env.NODE_ENV === "production";
-
 const refreshCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProd,
@@ -51,13 +49,7 @@ const addUser = async (req: Request, res: Response) => {
       { expiresIn: "7d" },
     );
 
-    res.cookie("refreshToken", refresh, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? ("none" as const) : ("lax" as const),
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("refreshToken", refresh, refreshCookieOptions);
 
     return res
       .status(201)
@@ -100,13 +92,8 @@ const loginUser = async (req: Request, res: Response) => {
     });
     console.log("2", payload);
 
-    res.cookie("refreshToken", refresh, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? ("none" as const) : ("lax" as const),
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("refreshToken", refresh, refreshCookieOptions);
+
 
     return res
       .status(200)
