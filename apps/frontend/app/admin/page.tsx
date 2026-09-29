@@ -1,6 +1,7 @@
 // app/admin/page.tsx
 "use client";
 import { Box, Card, CardContent, Typography, CircularProgress, Chip } from "@mui/material";
+import { BarChart, PieChart } from "@mui/x-charts";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
@@ -18,6 +19,8 @@ export default function AdminOverview() {
   const { user, isLoading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [submittedBlogs, setSubmittedBlogs] = useState<AdminBlog[]>([]);
+  const [blogsByCategory, setBlogsByCategory] = useState<{ name: string; count: number }[]>([]);
+  const [blogsByStatus, setBlogsByStatus] = useState<{ label: string; value: number }[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -26,7 +29,7 @@ export default function AdminOverview() {
     async function fetchStats() {
       try {
         const [blogsRes, usersRes, categoriesRes] = await Promise.all([
-          adminApi.listAllBlogs({ limit: 50 }),
+          adminApi.listAllBlogs({ limit: 100 }),
           adminApi.listUsers(),
           adminApi.listCategories(),
         ]);
@@ -36,6 +39,31 @@ export default function AdminOverview() {
         ).length;
         const submitted = blogs.filter(
           (b: { status: string }) => b.status === "submitted"
+        );
+
+        // Blogs per category — use all categories from the API, even those with zero blogs
+        const categories = Array.isArray(categoriesRes.result) ? categoriesRes.result : [];
+        const categoryMap: Record<string, number> = {};
+        categories.forEach((c) => {
+          categoryMap[c.title ?? ""] = 0;
+        });
+        blogs.forEach((b: AdminBlog) => {
+          const cat = b.category?.title;
+          if (cat && cat in categoryMap) {
+            categoryMap[cat] += 1;
+          }
+        });
+        setBlogsByCategory(
+          Object.entries(categoryMap).map(([name, count]) => ({ name, count }))
+        );
+
+        // Blogs by status
+        const statusMap: Record<string, number> = {};
+        blogs.forEach((b: AdminBlog) => {
+          statusMap[b.status] = (statusMap[b.status] ?? 0) + 1;
+        });
+        setBlogsByStatus(
+          Object.entries(statusMap).map(([label, value]) => ({ label, value }))
         );
 
         setStats({
@@ -108,6 +136,56 @@ export default function AdminOverview() {
         ))}
       </Box>
 
+      {/* Analytics */}
+      <Typography variant="h6" sx={{ fontWeight: 600, mt: 5, mb: 2 }}>
+        Analytics
+      </Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          mb: 5,
+        }}
+      >
+        <Card>
+          <CardContent>
+            <Typography sx={{ fontWeight: 600, mb: 2 }}>Blogs per Category</Typography>
+            {blogsByCategory.length > 0 ? (
+              <BarChart
+                xAxis={[{ scaleType: "band", data: blogsByCategory.map((c) => c.name) }]}
+                series={[{ data: blogsByCategory.map((c) => c.count), color: "#A0522D" }]}
+                height={250}
+              />
+            ) : (
+              <Typography color="text.secondary">No data available.</Typography>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <Typography sx={{ fontWeight: 600, mb: 2 }}>Blogs by Status</Typography>
+            {blogsByStatus.length > 0 ? (
+              <PieChart
+                series={[
+                  {
+                    data: blogsByStatus.map((s, i) => ({
+                      id: i,
+                      value: s.value,
+                      label: s.label,
+                    })),
+                  },
+                ]}
+                height={250}
+              />
+            ) : (
+              <Typography color="text.secondary">No data available.</Typography>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+
       <Typography variant="h6" sx={{ fontWeight: 600, mt: 5, mb: 2, width:"90%", mx:"auto"}}>
         New Blogs to Review
       </Typography>
@@ -139,3 +217,4 @@ export default function AdminOverview() {
     </>
   );
 }
+
