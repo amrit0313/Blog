@@ -205,7 +205,7 @@ export default function CreateBlogPage() {
               id="status"
               value={status}
               onChange={(e) =>
-                setStatus(e.target.value as "draft" | "published")
+                setStatus(e.target.value as "draft" | "submitted")
               }
             >
               <option value="draft">Draft</option>
@@ -224,7 +224,6 @@ export default function CreateBlogPage() {
           />
           {imagePreview && (
             <div className="mt-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imagePreview}
                 alt="Selected cover preview"

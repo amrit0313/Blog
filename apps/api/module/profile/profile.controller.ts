@@ -1,15 +1,27 @@
 import Profile from "./profile.model";
+import { User } from "../user/user.model";
 import { Request, Response } from "express";
 const createOrUpdateProfile = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const avatar = req.file?.filename;
 
+    // Separate user fields from profile fields
+    const { name, email, ...profileData } = req.body;
+
+    // Update user name/email if provided
+    if (name !== undefined || email !== undefined) {
+      const userUpdate: { name?: string; email?: string } = {};
+      if (name !== undefined) userUpdate.name = name;
+      if (email !== undefined) userUpdate.email = email;
+      await User.findByIdAndUpdate(userId, { $set: userUpdate }, { new: true });
+    }
+
     const profile = await Profile.findOneAndUpdate(
       { user: userId }, // Filter: find profile by user ID
       {
         $set: {
-          ...req.body,
+          ...profileData,
           ...(avatar && { avatar }),
         },
       }, // Update: data from the request body
@@ -35,10 +47,12 @@ const createOrUpdateProfile = async (req: Request, res: Response) => {
 const getProfile = async (req: Request, res: Response) => {
   try {
     const user = req.user?.id;
+
     const profile = await Profile.findOne({ user }).populate(
       "user",
       "id name email",
     );
+    console.log(profile)
     if (!profile) {
       return res.status(400).json({ message: "profile doesn't exist" });
     }

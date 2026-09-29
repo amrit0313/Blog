@@ -1,10 +1,10 @@
 // app/admin/page.tsx
 "use client";
-import { Box, Card, CardContent, Typography, CircularProgress } from "@mui/material";
+import { Box, Card, CardContent, Typography, CircularProgress, Chip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
-import { adminApi } from "../../lib/admin";
+import { adminApi, type AdminBlog } from "../../lib/admin";
 
 interface DashboardStats {
   totalBlogs: number;
@@ -17,6 +17,7 @@ export default function AdminOverview() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [submittedBlogs, setSubmittedBlogs] = useState<AdminBlog[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -25,15 +26,17 @@ export default function AdminOverview() {
     async function fetchStats() {
       try {
         const [blogsRes, usersRes, categoriesRes] = await Promise.all([
-          adminApi.listAllBlogs({ limit: 10}),
+          adminApi.listAllBlogs({ limit: 50 }),
           adminApi.listUsers(),
           adminApi.listCategories(),
         ]);
-        console.log(categoriesRes)
         const blogs = "result" in blogsRes ? blogsRes.result : [];
         const published = blogs.filter(
           (b: { status: string }) => b.status === "published"
         ).length;
+        const submitted = blogs.filter(
+          (b: { status: string }) => b.status === "submitted"
+        );
 
         setStats({
           totalBlogs: blogs.length,
@@ -41,6 +44,7 @@ export default function AdminOverview() {
           totalUsers: Array.isArray(usersRes) ? usersRes.length : 0,
           totalCategories: Array.isArray(categoriesRes.result) ? categoriesRes.result.length : 0,
         });
+        setSubmittedBlogs(submitted);
       } catch (err) {
         setError("Failed to load dashboard data.");
       }
@@ -103,6 +107,36 @@ export default function AdminOverview() {
           </Card>
         ))}
       </Box>
+
+      {/* New Blogs to Review */}
+      <Typography variant="h6" sx={{ fontWeight: 600, mt: 5, mb: 2 }}>
+        New Blogs to Review
+      </Typography>
+      {submittedBlogs.length === 0 ? (
+        <Typography color="text.secondary">No blogs waiting for review.</Typography>
+      ) : (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {submittedBlogs.map((blog) => (
+            <Card
+              key={blog._id}
+              onClick={() => router.push(`/admin/blogs/${blog._id}`)}
+              sx={{ cursor: "pointer", "&:hover": { boxShadow: 3 } }}
+            >
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                  <Box>
+                    <Typography sx={{ fontWeight: 600 }}>{blog.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      By {blog.author?.name ?? "Unknown"}
+                    </Typography>
+                  </Box>
+                  <Chip size="small" label={blog.status} color="warning" />
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
     </>
   );
 }

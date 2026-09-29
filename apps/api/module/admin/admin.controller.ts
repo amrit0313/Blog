@@ -136,3 +136,4 @@ const rejectBlog = async (req: Request, res: Response) => {
 };
 
 export { deleteBlogs, addAnotherAdmin, deleteUser, createUser, verifyBlog, rejectBlog };
+

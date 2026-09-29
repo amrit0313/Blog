@@ -1,6 +1,8 @@
 import Joi from "joi";
 
 const profileValidation = Joi.object({
+  name: Joi.string().optional(),
+  email: Joi.string().email().optional(),
   bio: Joi.string().max(250).allow('').optional(),
   socialLinks: Joi.object({
     instagram: Joi.string().uri().allow(""),
