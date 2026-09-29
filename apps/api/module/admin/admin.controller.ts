@@ -95,4 +95,44 @@ const createUser = async (req: Request, res: Response) => {
   }
 };
 
-export { deleteBlogs, addAnotherAdmin, deleteUser, createUser };
+const verifyBlog = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    if (blog.status !== "submitted") {
+      return res.status(400).json({ message: "Only submitted blogs can be verified" });
+    }
+    blog.status = "published";
+    await blog.save();
+    return res.status(200).json({ message: "Blog verified and published", blog });
+  } catch (err: any) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+const rejectBlog = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    if (blog.status !== "submitted") {
+      return res.status(400).json({ message: "Only submitted blogs can be rejected" });
+    }
+    blog.status = "rejected";
+    await blog.save();
+    return res.status(200).json({ message: "Blog rejected", blog });
+  } catch (err: any) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+export { deleteBlogs, addAnotherAdmin, deleteUser, createUser, verifyBlog, rejectBlog };

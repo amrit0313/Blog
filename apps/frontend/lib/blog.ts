@@ -15,7 +15,7 @@ export interface Blog {
   _id: string;
   title: string;
   description: string;
-  status: "draft" | "published" | "unpublished";
+  status: "draft" | "published" | "unpublished" | "submitted" | "rejected";
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -56,12 +56,10 @@ export const blogApi = {
     });
   },
 
-  // GET /api/blog/me (auth required)
   myBlogs() {
     return apiRequest<BlogListApiResponse>("/blog/me", { method: "GET" });
   },
 
-  // POST /api/blog/create (auth required, multipart form-data)
   create(data: FormData) {
     return apiRequest<ApiResponse<Blog>>("/blog/create", {
       method: "POST",
@@ -69,19 +67,16 @@ export const blogApi = {
     });
   },
 
-  // GET /api/blog/:id
   getById(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, { method: "GET" });
   },
 
-  // GET /api/blog/slug/:slug
   getBySlug(slug: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/slug/${slug}`, {
       method: "GET",
     });
   },
 
-  // PUT /api/blog/:id (auth required)
   update(id: string, data: FormData) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "PUT",

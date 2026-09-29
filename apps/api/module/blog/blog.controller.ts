@@ -37,7 +37,6 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ message: "Invalid request" });
     }
 
-    data.status = "submitted";
 
     const newBlog = await blog.create(data);
 
@@ -346,12 +345,13 @@ const AdminListAllBlogs = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = {
+      status: { $ne: "draft" },
+    };
 
     if (req.query.search) {
       filter.title = new RegExp(String(req.query.search), "i");
     }
-  
 
     const count = await blog.countDocuments(filter);
 

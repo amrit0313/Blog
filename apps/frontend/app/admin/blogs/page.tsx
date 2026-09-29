@@ -19,8 +19,6 @@ export default function AdminBlogsPage() {
   const [loading, setLoading] = useState(true);
   const [unpublishTarget, setUnpublishTarget] = useState<Blog | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Blog | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   async function handleConfirmUnpublish() {
     if (!unpublishTarget) return;
@@ -38,22 +36,6 @@ export default function AdminBlogsPage() {
       toast.error("Failed to unpublish blog.");
     } finally {
       setUnpublishing(false);
-    }
-  }
-
-  async function handleConfirmDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await adminApi.deleteBlog(deleteTarget._id);
-      toast.success("Blog deleted");
-      setRows((prev) => prev.filter((b) => b._id !== deleteTarget._id));
-      setRowCount((prev) => prev - 1);
-      setDeleteTarget(null);
-    } catch {
-      toast.error("Failed to delete blog.");
-    } finally {
-      setDeleting(false);
     }
   }
 
@@ -82,7 +64,7 @@ export default function AdminBlogsPage() {
       valueFormatter: (v) => new Date(v).toLocaleDateString(),
     },
     {
-      field: "actions", headerName: "Actions", width: 200, sortable: false,
+      field: "actions", headerName: "Actions", width: 140, sortable: false,
       renderCell: (p) => (
         <Box sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}>
           <Button
@@ -94,16 +76,6 @@ export default function AdminBlogsPage() {
             }}
           >
             Unpublish
-          </Button>
-          <Button
-            size="small"
-            color="error"
-            onClick={(e) => {
-              e.stopPropagation();
-              setDeleteTarget(p.row);
-            }}
-          >
-            Delete
           </Button>
         </Box>
       ),
@@ -156,30 +128,6 @@ export default function AdminBlogsPage() {
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
-      >
-        <DialogTitle>Delete Blog</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this blog?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-            disabled={deleting}
-          >
-            {deleting ? "Deleting..." : "Yes, Delete"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
 }

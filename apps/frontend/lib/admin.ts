@@ -152,6 +152,18 @@ export const adminApi = {
       method: "DELETE",
     });
   },
+
+  verifyBlog(id: string) {
+    return apiRequest<{ message: string; blog: AdminBlog }>(`/admin/blog/${id}/verify`, {
+      method: "PATCH",
+    });
+  },
+
+  rejectBlog(id: string) {
+    return apiRequest<{ message: string; blog: AdminBlog }>(`/admin/blog/${id}/reject`, {
+      method: "PATCH",
+    });
+  },
 };
 
 export { ApiError };
