@@ -99,6 +99,7 @@ export default function AdminBlogsPage() {
         onRowClick={(params) => router.push(`/admin/blogs/${params.id}`)}
         sx={{
           bgcolor: "background.paper",
+          width: "100%",
           "& .MuiDataGrid-row": { cursor: "pointer" },
         }}
       />
