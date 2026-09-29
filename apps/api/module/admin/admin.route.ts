@@ -1,5 +1,5 @@
 import express from "express";
-import { deleteBlogs, addAnotherAdmin, deleteUser } from "./admin.controller";
+import { deleteBlogs, addAnotherAdmin, deleteUser, createUser } from "./admin.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
 import { AdminListAllBlogs } from "../blog/blog.controller";
 
@@ -14,5 +14,6 @@ router.patch(
 );
 router.get('',authenticateToken,authorizeUser("admin"),AdminListAllBlogs)
 router.delete("/user/:id", authenticateToken, authorizeUser("admin"), deleteUser);
+router.post("/user/create", authenticateToken, authorizeUser("admin"), createUser);
 
 export default router;

@@ -1,6 +1,7 @@
 import Blog from "../blog/blog.model";
 import { Request, Response } from "express";
 import { User } from "../user/user.model";
+import bcrypt from "bcryptjs";
 
 const deleteBlogs = async (req: Request, res: Response) => {
   try {
@@ -61,4 +62,37 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export { deleteBlogs, addAnotherAdmin, deleteUser };
+const createUser = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Name, email, and password are required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "A user with this email already exists" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      role: role === "admin" ? "admin" : "user",
+    });
+
+    return res.status(201).json({
+      message: "User created successfully",
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
+    });
+  } catch (err: any) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
+  }
+};
+
+export { deleteBlogs, addAnotherAdmin, deleteUser, createUser };

@@ -29,8 +29,8 @@ const createBlogSchema = yup.object({
     .min(20, "Description should be at least 20 characters"),
   category: yup.string().required("Please select a category"),
   status: yup
-    .mixed<"draft" | "published">()
-    .oneOf(["draft", "published"])
+    .mixed<"draft" | "submitted">()
+    .oneOf(["draft", "submitted"])
     .required(),
 });
 
@@ -40,7 +40,7 @@ export default function CreateBlogPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [status, setStatus] = useState<"draft" | "submitted">("draft");
   const [image, setImage] = useState<File | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -186,10 +186,10 @@ export default function CreateBlogPage() {
             <Select
               id="status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as "draft" | "published")}
+              onChange={(e) => setStatus(e.target.value as "draft" | "submitted")}
             >
               <option value="draft">Draft</option>
-              <option value="published">Published</option>
+              <option value="published">Submit</option>
             </Select>
           </FormField>
         </div>

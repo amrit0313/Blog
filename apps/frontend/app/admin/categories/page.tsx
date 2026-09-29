@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import { toast } from "sonner";
 import { adminApi, type AdminCategory } from "../../../lib/admin";
 
@@ -19,6 +20,9 @@ export default function AdminCategoriesPage() {
   const [creating, setCreating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminCategory | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editTarget, setEditTarget] = useState<AdminCategory | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     adminApi
@@ -30,7 +34,7 @@ export default function AdminCategoriesPage() {
       .catch(() => toast.error("Failed to load categories."))
       .finally(() => setLoading(false));
   }, []);
-
+ 
   async function handleCreate() {
     if (!newTitle.trim()) return;
     setCreating(true);
@@ -63,6 +67,30 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  function openEdit(category: AdminCategory) {
+    setEditTarget(category);
+    setEditTitle(category.title ?? "");
+  }
+
+  async function handleEdit() {
+    if (!editTarget || !editTitle.trim()) return;
+    setEditing(true);
+    try {
+      await adminApi.updateCategory(editTarget._id, { title: editTitle.trim() });
+      setCategories((prev) =>
+        prev.map((c) =>
+          c._id === editTarget._id ? { ...c, title: editTitle.trim() } : c
+        )
+      );
+      toast.success("Category updated.");
+      setEditTarget(null);
+    } catch {
+      toast.error("Failed to update category.");
+    } finally {
+      setEditing(false);
+    }
+  }
+
   const columns: GridColDef<AdminCategory>[] = [
     { field: "title", headerName: "Title", flex: 1, minWidth: 200 },
     {
@@ -74,10 +102,20 @@ export default function AdminCategoriesPage() {
     {
       field: "actions",
       headerName: "Actions",
-      width: 140,
+      width: 180,
       sortable: false,
       renderCell: (p) => (
         <Box sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}>
+          <Button
+            size="small"
+            startIcon={<EditIcon />}
+            onClick={(e) => {
+              e.stopPropagation();
+              openEdit(p.row);
+            }}
+          >
+            Edit
+          </Button>
           <Button
             size="small"
             color="error"
@@ -132,16 +170,16 @@ export default function AdminCategoriesPage() {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Add Category</DialogTitle>
         <DialogContent>
+          <label htmlFor="newCategoryTitle">Category Title</label>
           <TextField
             autoFocus
-            label="Category Title"
             fullWidth
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleCreate();
             }}
-            sx={{ mt: 1 }}
+            sx={{ mt: 1}}
           />
         </DialogContent>
         <DialogActions>
@@ -154,6 +192,37 @@ export default function AdminCategoriesPage() {
             disabled={creating || !newTitle.trim()}
           >
             {creating ? "Creating..." : "Create"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
+      <Dialog open={Boolean(editTarget)} onClose={() => setEditTarget(null)}>
+        <DialogTitle>Edit Category</DialogTitle>
+        <DialogContent>
+          <label htmlFor="newCategoryTitle">New Title</label>
+
+          <TextField
+            autoFocus
+            fullWidth
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleEdit();
+            }}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditTarget(null)} disabled={editing}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEdit}
+            variant="contained"
+            disabled={editing || !editTitle.trim()}
+          >
+            {editing ? "Saving..." : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

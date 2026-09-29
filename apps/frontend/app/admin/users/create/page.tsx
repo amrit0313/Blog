@@ -7,21 +7,29 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { toast } from "sonner";
+import * as Yup from "yup";
 import { adminApi, ApiError } from "../../../../lib/admin";
 
-// Shared input styling to match the Tailwind form (rounded, soft border, red focus ring)
+const createUserSchema = Yup.object().shape({
+  name: Yup.string().required("Name is required"),
+  email: Yup.string().email("Enter a valid email").required("Email is required"),
+  password: Yup.string().required("Password is required"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Passwords do not match")
+    .required("Confirm password is required"),
+  role: Yup.string().oneOf(["admin", "user"]).required("Role is required"),
+});
+
 const inputSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "10px",
     bgcolor: "background.paper",
     "& fieldset": { borderColor: "divider" },
     "&:hover fieldset": { borderColor: "#d8c5b7" },
-    "&.Mui-focused": { boxShadow: "0 0 0 3px rgba(230,57,70,0.12)" },
     "&.Mui-focused fieldset": { borderColor: "primary.main", borderWidth: 1 },
   },
 };
 
-// Label above the input, like the blog form's FormField
 function Field({
   label, htmlFor, required, error, children,
 }: {
@@ -74,21 +82,25 @@ export default function CreateUserPage() {
   const [creating, setCreating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  function validate() {
-    const e: Record<string, string> = {};
-    if (!name.trim()) e.name = "Name is required";
-    if (!email.trim()) e.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Enter a valid email";
-    if (!password) e.password = "Password is required";
-    else if (password.length < 8) e.password = "Password must be at least 8 characters";
-    if (confirmPassword !== password) e.confirmPassword = "Passwords do not match";
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  }
-
   async function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault();
-    if (!validate()) return;
+
+    try {
+      await createUserSchema.validate(
+        { name, email, password, confirmPassword, role },
+        { abortEarly: false }
+      );
+      setErrors({});
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const e: Record<string, string> = {};
+        err.inner.forEach((e2) => {
+          if (e2.path) e[e2.path] = e2.message;
+        });
+        setErrors(e);
+      }
+      return;
+    }
 
     setCreating(true);
     try {
@@ -159,7 +171,6 @@ export default function CreateUserPage() {
         <Field label="Name" htmlFor="name" required error={errors.name}>
           <TextField
             id="name"
-            size="small"
             fullWidth
             placeholder="Enter full name"
             value={name}
@@ -173,13 +184,13 @@ export default function CreateUserPage() {
           <TextField
             id="email"
             type="email"
-            size="small"
+
             fullWidth
-            placeholder="name@example.com"
+            placeholder="Enter email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             error={Boolean(errors.email)}
-            sx={inputSx}
+            sx={{...inputSx }}
           />
         </Field>
 
@@ -188,9 +199,8 @@ export default function CreateUserPage() {
             <TextField
               id="password"
               type="password"
-              size="small"
               fullWidth
-              placeholder="At least 8 characters"
+              placeholder="Enter password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               error={Boolean(errors.password)}
@@ -202,7 +212,6 @@ export default function CreateUserPage() {
             <TextField
               id="confirmPassword"
               type="password"
-              size="small"
               fullWidth
               placeholder="Re-enter password"
               value={confirmPassword}
@@ -228,7 +237,6 @@ export default function CreateUserPage() {
           </TextField>
         </Field>
 
-        {/* Actions */}
         <Box
           sx={{
             display: "flex",
