@@ -1,25 +1,27 @@
+// app/admin/profile/edit/page.tsx
 "use client";
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "../../../../components/ui/Button";
-import Footer from "../../../../components/footer/Footer";
-import Navbar from "../../../../components/navbar/Navbar";
 import { useAuth } from "../../../../context/AuthContext";
 import { profileApi, ProfileData } from "../../../../lib/profile";
 import { getErrorMessage } from "../../../../lib/toast";
 import { toast } from "sonner";
 
-export default function EditProfilePage() {
+export default function AdminEditProfilePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
   const [website, setWebsite] = useState("");
   const [avatar, setAvatar] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -32,16 +34,19 @@ export default function EditProfilePage() {
     }
 
     let cancelled = false;
-    profileApi
+   const profile = profileApi
       .get()
       .then((response) => {
         if (cancelled) return;
         const nextProfile = response.profile ?? null;
         setProfile(nextProfile);
+        setName(nextProfile?.user?.name ?? user?.name ?? "");
+        setEmail(nextProfile?.user?.email ?? user?.email ?? "");
         setBio(nextProfile?.bio ?? "");
         setInstagram(nextProfile?.socialLinks?.instagram ?? "");
         setFacebook(nextProfile?.socialLinks?.facebook ?? "");
         setWebsite(nextProfile?.socialLinks?.website ?? "");
+        setAvatarPreview(nextProfile?.avatar ?? null);
       })
       .catch(() => {
         if (!cancelled) setError("Unable to load your profile.");
@@ -49,7 +54,7 @@ export default function EditProfilePage() {
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
-
+console.log(profile)
     return () => {
       cancelled = true;
     };
@@ -61,6 +66,8 @@ export default function EditProfilePage() {
     setIsSaving(true);
 
     const formData = new FormData();
+    formData.append("name", name.trim());
+    formData.append("email", email.trim());
     formData.append("bio", bio.trim());
     formData.append("socialLinks[instagram]", instagram.trim());
     formData.append("socialLinks[facebook]", facebook.trim());
@@ -70,7 +77,7 @@ export default function EditProfilePage() {
     try {
       const response = await profileApi.update(formData);
       toast.success(response.message ?? "Profile updated successfully.");
-      router.push("/profile");
+      router.push("/admin/profile");
     } catch (submitError) {
       toast.error(
         getErrorMessage(submitError, "Unable to update your profile."),
@@ -98,12 +105,12 @@ export default function EditProfilePage() {
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
         <div className="mb-8">
           <Link
-            href="/profile"
+            href="/admin/profile"
             className="text-sm font-semibold no-underline hover:underline"
           >
             &lt;- Back to profile
           </Link>
-          <p className="eyebrow mt-8">Profile settings</p>
+          <p className="eyebrow mt-8">Admin settings</p>
           <h1 className="mt-2 text-3xl">Edit Profile</h1>
           <p className="mt-3">Keep your profile details up to date.</p>
         </div>
@@ -111,8 +118,39 @@ export default function EditProfilePage() {
         <form onSubmit={handleSubmit} className="card space-y-6 p-6 sm:p-8">
           <div>
             <p className="text-sm font-semibold text-foreground">Account</p>
-            <p className="mt-2 text-sm">{profile?.user?.name ?? user?.name}</p>
-            <p className="text-sm">{profile?.user?.email ?? user?.email}</p>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="mb-2 block text-sm font-semibold text-foreground"
+                >
+                  Name
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="w-full px-3 py-3"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-semibold text-foreground"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="w-full px-3 py-3"
+                />
+              </div>
+            </div>
           </div>
 
           <div>
@@ -139,7 +177,7 @@ export default function EditProfilePage() {
               htmlFor="avatar"
               className="mb-2 block text-sm font-semibold text-foreground"
             >
-              Avatar
+              Profile Image
             </label>
             <input
               id="avatar"
@@ -149,6 +187,9 @@ export default function EditProfilePage() {
               onChange={(event) => setAvatar(event.target.files?.[0] ?? null)}
               className="w-full px-3 py-3"
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Upload a new profile image
+            </p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
@@ -212,7 +253,7 @@ export default function EditProfilePage() {
           <div className="flex flex-wrap justify-end gap-3">
             <Button
               variant="outline"
-              href="/profile"
+              href="/admin/profile"
               className="rounded-md px-4 py-2 no-underline"
             >
               Cancel

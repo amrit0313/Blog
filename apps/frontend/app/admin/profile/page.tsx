@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box, Button, Typography, CircularProgress,
-  Card, CardContent, Divider, Avatar,
+  Card, CardContent, Divider,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import { useAuth } from "../../../context/AuthContext";
 import { profileApi, ProfileData } from "../../../lib/profile";
 import { ApiError } from "../../../lib/api";
+import Avatar from "../../../components/avatar";
+
 
 export default function AdminProfilePage() {
   const router = useRouter();
@@ -94,7 +96,7 @@ export default function AdminProfilePage() {
               <Avatar
                 src={profile?.avatar}
                 name={displayName}
-                sx={{ width: 80, height: 80, fontSize: "2rem" }}
+               
               />
               <Box>
                 <Typography variant="h5" sx={{ fontWeight: 700 }}>
