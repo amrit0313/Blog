@@ -108,8 +108,7 @@ export default function AdminOverview() {
         ))}
       </Box>
 
-      {/* New Blogs to Review */}
-      <Typography variant="h6" sx={{ fontWeight: 600, mt: 5, mb: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 600, mt: 5, mb: 2, width:"90%", mx:"auto"}}>
         New Blogs to Review
       </Typography>
       {submittedBlogs.length === 0 ? (
@@ -120,7 +119,7 @@ export default function AdminOverview() {
             <Card
               key={blog._id}
               onClick={() => router.push(`/admin/blogs/${blog._id}`)}
-              sx={{ cursor: "pointer", "&:hover": { boxShadow: 3 } }}
+              sx={{ width: "90%", mx: "auto", cursor: "pointer", "&:hover": { boxShadow: 3 }}} 
             >
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
