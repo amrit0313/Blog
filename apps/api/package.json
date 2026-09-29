@@ -15,6 +15,7 @@
     "joi": "^18.2.9",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.2",
+    "multer": "^2.4.0",
     "react": "^19.2.8",
     "resend": "^6.30.0",
     "slugify": "^1.6.9"
@@ -24,7 +25,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.2.0",
+    "@types/multer": "^2.3.0",
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
     "tsx": "^4.23.15",
