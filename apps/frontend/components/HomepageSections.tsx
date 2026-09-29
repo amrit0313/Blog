@@ -2,10 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Card, Chip, Stack } from "@mui/material";
+import { Chip, Stack } from "@mui/material";
 import Button from "./ui/Button";
 import type { Blog } from "../lib/blog";
 import { Category } from "../lib/category";
+
+const getDescriptionPreview = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 function Reveal({
   children,
@@ -59,6 +66,16 @@ export default function HomepageSections({
   onStartWriting,
 }: HomepageSectionsProps) {
   return (
+    <>
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .blog-card-fallback {
+          background: linear-gradient(135deg, var(--muted) 0%, var(--border) 100%);
+        }
+      `}</style>
     <div className="mx-auto w-full max-w-6xl px-6 pb-20 lg:px-8">
       <Reveal className="mb-8 flex items-end justify-between gap-4">
         <div>
@@ -72,42 +89,73 @@ export default function HomepageSections({
           Read the latest <span className="arrow ml-1 inline-block">-&gt;</span>
         </Link>
       </Reveal>
-      <div className="grid auto-rows-112 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {blogs.map((post, index) => (
           <Reveal key={post._id} delay={index * 70} className="h-full">
-            <Card
-              component={Link}
+            <Link
               href="/blogs"
-              elevation={0}
-              className="post-card card group flex h-full flex-col overflow-hidden no-underline"
-              sx={{
-                color: "inherit",
-                textDecoration: "none",
-                transition: "transform 220ms ease, box-shadow 220ms ease",
+              className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background no-underline motion-safe:animate-[fadeUp_400ms_ease-out_both] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+              style={{
+                animationDelay: `${index * 80}ms`,
               }}
             >
-              <div className="post-cover flex h-44 items-end bg-linear-to-br p-5">
-                <Chip
-                  label={post.category?.title ?? "General"}
-                  size="small"
-                  sx={{
-                    backgroundColor: "rgba(255, 255, 255, 0.8)",
-                    color: "#16213e",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                />
+              {/* Cover image */}
+              <div className="relative aspect-[16/10] overflow-hidden rounded-t-xl bg-muted">
+                {post.image ? (
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${post.image}`}
+                    alt={post.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      target.style.display = "none";
+                      target.parentElement?.classList.add("blog-card-fallback");
+                    }}
+                  />
+                ) : null}
+                {/* Gradient overlay */}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                {/* Category badge */}
+                {post.category?.title && (
+                  <span className="absolute top-3 left-3 rounded-full bg-background/80 backdrop-blur px-2.5 py-0.5 text-xs font-semibold text-foreground">
+                    {post.category.title}
+                  </span>
+                )}
               </div>
+              {/* Body */}
               <div className="flex flex-1 flex-col p-5">
-                <h3 className="line-clamp-6 text-xl leading-snug transition-colors group-hover:text-primary">
-                  {post.description}
+                <h3 className="font-semibold line-clamp-2 text-lg leading-snug text-foreground transition-colors duration-300 group-hover:text-primary">
+                  {post.title}
                 </h3>
-                <div className="mt-auto flex items-center justify-between pt-5 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
+                  {getDescriptionPreview(post.description)}
+                </p>
+                <div className="mt-auto flex items-center justify-between pt-4 text-xs text-muted-foreground">
                   <span>{post.author?.name ?? "Anonymous"}</span>
+                  <span>
+                    {new Date(post.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
                 </div>
+                <span className="mt-3 inline-flex items-center text-sm font-semibold text-primary">
+                  Read more
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="ml-1 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
               </div>
-            </Card>
+            </Link>
           </Reveal>
         ))}
       </div>
@@ -121,11 +169,11 @@ export default function HomepageSections({
           spacing={1.5}
           sx={{ mt: 3.5, flexWrap: "wrap" }}
         >
-          {categories?.map((topic:Category) => (
+          {categories?.map((topic: Category) => (
             <Chip
               key={topic._id}
               component={Link}
-              href="/blogs"
+              href={`/blogs?category=${topic.title}`}
               clickable
               label={topic.title}
               className="topic-chip"
@@ -186,5 +234,6 @@ export default function HomepageSections({
         </Button>
       </Reveal>
     </div>
+    </>
   );
 }

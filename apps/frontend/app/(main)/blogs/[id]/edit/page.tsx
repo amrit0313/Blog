@@ -8,12 +8,18 @@ import {
   Form,
   FormField,
   Input,
-  Textarea,
   Select,
 } from "../../../../../components/dashboard/form";
+import RichTextEditor from "../../../../../components/RichTextEditor";
 import { blogApi, type Blog } from "../../../../../lib/blog";
 import { categoryApi, type Category } from "../../../../../lib/category";
 import { ApiError } from "../../../../../lib/api";
+
+const stripHtml = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
 
 const editBlogSchema = yup.object({
   title: yup
@@ -23,9 +29,12 @@ const editBlogSchema = yup.object({
     .max(120, "Title must be 120 characters or fewer"),
   description: yup
     .string()
-    .trim()
     .required("Description is required")
-    .min(20, "Description should be at least 20 characters"),
+    .test(
+      "min-text",
+      "Description should be at least 20 characters",
+      (v) => stripHtml(v ?? "").length >= 20,
+    ),
   category: yup.string().required("Please select a category"),
   status: yup
     .mixed<"draft" | "published">()
@@ -46,6 +55,7 @@ export default function EditBlogPage({
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -55,6 +65,17 @@ export default function EditBlogPage({
   useEffect(() => {
     params.then((p) => setId(p.id));
   }, [params]);
+  useEffect(() => {
+    if (!image) {
+      setImagePreview("");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(image);
+    setImagePreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [image]);
 
   useEffect(() => {
     if (!id) return;
@@ -68,7 +89,7 @@ export default function EditBlogPage({
         const fetchedBlog = blogRes.result;
         setBlog(fetchedBlog);
         setTitle(fetchedBlog.title);
-        console.log(title)
+        console.log(title);
         setDescription(fetchedBlog.description);
         setCategory(fetchedBlog.category?._id ?? "");
         setStatus(fetchedBlog.status === "published" ? "published" : "draft");
@@ -87,7 +108,7 @@ export default function EditBlogPage({
     try {
       await editBlogSchema.validate(
         { title, description, category, status },
-        { abortEarly: false }
+        { abortEarly: false },
       );
       setFieldErrors({});
       return true;
@@ -127,7 +148,7 @@ export default function EditBlogPage({
       setError(
         err instanceof ApiError
           ? err.message
-          : "Failed to update blog. Please try again."
+          : "Failed to update blog. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -162,7 +183,6 @@ export default function EditBlogPage({
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-12 lg:px-8">
       <div className="mb-8">
-
         <h1 className="mt-2 text-3xl font-bold text-foreground">Edit Blog</h1>
         <p className="mt-2 text-muted-foreground">
           Update your blog post below.
@@ -197,12 +217,10 @@ export default function EditBlogPage({
           required
           error={fieldErrors.description}
         >
-          <Textarea
+          <RichTextEditor
             id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Write your blog content..."
-            rows={8}
+            content={description}
+            onChange={setDescription}
           />
         </FormField>
 
@@ -231,7 +249,9 @@ export default function EditBlogPage({
             <Select
               id="status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as "draft" | "published")}
+              onChange={(e) =>
+                setStatus(e.target.value as "draft" | "published")
+              }
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
@@ -244,9 +264,9 @@ export default function EditBlogPage({
             <div className="mb-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={blog.image}
+                src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
                 alt="Current cover"
-                className="aspect-video w-full rounded-md border border-border object-cover"
+                className="aspect-video w-20 h-20 rounded-md border border-border object-cover"
               />
               <p className="mt-1 text-xs text-muted-foreground">
                 Current cover image
@@ -260,10 +280,15 @@ export default function EditBlogPage({
             onChange={(e) => setImage(e.target.files?.[0] ?? null)}
             className="w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-[#c92f3d]"
           />
-          {image && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              New image selected: {image.name}
-            </p>
+          {imagePreview && (
+            <div className="mt-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imagePreview}
+                alt="Selected cover preview"
+                className="aspect-videow-20  h-20 rounded-md border border-border object-center"
+              />
+            </div>
           )}
         </FormField>
 
