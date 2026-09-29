@@ -5,7 +5,18 @@ import jwt from "jsonwebtoken";
 import { getEnvConfig } from "../../config/env.config";
 import { sendResetMail } from "../../services/email.service";
 import crypto from "node:crypto";
-import { nextTick } from "node:process";
+const isProd = process.env.NODE_ENV === "production";
+import { CookieOptions } from "express";
+
+const isProd = process.env.NODE_ENV === "production";
+
+const refreshCookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+  path: "/",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
 
 const addUser = async (req: Request, res: Response) => {
   try {
@@ -42,8 +53,8 @@ const addUser = async (req: Request, res: Response) => {
 
     res.cookie("refreshToken", refresh, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? ("none" as const) : ("lax" as const),
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -91,8 +102,8 @@ const loginUser = async (req: Request, res: Response) => {
 
     res.cookie("refreshToken", refresh, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? ("none" as const) : ("lax" as const),
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -175,43 +186,26 @@ const resetPassword = async (
 };
 
 const refresh = async (req: Request, res: Response) => {
-  const refreshToken = req.cookies.refreshToken;
-  const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
 
-  if (!refreshToken) {
-    return res.status(401).json({ message: "Token not provided" });
+    if (!refreshToken) return res.status(401).json({ message: "Token not provided" });
+    if (!JWT_SECRET || !REFRESH_SECRET) return res.status(500).json({ message: "Server error" });
+
+    const payload = jwt.verify(refreshToken, REFRESH_SECRET) as { userId: string };
+    const user = await User.findById(payload.userId);
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    const userData = { id: user._id, name: user.name, email: user.email, role: user.role };
+    const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
+    const newRefresh = jwt.sign({ userId: user._id.toString() }, REFRESH_SECRET, { expiresIn: "7d" });
+
+    res.cookie("refreshToken", newRefresh, refreshCookieOptions);
+    return res.json({ token });
+  } catch {
+    return res.status(401).json({ message: "Invalid or expired refresh token" });
   }
-
-  if (!REFRESH_SECRET) {
-    return res.status(401).json({ message: "Server error" });
-  }
-
-  const payload = jwt.verify(refreshToken, REFRESH_SECRET) as {
-    userId: string;
-  };
-  const user = await User.findById(payload.userId);
-  if (!user) return res.status(401).json({ message: "User not found" });
-  const userData = {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  };
-  const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
-  const refresh = jwt.sign({ userId: userData.id.toString() }, REFRESH_SECRET, {
-    expiresIn: "7d",
-  });
-  res.cookie("refreshToken", refresh, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
-
-  res.json({
-    token,
-  });
 };
 
 export {
