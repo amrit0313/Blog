@@ -1,15 +1,15 @@
 import express from "express";
 import { authenticateToken } from "../auth/auth.middleware";
 import { createOrUpdateProfile, getProfile } from "./profile.controller";
-import { profileUpload } from "../../middlewares/fileupload.middleware";
 import bodyValidator from "../../services/validator.middleware";
 import { profileValidation } from "./profile.validation";
+import { imageUpload } from "../../middlewares/upload";
 const router = express.Router();
 
 router.patch(
   "",
   authenticateToken,
-  profileUpload.single("avatar"),
+  imageUpload.single("avatar"),
   bodyValidator(profileValidation),
   createOrUpdateProfile,
 );

@@ -10,6 +10,7 @@ interface IBlog {
   status: "draft" | "published" | "unpublished";
   image?: string;
 }
+import { storage } from "../../storage";
 
 interface AppError extends Error {
   status?: number;
@@ -21,31 +22,43 @@ const createError = (message: string, status = 500): AppError => {
   return err;
 };
 
+import mongoose from "mongoose";
+
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
+  let uploaded: { key: string; url: string } | null = null;
+
   try {
-    const data = req.body;
+    const { title, category, description } = req.body;
 
-    if (data.title) {
-      data.slug = slugify(data.title);
-    }
-
-    if (req.file) {
-      data.image = req.file.filename;
-    }
-
-    if (!data.title || !data.category || !data.description) {
+    if (!title || !category || !description) {
       return res.status(400).json({ message: "Invalid request" });
     }
 
+    // category is an ObjectId ref, so reject malformed ids as a 400 (not a 500 CastError)
+    if (!mongoose.isValidObjectId(category)) {
+      return res.status(400).json({ message: "Invalid category" });
+    }
 
-    const newBlog = await blog.create(data);
+    if (req.file) {
+      uploaded = await storage.upload(req.file, { folder: "blogs" });
+    }
 
-    res.json({
+    const newBlog = await blog.create({
+      title,
+      description,
+      category,
+      author: req.user!.id, // from your auth middleware, NOT from req.body
+      status: "submitted", // server decides, never the client
+      image: uploaded ?? undefined,
+    });
+
+    res.status(201).json({
       result: newBlog,
       message: "Blog submitted for review",
       meta: null,
     });
   } catch (exception) {
+    if (uploaded) await storage.delete(uploaded.key).catch(console.error);
     next(exception);
   }
 };
@@ -236,43 +249,52 @@ const AllBlogsFiltering = async (
     next(exception);
   }
 };
-
 const BlogUpdateById = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  try {
-    const data = req.body;
+  let uploaded: { key: string; url: string } | null = null;
 
-    if (data.title) {
-      data.slug = slugify(data.title);
+  try {
+    const { title, description, category } = req.body;
+
+    const existing = await blog.findById(req.params.id);
+    if (!existing) throw createError("Blog not found", 404);
+    if (existing.author.toString() !== req.user!.id)
+      throw createError("Forbidden", 403);
+
+    if (category !== undefined && !mongoose.isValidObjectId(category)) {
+      throw createError("Invalid category", 400);
     }
+
+    const update: Record<string, unknown> = {};
+    if (title !== undefined)
+      Object.assign(update, { title, slug: slugify(title) });
+    if (description !== undefined) update.description = description;
+    if (category !== undefined) update.category = category;
 
     if (req.file) {
-      data.image = req.file.filename;
+      uploaded = await storage.upload(req.file, { folder: "blogs" });
+      update.image = uploaded;
     }
 
-    const BlogUpdate = await blog.findByIdAndUpdate(
-      req.params.id,
-      { $set: data },
-      { new: true },
+    const updated = await blog.findByIdAndUpdate(
+      existing._id,
+      { $set: update },
+      { new: true, runValidators: true },
     );
 
-    if (!BlogUpdate) {
-      throw createError("Blog not found", 404);
+    if (uploaded && existing.image?.key) {
+      await storage.delete(existing.image.key).catch(console.error);
     }
 
-    res.json({
-      result: BlogUpdate,
-      message: "Blog updated",
-      meta: null,
-    });
+    res.json({ result: updated, message: "Blog updated", meta: null });
   } catch (exception) {
+    if (uploaded) await storage.delete(uploaded.key).catch(console.error);
     next(exception);
   }
 };
-
 const UnpublishBlogById = async (
   req: Request,
   res: Response,
