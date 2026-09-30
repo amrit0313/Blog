@@ -9,6 +9,8 @@ import categoryRoutes from "./module/categories/category.routes";
 import userRoutes from "./module/user/user.route";
 import { connectDB } from "./config/db";
 import errorHandler from "./services/errorHandler";
+import { UPLOADS_DIR, usesLocalStorage } from "./storage";
+
 import path from "path";
 const PORT = 5000;
 
@@ -16,7 +18,11 @@ const app = express();
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["https://blog-ncc19.vercel.app", "http://localhost:3000", "https://blog-kt2b18nqp-ncc19.vercel.app/"],
+    origin: [
+      "https://blog-ncc19.vercel.app",
+      "http://localhost:3000",
+      "https://blog-kt2b18nqp-ncc19.vercel.app/",
+    ],
     credentials: true,
   }),
 );
@@ -26,8 +32,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/uploads", express.static("uploads"));
-app.use("/api/user", userRoutes)
+if (usesLocalStorage) {
+  app.use("/uploads", express.static(UPLOADS_DIR));
+}
+app.use("/api/user", userRoutes);
 app.use("/api/category", categoryRoutes);
 
 app.use(express.urlencoded({ extended: true }));

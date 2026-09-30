@@ -7,8 +7,8 @@ const ProfileSchema = new mongoose.Schema(
       maxlength: 250,
     },
     avatar: {
-      type: String,
-      default: "",
+      key: String,
+      url: String,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -30,8 +30,8 @@ const ProfileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    resetPasswordToken: String,
-    resetPasswordExpires: Date,
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
   },
   {
     timestamps: true,
