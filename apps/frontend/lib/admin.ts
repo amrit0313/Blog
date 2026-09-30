@@ -10,6 +10,7 @@ export interface AdminUser {
 export interface AdminBlog {
   _id: string;
   title: string;
+  slug: string;
   description: string;
   status: "draft" | "published" | "unpublished";
   image?: string;

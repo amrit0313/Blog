@@ -122,7 +122,7 @@ export default function DraftDetailPage() {
           {draft.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={imgSrc(blog.image, "blogs")}
+              src={imgSrc(draft.image, "blogs")}
               alt=""
               className="mt-8 aspect-video w-full rounded-md object-cover"
             />
@@ -131,7 +131,7 @@ export default function DraftDetailPage() {
             {draft.description}
           </p>
           <div className="mt-10 flex flex-wrap gap-3 border-t border-border pt-6">
-            <Button href={`/blogs/${draft._id}/edit`}>Continue Editing</Button>
+            <Button href={`/blogs/${draft.slug}/edit`}>Continue Editing</Button>
             <Button
               variant="outline"
               onClick={handleDelete}

@@ -54,7 +54,7 @@ export default function ProfileBlogCard({
     (blog.status ? defaultStatusStyles[blog.status] : undefined) ??
     "bg-gray-100 text-gray-700";
 
-  const href = actionHref ?? `/blogs/${blog._id}`;
+  const href = actionHref ?? `/blogs/${blog.slug}`;
 
   return (
     <article className={`card flex flex-col p-6 ${className}`.trim()}>

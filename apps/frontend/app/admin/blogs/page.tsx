@@ -96,7 +96,7 @@ export default function AdminBlogsPage() {
         onPaginationModelChange={setPaginationModel}
         pageSizeOptions={[10, 20]}
         disableRowSelectionOnClick
-        onRowClick={(params) => router.push(`/admin/blogs/${params.id}`)}
+        onRowClick={(params) => router.push(`/admin/blogs/${params.row.slug}`)}
         sx={{
           bgcolor: "background.paper",
           width: "100%",
