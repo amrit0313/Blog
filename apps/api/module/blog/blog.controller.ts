@@ -10,6 +10,7 @@ interface IBlog {
   status: "draft" | "published" | "unpublished";
   image?: string;
 }
+import { storage } from "../../storage";
 
 interface AppError extends Error {
   status?: number;
@@ -34,30 +35,40 @@ async function generateUniqueSlug(title: string, excludeId?: string) {
 }
 
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
+  let uploaded: { key: string; url: string } | null = null;
+
   try {
-    const data = req.body;
+    const { title, category, description } = req.body;
 
     if (data.title) {
       data.slug = await generateUniqueSlug(data.title);
     }
 
+    // category is an ObjectId ref, so reject malformed ids as a 400 (not a 500 CastError)
+    if (!mongoose.isValidObjectId(category)) {
+      return res.status(400).json({ message: "Invalid category" });
+    }
+
     if (req.file) {
-      data.image = req.file.filename;
+      uploaded = await storage.upload(req.file, { folder: "blogs" });
     }
 
-    if (!data.title || !data.category || !data.description) {
-      return res.status(400).json({ message: "Invalid request" });
-    }
+    const newBlog = await blog.create({
+      title,
+      description,
+      category,
+      author: req.user!.id, // from your auth middleware, NOT from req.body
+      status: "submitted", // server decides, never the client
+      image: uploaded ?? undefined,
+    });
 
-
-    const newBlog = await blog.create(data);
-
-    res.json({
+    res.status(201).json({
       result: newBlog,
       message: "Blog submitted for review",
       meta: null,
     });
   } catch (exception) {
+    if (uploaded) await storage.delete(uploaded.key).catch(console.error);
     next(exception);
   }
 };
@@ -255,6 +266,8 @@ const BlogUpdateBySlug = async (
   res: Response,
   next: NextFunction,
 ) => {
+  let uploaded: { key: string; url: string } | null = null;
+
   try {
     const existing = await blog.findOne({ slug: req.params.slug });
 
@@ -276,7 +289,8 @@ const BlogUpdateBySlug = async (
     delete data.slug;
 
     if (req.file) {
-      data.image = req.file.filename;
+      uploaded = await storage.upload(req.file, { folder: "blogs" });
+      update.image = uploaded;
     }
 
     const BlogUpdate = await blog.findByIdAndUpdate(
@@ -291,6 +305,7 @@ const BlogUpdateBySlug = async (
       meta: null,
     });
   } catch (exception) {
+    if (uploaded) await storage.delete(uploaded.key).catch(console.error);
     next(exception);
   }
 };

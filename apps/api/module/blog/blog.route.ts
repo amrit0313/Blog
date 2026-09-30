@@ -13,6 +13,7 @@ import {
 } from "./blog.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
 import { blogUpload } from "../../middlewares/fileupload.middleware";
+import { imageUpload } from "../../middlewares/upload";
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get("/me", authenticateToken, GetMyBlogs);
 router.post(
   "/create",
   authenticateToken,
-  blogUpload.single("image"),
+  imageUpload.single("image"),
   bodyValidator(CreateBlogValidation),
   createBlog,
 );
