@@ -14,7 +14,8 @@ export default function Avatar({
   className = "h-20 w-20",
   fallback = "initials",
 }: AvatarProps) {
-  const avatarUrl = imgSrc(src, "profile");
+  console.log(src);
+  const avatarUrl = src && imgSrc(src, "profile");
   const label = name ? `${name} avatar` : "Profile avatar";
 
   if (avatarUrl) {

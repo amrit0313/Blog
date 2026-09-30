@@ -64,6 +64,7 @@ export default function ProfilePage() {
             setProfile(response.profile ?? null);
             setProfileMissing(!response.profile);
           });
+          console.log(response);
         }
       } catch (error) {
         if (!cancelled) {
@@ -253,7 +254,9 @@ export default function ProfilePage() {
           )}
           <h3 className="mt-8 text-xl font-bold">Published Blogs</h3>
           {!blogsLoading && !blogsError && publishedBlogs.length === 0 && (
-            <p className="mt-3 text-muted-foreground">No published blogs yet.</p>
+            <p className="mt-3 text-muted-foreground">
+              No published blogs yet.
+            </p>
           )}
           {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
             <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -270,7 +273,9 @@ export default function ProfilePage() {
           {/* Submitted for Review */}
           <h3 className="mt-10 text-xl font-bold">Submitted for review</h3>
           {!blogsLoading && !blogsError && submittedBlogs.length === 0 && (
-            <p className="mt-3 text-muted-foreground">No blogs submitted for review.</p>
+            <p className="mt-3 text-muted-foreground">
+              No blogs submitted for review.
+            </p>
           )}
           {!blogsLoading && !blogsError && submittedBlogs.length > 0 && (
             <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -325,7 +330,6 @@ export default function ProfilePage() {
               </Button>
             </div>
           )}
-
         </section>
       </main>
     </div>

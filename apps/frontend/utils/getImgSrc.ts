@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_FUNCTION;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const imgSrc = (img?: { url?: string } | string, folder = "blogs") =>
   !img

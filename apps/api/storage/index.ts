@@ -20,7 +20,7 @@ function createStorage(): StorageDriver {
     case "local":
       return new LocalStorage(
         UPLOADS_DIR,
-        `${process.env.APP_URL ?? "http://localhost:3000"}/uploads`,
+        `${process.env.BACKEND_URL ?? "http://localhost:5000"}/uploads`,
       );
     default:
       throw new Error(`Unknown STORAGE_DRIVER: ${driver}`);
@@ -29,5 +29,7 @@ function createStorage(): StorageDriver {
 
 export const storage = createStorage();
 export const usesLocalStorage = !(
-  (process.env.STORAGE_DRIVER ?? (process.env.NODE_ENV === "production" ? "cloudinary" : "local")) === "cloudinary"
+  (process.env.STORAGE_DRIVER ??
+    (process.env.NODE_ENV === "production" ? "cloudinary" : "local")) ===
+  "cloudinary"
 );

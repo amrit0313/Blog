@@ -12,10 +12,11 @@ import ArticleIcon from "@mui/icons-material/Article";
 import CategoryIcon from "@mui/icons-material/Category";
 import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
 import Image from "next/image";
-import NepalCanLogo from "../../public/navbar-logo-short-v3 (1).png";
+import NepalCanLogo from "../../assets/navbar.png";
 import { useAuth } from "../../context/AuthContext";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 const drawerWidth = 240;
 const links = [
@@ -32,6 +33,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
   const notified = useRef(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdmin = user?.role === "admin";
 
@@ -60,6 +62,26 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push("/login");
   }
 
+  const drawer = (
+    <Box>
+      <Toolbar />
+      <List sx={{pt:2}}>
+        {links.map((l) => (
+          <ListItemButton
+            key={l.href}
+            component={Link}
+            href={l.href}
+            selected={pathname === l.href}
+            onClick={() => setMobileOpen(false)}
+          >
+            <ListItemIcon>{l.icon}</ListItemIcon>
+            <ListItemText primary={l.label} />
+          </ListItemButton>
+        ))}
+      </List>
+    </Box>
+  );
+
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
@@ -74,18 +96,35 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     borderColor: "divider",             // uses theme.palette.divider (#eadfd6)
   }}
 >
-  <Toolbar sx={{ px: { xs: 3, lg: 4 }, py: 1 }}>
+  <Toolbar sx={{ px: { xs: 1, sm: 2, lg: 4 }, py: 1 }}>
+    <IconButton
+      color="inherit"
+      edge="start"
+      onClick={() => setMobileOpen(!mobileOpen)}
+      sx={{ mr: 1, display: { md: "none" } }}
+      aria-label="Toggle menu"
+    >
+      <MenuIcon />
+    </IconButton>
     <Link
       href="/"
       className="flex items-center gap-2 text-xl font-bold tracking-tight hover:text-primary"
     >
       <Image src={NepalCanLogo} className="h-8 w-8" alt="Nepal Can Blog logo" />
-      Nepal Can<span className="text-black"> Blog</span>
+      Nepal Can <span className="text-black"> Blog</span>
     </Link>
     <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1 }}>
       {user && (
-        <Typography component="span" variant="body1" sx={{ fontWeight: 700, mr: 4, color:"primary.main"}}>
-          {user.name}
+        <Typography
+          component="span"
+          variant="body1"
+          sx={{ fontWeight: 700, mr: { xs: 1, sm: 4 }, color: "primary.main", display: { xs: "none", sm: "block" } }}
+        >
+          <Link
+            href="/admin/profile" >
+            
+            {user.name}
+          </Link>
         </Typography>
       )}
       <Box
@@ -97,40 +136,41 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         title="Logout"
       >
         <LogoutIcon fontSize="small" />
-        <Typography component="span" variant="body2" sx={{ fontWeight: 500,color:"primary.main" }}>Logout</Typography>
+        <Typography component="span" variant="body2" sx={{ fontWeight: 500, color:"primary.main", display: { xs: "none", sm: "block" } }}>Logout</Typography>
       </Box>
     </Box>
   </Toolbar>
 </AppBar>
+      {/* Desktop drawer */}
       <Drawer
         variant="permanent"
         sx={{
           width: drawerWidth,
+          display: { xs: "none", md: "block" },
           "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
         }}
       >
-
-        <Toolbar />
-        <List sx={{pt:2}}>
-          {links.map((l) => (
-            <ListItemButton
-              key={l.href}
-              component={Link}
-              href={l.href}
-              selected={pathname === l.href}
-            >
-              <ListItemIcon>{l.icon}</ListItemIcon>
-              <ListItemText primary={l.label} />
-            </ListItemButton>
-          ))}
-        </List>
+        {drawer}
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3, minHeight: "100vh", bgcolor: "background.default" }}>
+      {/* Mobile drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, minHeight: "100vh", bgcolor: "background.default", width: { xs: "100%", md: `calc(100% - ${drawerWidth}px)` } }}>
         <Toolbar />
         {children}
       </Box>
     </Box>
   );
 }
- 

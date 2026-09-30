@@ -104,7 +104,7 @@ export default function HomepageSections({
               <div className="relative aspect-[16/10] overflow-hidden rounded-t-xl bg-muted">
                 {post.image ? (
                   <img
-                    src={imgSrc(blog.image, "blogs")}
+                    src={imgSrc(post.image, "blogs")}
                     alt={post.title}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
