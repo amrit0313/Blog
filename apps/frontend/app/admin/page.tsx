@@ -61,8 +61,12 @@ export default function AdminOverview() {
           Object.entries(categoryMap).map(([name, count]) => ({ name, count }))
         );
 
-        // Blogs by status
+        // Blogs by status — include all statuses even if zero
+        const allStatuses = ["draft", "published", "unpublished", "submitted", "rejected"];
         const statusMap: Record<string, number> = {};
+        allStatuses.forEach((s) => {
+          statusMap[s] = 0;
+        });
         blogs.forEach((b: AdminBlog) => {
           statusMap[b.status] = (statusMap[b.status] ?? 0) + 1;
         });
@@ -152,13 +156,21 @@ export default function AdminOverview() {
           mb: 5,
         }}
       >
+
         <Card>
           <CardContent>
             <Typography sx={{ fontWeight: 600, mb: 2 }}>Blogs per Category</Typography>
             {blogsByCategory.length > 0 ? (
-              <BarChart
-                xAxis={[{ scaleType: "band", data: categoryChartData }]}
-                series={[{ data: categoryChartSeries, color: "#A0522D" }]}
+              <PieChart
+                series={[
+                  {
+                    data: blogsByCategory.map((c, i) => ({
+                      id: i,
+                      value: c.count,
+                      label: c.name,
+                    })),
+                  },
+                ]}
                 height={250}
               />
             ) : (
@@ -166,17 +178,13 @@ export default function AdminOverview() {
             )}
           </CardContent>
         </Card>
-
         <Card>
           <CardContent>
             <Typography sx={{ fontWeight: 600, mb: 2 }}>Blogs by Status</Typography>
             {blogsByStatus.length > 0 ? (
-              <PieChart
-                series={[
-                  {
-                    data: statusChartData,
-                  },
-                ]}
+              <BarChart
+                xAxis={[{ scaleType: "band", data: blogsByStatus.map((s) => s.label) }]}
+                series={[{ data: blogsByStatus.map((s) => s.value), color: "#A0522D" }]}
                 height={250}
               />
             ) : (
