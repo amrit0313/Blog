@@ -3,8 +3,18 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Box, Button, Chip, Typography, CircularProgress,
-  Card, CardContent, Divider,Dialog,DialogTitle,DialogContent,DialogActions
+  Box,
+  Button,
+  Chip,
+  Typography,
+  CircularProgress,
+  Card,
+  CardContent,
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -12,6 +22,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { toast } from "sonner";
 import { blogApi, type Blog } from "../../../../lib/blog";
 import { adminApi } from "../../../../lib/admin";
+import { imgSrc } from "../../../../utils/getImgSrc";
 import { ApiError } from "../../../../lib/api";
 
 interface AdminBlogDetailPageProps {
@@ -30,7 +41,9 @@ function formatDate(value?: string) {
       });
 }
 
-export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps) {
+export default function AdminBlogDetailPage({
+  params,
+}: AdminBlogDetailPageProps) {
   const router = useRouter();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,7 +89,9 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
   if (error) {
     return (
       <Box sx={{ textAlign: "center", py: 8 }}>
-        <Typography variant="h6" color="error">{error}</Typography>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push("/admin/blogs")}
@@ -94,16 +109,18 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
     try {
       if (action === "verify") {
         await adminApi.verifyBlog(blog._id);
-        setBlog((prev) => prev ? { ...prev, status: "published" } : prev);
+        setBlog((prev) => (prev ? { ...prev, status: "published" } : prev));
         toast.success("Blog verified and published.");
       } else {
         await adminApi.rejectBlog(blog._id);
-        setBlog((prev) => prev ? { ...prev, status: "rejected" } : prev);
+        setBlog((prev) => (prev ? { ...prev, status: "rejected" } : prev));
         toast.success("Blog rejected.");
       }
       setAction(null);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to process blog.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to process blog.",
+      );
     } finally {
       setProcessing(false);
     }
@@ -129,7 +146,13 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         <Chip
           size="small"
           label={blog.status}
-          color={blog.status === "published" ? "success" : blog.status === "rejected" ? "error" : "warning"}
+          color={
+            blog.status === "published"
+              ? "success"
+              : blog.status === "rejected"
+                ? "error"
+                : "warning"
+          }
         />
         <Typography variant="body2" color="text.secondary">
           By {blog.author?.name ?? "Unknown"}
@@ -165,7 +188,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
       {blog.image && (
         <Box
           component="img"
-          src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
+          src={imgSrc(blog.image, "blogs")}
           alt={blog.title}
           sx={{
             width: "100%",
@@ -186,7 +209,14 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
             {blog.description}
           </Typography>
           <Divider sx={{ my: 3 }} />
-          <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 2,
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               Created: {formatDate(blog.createdAt) ?? "Unknown"}
             </Typography>
@@ -200,7 +230,9 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
       {/* Verify/Reject Confirmation Dialog */}
       {action && (
         <Dialog open onClose={() => setAction(null)}>
-          <DialogTitle>{action === "verify" ? "Verify Blog" : "Reject Blog"}</DialogTitle>
+          <DialogTitle>
+            {action === "verify" ? "Verify Blog" : "Reject Blog"}
+          </DialogTitle>
           <DialogContent>
             <Typography>
               Are you sure you want to {action} this blog?
@@ -216,7 +248,11 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
               variant="contained"
               disabled={processing}
             >
-              {processing ? "Processing..." : action === "verify" ? "Yes, Verify" : "Yes, Reject"}
+              {processing
+                ? "Processing..."
+                : action === "verify"
+                  ? "Yes, Verify"
+                  : "Yes, Reject"}
             </Button>
           </DialogActions>
         </Dialog>

@@ -7,6 +7,7 @@ import Button from "../../../../../components/ui/Button";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ApiError } from "../../../../../lib/api";
 import { blogApi, type Blog } from "../../../../../lib/blog";
+import { imgSrc } from "../../../../../utils/getImgSrc";
 
 export default function DraftDetailPage() {
   const router = useRouter();
@@ -121,7 +122,7 @@ export default function DraftDetailPage() {
           {draft.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${draft.image}`}
+              src={imgSrc(blog.image, "blogs")}
               alt=""
               className="mt-8 aspect-video w-full rounded-md object-cover"
             />

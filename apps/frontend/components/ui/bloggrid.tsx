@@ -3,6 +3,7 @@ import Link from "next/link";
 import Card from "../dashboard/card";
 import { HiCalendar, HiUser, HiTag, HiArrowRight } from "react-icons/hi2";
 import type { Blog } from "../../lib/blog";
+import { imgSrc } from "../../utils/getImgSrc";
 
 interface BlogGridProps {
   blogs: Blog[];
@@ -59,8 +60,7 @@ export default function BlogGrid({
                 {blog.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
-                    alt={blog.title}
+                    src={imgSrc(blog.image, "blogs")}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
@@ -72,10 +72,11 @@ export default function BlogGrid({
                 )}
                 <div className="absolute top-2.5 left-2.5">
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${blog.status === "published"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                      }`}
+                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      blog.status === "published"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
                   >
                     {blog.status === "published" ? "Published" : "Draft"}
                   </span>
@@ -135,10 +136,11 @@ export default function BlogGrid({
             <Link
               key={page}
               href={pageHref(page)}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${page === currentPage
-                ? "bg-primary text-primary-foreground"
-                : "border border-border bg-card text-foreground hover:border-primary hover:text-primary"
-                }`}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                page === currentPage
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border bg-card text-foreground hover:border-primary hover:text-primary"
+              }`}
             >
               {page}
             </Link>

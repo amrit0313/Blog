@@ -6,6 +6,7 @@ import { Chip, Stack } from "@mui/material";
 import Button from "./ui/Button";
 import type { Blog } from "../lib/blog";
 import { Category } from "../lib/category";
+import { imgSrc } from "../utils/getImgSrc";
 
 const getDescriptionPreview = (html: string) =>
   html
@@ -103,7 +104,7 @@ export default function HomepageSections({
               <div className="relative aspect-[16/10] overflow-hidden rounded-t-xl bg-muted">
                 {post.image ? (
                   <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${post.image}`}
+                    src={imgSrc(blog.image, "blogs")}
                     alt={post.title}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"

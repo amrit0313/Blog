@@ -243,7 +243,7 @@ function MetaCard({
 function HeroImage({ blog }: { blog: Blog }) {
   const [imgError, setImgError] = useState(false);
   const url = getBlogImageUrl(blog.image);
-  const isSvg = blog.image?.toLowerCase().endsWith(".svg");
+  const isSvg = blog?.image?.endsWith(".svg");
 
   if (!url || imgError) {
     // gradient placeholder
