@@ -16,7 +16,7 @@ import { ApiError } from "../../../../lib/api";
 import DOMPurify from "dompurify";
 
 interface AdminBlogDetailPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 function formatDate(value?: string) {
@@ -42,22 +42,21 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
   const [blog, setBlog] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [id, setId] = useState<string>("");
+  const [slug, setSlug] = useState<string>("");
   const [action, setAction] = useState<"verify" | "reject" | null>(null);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    params.then((p) => setId(p.id));
+    params.then((p) => setSlug(p.slug));
   }, [params]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
 
     const fetchBlog = async () => {
       try {
         setError("");
-        const res = await blogApi.getById(id);
-        console.log(res)
+        const res = await blogApi.getBySlug(slug);
         setBlog(res.result);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
@@ -71,7 +70,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
     };
 
     fetchBlog();
-  }, [id]);
+  }, [slug]);
 
   const sanitizedHtml = useMemo(() => {
     if (!blog?.description) return "";

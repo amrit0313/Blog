@@ -37,23 +37,23 @@ const editBlogSchema = yup.object({
     ),
   category: yup.string().required("Please select a category"),
   status: yup
-    .mixed<"draft" | "published">()
-    .oneOf(["draft", "published"])
+    .mixed<"draft" | "submitted">()
+    .oneOf(["draft", "submitted"])
     .required(),
 });
 
 export default function EditBlogPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
   const router = useRouter();
-  const [id, setId] = useState<string>("");
+  const [slug, setSlug] = useState<string>("");
   const [blog, setBlog] = useState<Blog | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
-  const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [status, setStatus] = useState<"draft" | "submitted">("draft");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -63,8 +63,9 @@ export default function EditBlogPage({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    params.then((p) => setId(p.id));
+    params.then((p) => setSlug(p.slug));
   }, [params]);
+
   useEffect(() => {
     if (!image) {
       setImagePreview("");
@@ -78,21 +79,20 @@ export default function EditBlogPage({
   }, [image]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
 
     const fetchData = async () => {
       try {
         const [blogRes, categoryRes] = await Promise.all([
-          blogApi.getById(id),
+          blogApi.getBySlug(slug),
           categoryApi.list(),
         ]);
         const fetchedBlog = blogRes.result;
         setBlog(fetchedBlog);
         setTitle(fetchedBlog.title);
-        console.log(title);
         setDescription(fetchedBlog.description);
         setCategory(fetchedBlog.category?._id ?? "");
-        setStatus(fetchedBlog.status === "published" ? "published" : "draft");
+        setStatus(fetchedBlog.status === "submitted" ? "submitted" : "draft");
         setCategories(categoryRes.result ?? []);
       } catch {
         setError("Failed to load blog. Please try again later.");
@@ -102,13 +102,13 @@ export default function EditBlogPage({
     };
 
     fetchData();
-  }, [id]);
+  }, [slug]);
 
   const validate = async () => {
     try {
       await editBlogSchema.validate(
         { title, description, category, status },
-        { abortEarly: false },
+        { abortEarly: false }
       );
       setFieldErrors({});
       return true;
@@ -142,8 +142,8 @@ export default function EditBlogPage({
       formData.append("status", status);
       if (image) formData.append("image", image);
 
-      await blogApi.update(id, formData);
-      router.push(`/blogs/${id}`);
+      await blogApi.updateBySlug(slug, formData);
+      router.push(`/blogs/${slug}`);
     } catch (err) {
       setError(
         err instanceof ApiError
@@ -250,11 +250,11 @@ export default function EditBlogPage({
               id="status"
               value={status}
               onChange={(e) =>
-                setStatus(e.target.value as "draft" | "published")
+                setStatus(e.target.value as "draft" | "submitted")
               }
             >
               <option value="draft">Draft</option>
-              <option value="published">Published</option>
+              <option value="submitted">Submit</option>
             </Select>
           </FormField>
         </div>
@@ -286,7 +286,7 @@ export default function EditBlogPage({
               <img
                 src={imagePreview}
                 alt="Selected cover preview"
-                className="aspect-videow-20  h-20 rounded-md border border-border object-center"
+                className="aspect-video w-20 h-20 rounded-md border border-border object-cover"
               />
             </div>
           )}

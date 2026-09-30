@@ -22,7 +22,17 @@ const createError = (message: string, status = 500): AppError => {
   return err;
 };
 
-import mongoose from "mongoose";
+async function generateUniqueSlug(title: string, excludeId?: string) {
+  const base = slugify(title, { lower: true, strict: true });
+  let slug = base;
+  let counter = 1;
+
+  while (await blog.exists({ slug, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+    slug = `${base}-${counter++}`;
+  }
+
+  return slug;
+}
 
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
@@ -30,8 +40,8 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, category, description } = req.body;
 
-    if (!title || !category || !description) {
-      return res.status(400).json({ message: "Invalid request" });
+    if (data.title) {
+      data.slug = await generateUniqueSlug(data.title);
     }
 
     // category is an ObjectId ref, so reject malformed ids as a 400 (not a 500 CastError)
@@ -95,6 +105,7 @@ const BlogDetailById = async (
     next(exception);
   }
 };
+
 
 const BlogDetailBySlug = async (
   req: Request,
@@ -249,7 +260,8 @@ const AllBlogsFiltering = async (
     next(exception);
   }
 };
-const BlogUpdateById = async (
+
+const BlogUpdateBySlug = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -257,39 +269,41 @@ const BlogUpdateById = async (
   let uploaded: { key: string; url: string } | null = null;
 
   try {
-    const { title, description, category } = req.body;
+    const existing = await blog.findOne({ slug: req.params.slug });
 
-    const existing = await blog.findById(req.params.id);
-    if (!existing) throw createError("Blog not found", 404);
-    if (existing.author.toString() !== req.user!.id)
-      throw createError("Forbidden", 403);
-
-    if (category !== undefined && !mongoose.isValidObjectId(category)) {
-      throw createError("Invalid category", 400);
+    if (!existing) {
+      throw createError("Blog not found", 404);
     }
 
-    const update: Record<string, unknown> = {};
-    if (title !== undefined)
-      Object.assign(update, { title, slug: slugify(title) });
-    if (description !== undefined) update.description = description;
-    if (category !== undefined) update.category = category;
+
+    if (
+      req.user &&
+      existing.author.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      throw createError("Not authorized to modify this blog", 403);
+    }
+
+    const data = req.body;
+
+    delete data.slug;
 
     if (req.file) {
       uploaded = await storage.upload(req.file, { folder: "blogs" });
       update.image = uploaded;
     }
 
-    const updated = await blog.findByIdAndUpdate(
+    const BlogUpdate = await blog.findByIdAndUpdate(
       existing._id,
-      { $set: update },
-      { new: true, runValidators: true },
+      { $set: data },
+      { new: true },
     );
 
-    if (uploaded && existing.image?.key) {
-      await storage.delete(existing.image.key).catch(console.error);
-    }
-
-    res.json({ result: updated, message: "Blog updated", meta: null });
+    res.json({
+      result: BlogUpdate,
+      message: "Blog updated",
+      meta: null,
+    });
   } catch (exception) {
     if (uploaded) await storage.delete(uploaded.key).catch(console.error);
     next(exception);
@@ -419,7 +433,7 @@ export {
   BlogDetailBySlug,
   ListAllBlogs,
   AllBlogsFiltering,
-  BlogUpdateById,
+  BlogUpdateBySlug,
   UnpublishBlogById,
   BlogDeleteById,
   GetMyBlogs,
