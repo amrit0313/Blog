@@ -8,6 +8,13 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getErrorMessage } from "../../../lib/toast";
+import * as Yup from "yup";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
+const loginSchema = Yup.object().shape({
+  email: Yup.string().email("Enter a valid email address").required("Email is required"),
+  password: Yup.string().required("Password is required"),
+});
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,20 +22,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
 
-    if (!email.trim() || !password) {
-      setError("Enter your email and password to continue.");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Enter a valid email address.");
+    try {
+      await loginSchema.validate({ email, password }, { abortEarly: false });
+      setErrors({});
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const e: Record<string, string> = {};
+        err.inner.forEach((e2) => {
+          if (e2.path) e[e2.path] = e2.message;
+        });
+        setErrors(e);
+      }
       return;
     }
 
@@ -37,8 +47,7 @@ export default function LoginPage() {
       const user = await login({ email: email.trim(), password });
       if (user.role === "admin") {
         router.push("/admin");
-      } else router.push("/profile")
-      console.log(user.role);
+      } else router.push("/profile");
     } catch (submitError) {
       toast.error(getErrorMessage(submitError, "Unable to log in."));
     } finally {
@@ -79,10 +88,13 @@ export default function LoginPage() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
                 autoComplete="email"
-                aria-invalid={Boolean(error)}
+                aria-invalid={Boolean(errors.email)}
                 className="w-full px-3 py-3"
                 required
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
 
             <div>
@@ -104,34 +116,28 @@ export default function LoginPage() {
                 <input
                   id="password"
                   name="password"
+                  placeholder="Enter your password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   autoComplete="current-password"
-                  aria-invalid={Boolean(error)}
-                  className="w-full px-3 py-3 pr-20"
+                  aria-invalid={Boolean(errors.password)}
+                  className="w-full px-3 py-3 pr-10"
                   required
                 />
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
                   onClick={() => setShowPassword((visible) => !visible)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground hover:text-primary"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? "Hide" : "Show"}
-                </Button>
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
             </div>
-
-            {error && (
-              <p
-                role="alert"
-                className="rounded-md border border-primary/30 bg-secondary px-3 py-2 text-sm text-secondary-foreground"
-              >
-                {error}
-              </p>
-            )}
 
             <Button
               type="submit"

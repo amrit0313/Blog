@@ -34,7 +34,7 @@ export default function AdminCategoriesPage() {
       .catch(() => toast.error("Failed to load categories."))
       .finally(() => setLoading(false));
   }, []);
- 
+
   async function handleCreate() {
     if (!newTitle.trim()) return;
     setCreating(true);
@@ -136,11 +136,11 @@ export default function AdminCategoriesPage() {
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
           justifyContent: "space-between",
+          gap: 2,
           mb: 3,
-          width: "70%",
-          mx: "auto",
         }}
       >
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
@@ -163,9 +163,8 @@ export default function AdminCategoriesPage() {
         pageSizeOptions={[5, 10]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         disableRowSelectionOnClick
-        sx={{ bgcolor: "background.paper", width: "70%", Height: 200, margin: "auto" }}
+        sx={{ bgcolor: "background.paper", width: "100%" }}
       />
-
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
         <DialogTitle>Add Category</DialogTitle>
@@ -196,12 +195,10 @@ export default function AdminCategoriesPage() {
         </DialogActions>
       </Dialog>
 
-
       <Dialog open={Boolean(editTarget)} onClose={() => setEditTarget(null)}>
         <DialogTitle>Edit Category</DialogTitle>
         <DialogContent>
           <label htmlFor="newCategoryTitle">New Title</label>
-
           <TextField
             autoFocus
             fullWidth
