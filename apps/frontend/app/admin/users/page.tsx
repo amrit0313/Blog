@@ -86,11 +86,11 @@ export default function AdminUsersPage() {
       <Box
         sx={{
           display: "flex",
-          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
           justifyContent: "space-between",
+          gap: 2,
           mb: 3,
-          width: "70%",
-          mx: "auto",
         }}
       >
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
@@ -113,7 +113,7 @@ export default function AdminUsersPage() {
         pageSizeOptions={[5, 10]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         disableRowSelectionOnClick
-        sx={{ bgcolor: "background.paper", width: "70%", margin: "auto" }}
+        sx={{ bgcolor: "background.paper", width: "100%" }}
       />
 
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
