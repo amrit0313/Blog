@@ -10,10 +10,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 import { blogApi, type Blog } from "../../../../lib/blog";
 import { adminApi } from "../../../../lib/admin";
+import { imgSrc } from "../../../../utils/getImgSrc";
 import { ApiError } from "../../../../lib/api";
-import DOMPurify from "dompurify";
 
 interface AdminBlogDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -83,16 +84,18 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
     try {
       if (action === "verify") {
         await adminApi.verifyBlog(blog._id);
-        setBlog((prev) => prev ? { ...prev, status: "published" } : prev);
+        setBlog((prev) => (prev ? { ...prev, status: "published" } : prev));
         toast.success("Blog verified and published.");
       } else {
         await adminApi.rejectBlog(blog._id);
-        setBlog((prev) => prev ? { ...prev, status: "rejected" } : prev);
+        setBlog((prev) => (prev ? { ...prev, status: "rejected" } : prev));
         toast.success("Blog rejected.");
       }
       setAction(null);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Failed to process blog.");
+      toast.error(
+        err instanceof ApiError ? err.message : "Failed to process blog.",
+      );
     } finally {
       setProcessing(false);
     }
@@ -109,7 +112,9 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
   if (error) {
     return (
       <Box sx={{ textAlign: "center", py: 8 }}>
-        <Typography variant="h6" color="error">{error}</Typography>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push("/admin/blogs")}
@@ -123,9 +128,6 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
 
   if (!blog) return null;
 
-  const imageUrl = getBlogImageUrl(blog.image);
-  console.log(imageUrl);
-
   return (
     <Box sx={{ maxWidth: 960, mx: "auto", px: { xs: 2, sm: 4 }, py: { xs: 3, sm: 5 } }}>
       {/* Back button */}
@@ -138,7 +140,10 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
       </Button>
 
       {/* Title */}
-      <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.5rem" } }}>
+      <Typography
+        variant="h4"
+        sx={{ fontWeight: 700, mb: 2, fontSize: { xs: "1.75rem", sm: "2.25rem", md: "2.5rem" } }}
+      >
         {blog.title}
       </Typography>
 
@@ -148,15 +153,16 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
           <Typography component="span" variant="body1" color="text.secondary" sx={{ mr: 1 }}>
             Category:
           </Typography>
-          <Chip size="medium" label={blog.category.title} color="info"   sx={{
-    "& .MuiChip-label": {
-      fontSize: "0.9rem",
-      fontWeight: 600,
-    },
-   }} />
+          <Chip
+            size="medium"
+            label={blog.category.title}
+            color="info"
+            sx={{ "& .MuiChip-label": { fontSize: "0.9rem", fontWeight: 600 } }}
+          />
         </Box>
       )}
 
+      {/* Author / date / status */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4, flexWrap: "wrap" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
@@ -194,14 +200,21 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         <Chip
           size="small"
           label={blog.status}
-          color={blog.status === "published" ? "success" : blog.status === "rejected" ? "error" : "warning"}
+          color={
+            blog.status === "published"
+              ? "success"
+              : blog.status === "rejected"
+                ? "error"
+                : "warning"
+          }
         />
       </Box>
 
-      {imageUrl && (
+      {/* Cover image */}
+      {blog.image && (
         <Box
           component="img"
-          src={imageUrl}
+          src={imgSrc(blog.image, "blogs")}
           alt={blog.title}
           sx={{
             width: "100%",
@@ -215,6 +228,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         />
       )}
 
+      {/* Content */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
           <div
@@ -222,12 +236,19 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
           <Divider sx={{ my: 3 }} />
-          <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Last updated: {formatDate(blog.updatedAt) ?? "Unknown"}
-            </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 2,
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               Created: {formatDate(blog.createdAt) ?? "Unknown"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Last updated: {formatDate(blog.updatedAt) ?? "Unknown"}
             </Typography>
           </Box>
         </CardContent>
@@ -255,14 +276,15 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         </Box>
       )}
 
+      {/* Verify/Reject confirmation dialog */}
       {/* Verify/Reject Confirmation Dialog */}
       {action && (
-        <Dialog open onClose={() => setAction(null)}>
-          <DialogTitle>{action === "verify" ? "Verify Blog" : "Reject Blog"}</DialogTitle>
+        <Dialog open onClose={() => !processing && setAction(null)}>
+          <DialogTitle>
+            {action === "verify" ? "Verify Blog" : "Reject Blog"}
+          </DialogTitle>
           <DialogContent>
-            <Typography>
-              Are you sure you want to {action} this blog?
-            </Typography>
+            <Typography>Are you sure you want to {action} this blog?</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setAction(null)} disabled={processing}>
@@ -274,12 +296,15 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
               variant="contained"
               disabled={processing}
             >
-              {processing ? "Processing..." : action === "verify" ? "Yes, Verify" : "Yes, Reject"}
+              {processing
+                ? "Processing..."
+                : action === "verify"
+                  ? "Yes, Verify"
+                  : "Yes, Reject"}
             </Button>
           </DialogActions>
         </Dialog>
       )}
-
 
       <style jsx global>{`
         .blog-prose {
