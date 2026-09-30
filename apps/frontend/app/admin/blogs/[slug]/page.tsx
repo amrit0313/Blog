@@ -130,7 +130,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
 
   return (
     <Box sx={{ maxWidth: 960, mx: "auto", px: { xs: 2, sm: 4 }, py: { xs: 3, sm: 5 } }}>
-      {/* Back button */}
+      
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => router.push("/admin/blogs")}
@@ -147,7 +147,6 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         {blog.title}
       </Typography>
 
-      {/* Category */}
       {blog.category?.title && (
         <Box sx={{ mb: 2 }}>
           <Typography component="span" variant="body1" color="text.secondary" sx={{ mr: 1 }}>
@@ -254,7 +253,6 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         </CardContent>
       </Card>
 
-      {/* Admin actions — bottom right */}
       {blog.status === "submitted" && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
           <Button
@@ -276,8 +274,11 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         </Box>
       )}
 
+<<<<<<< HEAD
+=======
       {/* Verify/Reject confirmation dialog */}
       {/* Verify/Reject Confirmation Dialog */}
+>>>>>>> 37314f900ec2f349697378cd05c0e0ab938a98f0
       {action && (
         <Dialog open onClose={() => !processing && setAction(null)}>
           <DialogTitle>

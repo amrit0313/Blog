@@ -33,6 +33,7 @@ async function generateUniqueSlug(title: string, excludeId?: string) {
 
   return slug;
 }
+import mongoose from "mongoose";
 
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
@@ -40,8 +41,10 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, category, description } = req.body;
 
-    if (data.title) {
-      data.slug = await generateUniqueSlug(data.title);
+    if (!title || !category || !description) {
+      return res.status(400).json({ message: "Invalid request" });}
+    if (title) {
+    const slug = await generateUniqueSlug(title);
     }
 
     // category is an ObjectId ref, so reject malformed ids as a 400 (not a 500 CastError)
@@ -49,14 +52,17 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    if (req.file) {
-      uploaded = await storage.upload(req.file, { folder: "blogs" });
+    const slug = await generateUniqueSlug(title);
+
+    if (req?.file) {
+      uploaded = await storage.upload(req?.file, { folder: "blogs" });
     }
 
     const newBlog = await blog.create({
       title,
       description,
       category,
+      slug,
       author: req.user!.id, // from your auth middleware, NOT from req.body
       status: "submitted", // server decides, never the client
       image: uploaded ?? undefined,
@@ -290,7 +296,7 @@ const BlogUpdateBySlug = async (
 
     if (req.file) {
       uploaded = await storage.upload(req.file, { folder: "blogs" });
-      update.image = uploaded;
+      data.image = uploaded;
     }
 
     const BlogUpdate = await blog.findByIdAndUpdate(
@@ -309,6 +315,7 @@ const BlogUpdateBySlug = async (
     next(exception);
   }
 };
+
 const UnpublishBlogById = async (
   req: Request,
   res: Response,
