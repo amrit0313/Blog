@@ -2,7 +2,7 @@
 "use client";
 import { Box, Card, CardContent, Typography, CircularProgress, Chip } from "@mui/material";
 import { BarChart, PieChart } from "@mui/x-charts";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { adminApi, type AdminBlog } from "../../lib/admin";
@@ -22,6 +22,10 @@ export default function AdminOverview() {
   const [blogsByCategory, setBlogsByCategory] = useState<{ name: string; count: number }[]>([]);
   const [blogsByStatus, setBlogsByStatus] = useState<{ label: string; value: number }[]>([]);
   const [error, setError] = useState("");
+
+  const categoryChartData = useMemo(() => blogsByCategory.map((c) => c.name), [blogsByCategory]);
+  const categoryChartSeries = useMemo(() => blogsByCategory.map((c) => c.count), [blogsByCategory]);
+  const statusChartData = useMemo(() => blogsByStatus.map((s, i) => ({ id: i, value: s.value, label: s.label })), [blogsByStatus]);
 
   useEffect(() => {
     if (authLoading || user?.role !== "admin") return;
@@ -153,8 +157,8 @@ export default function AdminOverview() {
             <Typography sx={{ fontWeight: 600, mb: 2 }}>Blogs per Category</Typography>
             {blogsByCategory.length > 0 ? (
               <BarChart
-                xAxis={[{ scaleType: "band", data: blogsByCategory.map((c) => c.name) }]}
-                series={[{ data: blogsByCategory.map((c) => c.count), color: "#A0522D" }]}
+                xAxis={[{ scaleType: "band", data: categoryChartData }]}
+                series={[{ data: categoryChartSeries, color: "#A0522D" }]}
                 height={250}
               />
             ) : (
@@ -170,11 +174,7 @@ export default function AdminOverview() {
               <PieChart
                 series={[
                   {
-                    data: blogsByStatus.map((s, i) => ({
-                      id: i,
-                      value: s.value,
-                      label: s.label,
-                    })),
+                    data: statusChartData,
                   },
                 ]}
                 height={250}
