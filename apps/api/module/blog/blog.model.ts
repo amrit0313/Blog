@@ -12,6 +12,7 @@ const BlogSchema = new mongoose.Schema(
       unique: true, 
       index: true 
     },
+    
     description: {
       type: String,
     },
@@ -30,7 +31,10 @@ const BlogSchema = new mongoose.Schema(
       enum: ["draft", "published", "unpublished", "submitted", "rejected"],
       default: "draft",
     },
-    image: { type: String }
+    image: {
+      key: String, // for delete/replace
+      url: String, // for display
+    },
   },
   {
     timestamps: true,
