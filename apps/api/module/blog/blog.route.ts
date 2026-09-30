@@ -28,7 +28,7 @@ router.post(
   createBlog,
 );
 router.get("/:id", authenticateToken, BlogDetailById);
-router.get("/slug/:slug", BlogDetailBySlug);
+router.get("/slug/:slug",authenticateToken, BlogDetailBySlug);
 router.put(
   "/:id",
   authenticateToken,
