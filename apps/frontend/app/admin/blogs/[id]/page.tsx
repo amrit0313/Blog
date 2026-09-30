@@ -125,6 +125,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
   if (!blog) return null;
 
   const imageUrl = getBlogImageUrl(blog.image);
+  console.log(imageUrl);
 
   return (
     <Box sx={{ maxWidth: 960, mx: "auto", px: { xs: 2, sm: 4 }, py: { xs: 3, sm: 5 } }}>
@@ -157,7 +158,6 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         </Box>
       )}
 
-      {/* Meta row: author, date, status */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4, flexWrap: "wrap" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
@@ -199,7 +199,6 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         />
       </Box>
 
-      {/* Hero image */}
       {imageUrl && (
         <Box
           component="img"
@@ -217,7 +216,6 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         />
       )}
 
-      {/* Description */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
           <div
@@ -283,7 +281,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         </Dialog>
       )}
 
-      {/* Scoped blog prose styles */}
+
       <style jsx global>{`
         .blog-prose {
           font-size: 1.125rem;
