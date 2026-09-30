@@ -17,7 +17,7 @@ export interface Blog {
   slug: string;
   description: string;
   status: "draft" | "published" | "unpublished" | "submitted" | "rejected";
-  image?: string;
+  image?: string | { key?: string; url?: string };
   createdAt: string;
   updatedAt: string;
   author: BlogAuthor;

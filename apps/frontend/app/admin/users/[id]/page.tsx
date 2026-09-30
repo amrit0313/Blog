@@ -108,9 +108,9 @@ export default function AdminUserDetailPage({ params }: AdminUserDetailPageProps
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 3 }}>
             <Avatar
-              name={user.name}
               sx={{ width: 80, height: 80, fontSize: "2rem" }}
-            />
+            >              name={user.name}
+            </Avatar>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 {user.name}
