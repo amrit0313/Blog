@@ -42,7 +42,9 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     const { title, category, description } = req.body;
 
     if (!title || !category || !description) {
-      return res.status(400).json({ message: "Invalid request" });
+      return res.status(400).json({ message: "Invalid request" });}
+    if (title) {
+    const slug = await generateUniqueSlug(title);
     }
 
     // category is an ObjectId ref, so reject malformed ids as a 400 (not a 500 CastError)
@@ -52,8 +54,8 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
 
     const slug = await generateUniqueSlug(title);
 
-    if (req.file) {
-      uploaded = await storage.upload(req.file, { folder: "blogs" });
+    if (req?.file) {
+      uploaded = await storage.upload(req?.file, { folder: "blogs" });
     }
 
     const newBlog = await blog.create({
@@ -264,6 +266,7 @@ const AllBlogsFiltering = async (
     next(exception);
   }
 };
+
 const BlogUpdateBySlug = async (
   req: Request,
   res: Response,

@@ -8,6 +8,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ApiError } from "../../../../lib/api";
 import { blogApi, type Blog } from "../../../../lib/blog";
 import * as yup from "yup";
+import { imgSrc } from "../../../../utils/getImgSrc";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -132,7 +133,7 @@ export default function DraftsPage() {
               {draft.image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${draft.image}`}
+                  src={imgSrc(draft.image, "blogs")}
                   alt=""
                   className="aspect-video w-full object-cover"
                 />

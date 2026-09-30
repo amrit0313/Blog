@@ -7,7 +7,7 @@ import Avatar from "../avatar";
 import { useAuth } from "../../context/AuthContext";
 import { profileApi } from "../../lib/profile";
 import Image from "next/image";
-import NepalCanLogo from "../../public/navbar-logo-short-v3 (1).png";
+import NepalCanLogo from "../../assets/navbar.png";
 
 export default function Navbar() {
   const { isLoading, user, logout } = useAuth();

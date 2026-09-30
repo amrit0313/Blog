@@ -14,7 +14,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import Image from "next/image";
-import NepalCanLogo from "../../public/navbar-logo-short-v3 (1).png";
+import NepalCanLogo from "../../assets/navbar.png";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";

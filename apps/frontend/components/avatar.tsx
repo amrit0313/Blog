@@ -1,4 +1,5 @@
 import { FaCircleUser } from "react-icons/fa6";
+import { imgSrc } from "../utils/getImgSrc";
 
 interface AvatarProps {
   src?: string | null;
@@ -7,22 +8,14 @@ interface AvatarProps {
   fallback?: "initials" | "icon";
 }
 
-function getAvatarUrl(src?: string | null) {
-  if (!src) return null;
-  if (/^https?:\/\//i.test(src)) return src;
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) return null;
-  return `${apiUrl.replace(/\/api\/?$/, "")}/uploads/profiles/${src}`;
-}
-
 export default function Avatar({
   src,
   name,
   className = "h-20 w-20",
   fallback = "initials",
 }: AvatarProps) {
-  const avatarUrl = getAvatarUrl(src);
+  console.log(src);
+  const avatarUrl = src && imgSrc(src, "profile");
   const label = name ? `${name} avatar` : "Profile avatar";
 
   if (avatarUrl) {

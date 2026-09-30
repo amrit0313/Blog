@@ -14,6 +14,7 @@ import RichTextEditor from "../../../../../components/RichTextEditor";
 import { blogApi, type Blog } from "../../../../../lib/blog";
 import { categoryApi, type Category } from "../../../../../lib/category";
 import { ApiError } from "../../../../../lib/api";
+import { imgSrc } from "../../../../../utils/getImgSrc";
 
 const stripHtml = (html: string) =>
   html
@@ -264,7 +265,7 @@ export default function EditBlogPage({
             <div className="mb-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/blogs/${blog.image}`}
+                src={imgSrc(blog.image, "blogs")}
                 alt="Current cover"
                 className="aspect-video w-20 h-20 rounded-md border border-border object-cover"
               />
