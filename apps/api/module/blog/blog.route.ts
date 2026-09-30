@@ -7,9 +7,9 @@ import {
   GetMyBlogs,
   BlogDetailById,
   BlogDetailBySlug,
-  BlogUpdateById,
   BlogDeleteById,
   UnpublishBlogById,
+  BlogUpdateBySlug,
 } from "./blog.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
 import { blogUpload } from "../../middlewares/fileupload.middleware";
@@ -26,13 +26,13 @@ router.post(
   bodyValidator(CreateBlogValidation),
   createBlog,
 );
-router.get("/:id", authenticateToken, BlogDetailById);
 router.get("/slug/:slug",authenticateToken, BlogDetailBySlug);
+router.get("/:id", authenticateToken, BlogDetailById);
 router.put(
-  "/:id",
+  "/slug/:slug",
   authenticateToken,
   blogUpload.single("image"),
-  BlogUpdateById,
+  BlogUpdateBySlug,
 );
 router.delete("/:id", authenticateToken, BlogDeleteById);
 router.patch(

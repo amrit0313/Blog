@@ -69,21 +69,14 @@ function getBlogImageUrl(image?: string) {
 function DetailSkeleton() {
   return (
     <div className="mx-auto w-full max-w-6xl animate-pulse px-6 py-12 lg:px-8">
-      {/* back link */}
       <div className="mb-6 h-4 w-28 rounded bg-muted" />
-
-      {/* badge */}
       <div className="mb-3 h-5 w-20 rounded-full bg-muted" />
-      {/* title */}
       <div className="mb-2 h-10 w-3/4 rounded bg-muted" />
-      {/* meta row */}
       <div className="mb-8 flex gap-4">
         <div className="h-4 w-24 rounded bg-muted" />
         <div className="h-4 w-32 rounded bg-muted" />
         <div className="h-4 w-20 rounded bg-muted" />
       </div>
-
-      {/* hero + cards */}
       <div className="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="h-[320px] rounded-2xl bg-muted lg:col-span-8" />
         <div className="space-y-4 lg:col-span-4">
@@ -91,8 +84,6 @@ function DetailSkeleton() {
           <div className="h-44 rounded-xl bg-muted" />
         </div>
       </div>
-
-      {/* article skeleton */}
       <div className="w-full space-y-4">
         <div className="h-4 w-full rounded bg-muted" />
         <div className="h-4 w-5/6 rounded bg-muted" />
@@ -112,12 +103,9 @@ function AuthorCard({ blog }: { blog: Blog }) {
 
   return (
     <div className="card overflow-hidden">
-      {/* accent strip */}
       <div className="h-2 bg-gradient-to-r from-primary to-accent" />
-
       <div className="p-5">
         <p className="eyebrow mb-3">Written by</p>
-
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">
             {initial}
@@ -152,15 +140,12 @@ function MetaCard({
   return (
     <div className="card p-5">
       <div className="space-y-4 text-sm">
-        {/* Category */}
         {blog.category?.title && (
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Category</span>
             <Badge variant="info">{blog.category.title}</Badge>
           </div>
         )}
-
-        {/* Status */}
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Status</span>
           <Badge
@@ -175,8 +160,6 @@ function MetaCard({
             {blog.status}
           </Badge>
         </div>
-
-        {/* Published */}
         {formatDate(blog.createdAt) && (
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Published</span>
@@ -185,8 +168,6 @@ function MetaCard({
             </span>
           </div>
         )}
-
-        {/* Updated */}
         {formatDate(blog.updatedAt) && (
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Updated</span>
@@ -195,19 +176,13 @@ function MetaCard({
             </span>
           </div>
         )}
-
-        {/* Reading time */}
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Reading time</span>
           <span className="font-medium text-foreground">
             {readingTime(blog.description)}
           </span>
         </div>
-
-        {/* Divider */}
         <div className="border-t border-border" />
-
-        {/* Share / Copy link */}
         <button
           onClick={onCopyLink}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:border-primary hover:text-primary active:scale-[0.98]"
@@ -246,7 +221,6 @@ function HeroImage({ blog }: { blog: Blog }) {
   const isSvg = blog.image?.toLowerCase().endsWith(".svg");
 
   if (!url || imgError) {
-    // gradient placeholder
     return (
       <div className="flex h-full min-h-[260px] max-h-[380px] w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-secondary aspect-video">
         <div className="text-center">
@@ -289,7 +263,7 @@ function HeroImage({ blog }: { blog: Blog }) {
 /* ─── Main Page ───────────────────────────────────────────────── */
 
 interface BlogDetailPageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export default function BlogDetailPage({ params }: BlogDetailPageProps) {
@@ -300,15 +274,15 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   const [error, setError] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [id, setId] = useState<string>("");
+  const [slug, setSlug] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    params.then((p) => setId(p.id));
+    params.then((p) => setSlug(p.slug));
   }, [params]);
 
   useEffect(() => {
-    if (!id || authLoading) return;
+    if (!slug || authLoading) return;
 
     if (!user) {
       setLoading(false);
@@ -318,7 +292,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     const fetchBlog = async () => {
       try {
         setError("");
-        const res = await blogApi.getById(id);
+        const res = await blogApi.getBySlug(slug);
         setBlog(res.result);
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
@@ -332,7 +306,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     };
 
     fetchBlog();
-  }, [id, authLoading, user]);
+  }, [slug, authLoading, user]);
 
   const isAuthor = user && blog && user.id === blog.author?._id;
 
@@ -362,10 +336,8 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     }
   };
 
-  /* ── Loading skeleton ── */
   if (loading || authLoading) return <DetailSkeleton />;
 
-  /* ── Auth gate ── */
   if (!user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-6">
@@ -384,7 +356,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     );
   }
 
-  /* ── Error state ── */
   if (error && !blog) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center px-6">
@@ -396,8 +367,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           </div>
           <h1 className="text-2xl font-bold text-foreground">{error}</h1>
           <p className="mt-2 text-muted-foreground">
-            The blog you&apos;re looking for doesn&apos;t exist or has been
-            removed.
+            The blog you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <Link href="/blogs" className="mt-6 inline-block">
             <Button variant="outline">Back to Blogs</Button>
@@ -412,7 +382,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   return (
     <>
       <article className="mx-auto w-full max-w-6xl px-6 py-12 lg:px-8">
-        {/* ── Header area ── */}
         <header className="mb-8">
           <Link
             href="/blogs"
@@ -424,7 +393,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             Back to Blogs
           </Link>
 
-          {/* Category badge */}
           {blog.category?.title && (
             <div className="mt-5">
               <Badge variant="info" className="!text-xs">
@@ -433,12 +401,10 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             </div>
           )}
 
-          {/* Title */}
           <h1 className="mt-3 text-3xl font-bold leading-tight text-foreground sm:text-4xl lg:text-[2.75rem]">
             {blog.title}
           </h1>
 
-          {/* Meta row (always visible; on mobile acts as the sidebar replacement) */}
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
@@ -461,10 +427,9 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             <span>{readingTime(blog.description)}</span>
           </div>
 
-          {/* Author actions */}
           {isAuthor && (
             <div className="mt-5 flex gap-3">
-              <Link href={`/blogs/${blog._id}/edit`}>
+              <Link href={`/blogs/${blog.slug}/edit`}>
                 <Button variant="outline">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -486,7 +451,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           )}
         </header>
 
-        {/* ── Hero image & Written By / Meta Card side-by-side ── */}
         <div className="mb-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8">
             <HeroImage blog={blog} />
@@ -497,7 +461,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           </div>
         </div>
 
-        {/* ── Article content ── */}
         <div className="w-full">
           {error && (
             <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -510,7 +473,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
 
-          {/* Bottom navigation */}
           <footer className="mt-12 border-t border-border pt-6">
             <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
               <span>
@@ -524,7 +486,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         </div>
       </article>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -550,41 +511,33 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         }
       >
         <p className="text-muted-foreground">
-          Are you sure you want to delete &quot;{blog?.title}&quot;? This action
-          cannot be undone.
+          Are you sure you want to delete &quot;{blog?.title}&quot;? This action cannot be undone.
         </p>
       </Modal>
 
-      {/* ── Scoped blog prose styles ── */}
       <style jsx global>{`
         .blog-prose {
           font-size: 1.125rem;
           line-height: 1.8;
         }
-
         .blog-prose > * + * {
           margin-top: 1.25em;
         }
-
         .blog-prose p {
           color: var(--foreground);
         }
-
         .blog-prose p:empty,
         .blog-prose li:empty,
         .blog-prose li > p:empty {
           display: none;
         }
-
         .blog-prose strong {
           font-weight: 700;
           color: var(--foreground);
         }
-
         .blog-prose em {
           font-style: italic;
         }
-
         .blog-prose h1 {
           font-size: 2rem;
           font-weight: 800;
@@ -592,7 +545,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           margin-bottom: 0.75em;
           line-height: 1.3;
         }
-
         .blog-prose h2 {
           font-size: 1.5rem;
           font-weight: 700;
@@ -600,14 +552,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           margin-bottom: 0.5em;
           line-height: 1.35;
         }
-
         .blog-prose h3 {
           font-size: 1.25rem;
           font-weight: 600;
           margin-top: 1.5em;
           margin-bottom: 0.5em;
         }
-
         .blog-prose blockquote {
           border-left: 4px solid var(--primary);
           background: color-mix(in srgb, var(--primary) 5%, transparent);
@@ -617,42 +567,34 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           font-style: italic;
           color: var(--muted-foreground);
         }
-
         .blog-prose blockquote p {
           color: var(--muted-foreground);
           margin: 0;
         }
-
         .blog-prose ul {
           list-style-type: disc;
           padding-left: 1.75rem;
         }
-
         .blog-prose ol {
           list-style-type: decimal;
           padding-left: 1.75rem;
         }
-
         .blog-prose li {
           padding-left: 0.375rem;
           margin-top: 0.375em;
         }
-
         .blog-prose li > ol,
         .blog-prose li > ul {
           margin-top: 0.375em;
         }
-
         .blog-prose a {
           color: var(--primary);
           text-decoration: underline;
           text-underline-offset: 3px;
         }
-
         .blog-prose a:hover {
           color: #b92535;
         }
-
         .blog-prose code {
           background: var(--muted);
           padding: 0.15em 0.4em;
@@ -660,7 +602,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           font-size: 0.875em;
           font-family: var(--font-geist-mono), monospace;
         }
-
         .blog-prose pre {
           background: var(--foreground);
           color: var(--background);
@@ -670,7 +611,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           font-size: 0.875rem;
           line-height: 1.6;
         }
-
         .blog-prose pre code {
           background: none;
           padding: 0;
@@ -678,14 +618,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
           font-size: inherit;
           color: inherit;
         }
-
         .blog-prose img {
           max-width: 100%;
           height: auto;
           border-radius: var(--radius);
           margin: 1.5em 0;
         }
-
         .blog-prose hr {
           border: none;
           border-top: 1px solid var(--border);

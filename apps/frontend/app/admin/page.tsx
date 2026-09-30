@@ -204,7 +204,7 @@ export default function AdminOverview() {
           {submittedBlogs.map((blog) => (
             <Card
               key={blog._id}
-              onClick={() => router.push(`/admin/blogs/${blog._id}`)}
+              onClick={() => router.push(`/admin/blogs/${blog.slug}`)}
               sx={{ cursor: "pointer", "&:hover": { boxShadow: 3 }}}
             >
               <CardContent>

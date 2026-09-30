@@ -14,6 +14,7 @@ export interface BlogCategory {
 export interface Blog {
   _id: string;
   title: string;
+  slug: string;
   description: string;
   status: "draft" | "published" | "unpublished" | "submitted" | "rejected";
   image?: string;
@@ -84,21 +85,26 @@ export const blogApi = {
   },
 
   update(id: string, data: FormData) {
-    console.log(data)
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "PUT",
       data,
     });
   },
 
-  // DELETE /api/blog/:id (auth required)
+  updateBySlug(slug: string, data: FormData) {
+    return apiRequest<ApiResponse<Blog>>(`/blog/slug/${slug}`, {
+      method: "PUT",
+      data,
+    });
+  },
+
   delete(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "DELETE",
     });
   },
 
-  // PATCH /api/blog/:id/unpublish (auth required, admin only)
+
   unpublish(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}/unpublish`, {
       method: "PATCH",

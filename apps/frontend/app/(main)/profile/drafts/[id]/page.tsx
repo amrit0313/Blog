@@ -130,7 +130,7 @@ export default function DraftDetailPage() {
             {draft.description}
           </p>
           <div className="mt-10 flex flex-wrap gap-3 border-t border-border pt-6">
-            <Button href={`/blogs/${draft._id}/edit`}>Continue Editing</Button>
+            <Button href={`/blogs/${draft.slug}/edit`}>Continue Editing</Button>
             <Button
               variant="outline"
               onClick={handleDelete}

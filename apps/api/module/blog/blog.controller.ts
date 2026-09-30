@@ -21,12 +21,24 @@ const createError = (message: string, status = 500): AppError => {
   return err;
 };
 
+async function generateUniqueSlug(title: string, excludeId?: string) {
+  const base = slugify(title, { lower: true, strict: true });
+  let slug = base;
+  let counter = 1;
+
+  while (await blog.exists({ slug, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+    slug = `${base}-${counter++}`;
+  }
+
+  return slug;
+}
+
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = req.body;
 
     if (data.title) {
-      data.slug = slugify(data.title);
+      data.slug = await generateUniqueSlug(data.title);
     }
 
     if (req.file) {
@@ -82,6 +94,7 @@ const BlogDetailById = async (
     next(exception);
   }
 };
+
 
 const BlogDetailBySlug = async (
   req: Request,
@@ -237,31 +250,40 @@ const AllBlogsFiltering = async (
   }
 };
 
-const BlogUpdateById = async (
+const BlogUpdateBySlug = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
+    const existing = await blog.findOne({ slug: req.params.slug });
+
+    if (!existing) {
+      throw createError("Blog not found", 404);
+    }
+
+
+    if (
+      req.user &&
+      existing.author.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      throw createError("Not authorized to modify this blog", 403);
+    }
+
     const data = req.body;
 
-    if (data.title) {
-      data.slug = slugify(data.title);
-    }
+    delete data.slug;
 
     if (req.file) {
       data.image = req.file.filename;
     }
 
     const BlogUpdate = await blog.findByIdAndUpdate(
-      req.params.id,
+      existing._id,
       { $set: data },
       { new: true },
     );
-
-    if (!BlogUpdate) {
-      throw createError("Blog not found", 404);
-    }
 
     res.json({
       result: BlogUpdate,
@@ -272,7 +294,6 @@ const BlogUpdateById = async (
     next(exception);
   }
 };
-
 const UnpublishBlogById = async (
   req: Request,
   res: Response,
@@ -397,7 +418,7 @@ export {
   BlogDetailBySlug,
   ListAllBlogs,
   AllBlogsFiltering,
-  BlogUpdateById,
+  BlogUpdateBySlug,
   UnpublishBlogById,
   BlogDeleteById,
   GetMyBlogs,
