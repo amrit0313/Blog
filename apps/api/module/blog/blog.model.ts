@@ -31,6 +31,10 @@ const BlogSchema = new mongoose.Schema(
       enum: ["draft", "published", "unpublished", "submitted", "rejected"],
       default: "draft",
     },
+    likes: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User" 
+    }],
     image: {
       key: String, // for delete/replace
       url: String, // for display

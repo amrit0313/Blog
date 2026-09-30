@@ -14,6 +14,8 @@ import {
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
 import { blogUpload } from "../../middlewares/fileupload.middleware";
 import { imageUpload } from "../../middlewares/upload";
+import commentRoutes from "../comment/comment.routes";
+import { toggleLike } from "./blog.controller";
 
 const router = express.Router();
 
@@ -42,5 +44,8 @@ router.patch(
   authorizeUser("admin"),
   UnpublishBlogById,
 );
+
+router.put("/:id/like", authenticateToken, toggleLike);
+router.use("/:blogId/comments", commentRoutes);
 
 export default router;

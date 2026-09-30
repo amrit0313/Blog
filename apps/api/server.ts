@@ -8,6 +8,8 @@ import adminRoutes from "./module/admin/admin.route";
 import categoryRoutes from "./module/categories/category.routes";
 import userRoutes from "./module/user/user.route";
 import { connectDB } from "./config/db";
+import commentActionsRoutes from "./module/comment/comment-action.routes";
+
 import errorHandler from "./services/errorHandler";
 import { UPLOADS_DIR, usesLocalStorage } from "./storage";
 
@@ -42,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/category", categoryRoutes);
-
+app.use("/api/comments", commentActionsRoutes);
 app.use(errorHandler);
 
 const startServer = async () => {
