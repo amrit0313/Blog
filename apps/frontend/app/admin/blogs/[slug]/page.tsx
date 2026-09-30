@@ -32,6 +32,12 @@ function formatDate(value?: string) {
       });
 }
 
+function getBlogImageUrl(image?: string) {
+  if (!image) return null;
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "";
+  return `${base}/uploads/blogs/${image}`;
+}
+
 export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps) {
   const router = useRouter();
   const [blog, setBlog] = useState<Blog | null>(null);
@@ -230,7 +236,14 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
           <Divider sx={{ my: 3 }} />
-          <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 2,
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               Created: {formatDate(blog.createdAt) ?? "Unknown"}
             </Typography>
@@ -264,6 +277,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
       )}
 
       {/* Verify/Reject confirmation dialog */}
+      {/* Verify/Reject Confirmation Dialog */}
       {action && (
         <Dialog open onClose={() => !processing && setAction(null)}>
           <DialogTitle>
