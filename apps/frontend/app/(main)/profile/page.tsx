@@ -67,7 +67,7 @@ export default function ProfilePage() {
           });
           console.log(response);
         }
-      } catch (error){
+      } catch (error) {
         if (!cancelled) {
           startTransition(() => {
             if (
@@ -165,7 +165,6 @@ export default function ProfilePage() {
             <div className="flex items-center gap-5">
               <Avatar
                 src={profile?.avatar}
-                name={displayName}
                 className="h-20 w-20 text-2xl"
               />
               <div>

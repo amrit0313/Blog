@@ -12,7 +12,7 @@ export interface AdminBlog {
   title: string;
   slug: string;
   description: string;
-  status: "draft" | "published" | "unpublished";
+  status: "draft" | "published" | "unpublished" | "rejected";
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -41,7 +41,7 @@ export interface ApiResponse<T> {
 }
 
 export const adminApi = {
-  
+
   deleteBlog(id: string) {
     return apiRequest<ApiResponse<AdminBlog>>(`/admin/${id}`, {
       method: "DELETE",

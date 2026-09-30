@@ -12,6 +12,7 @@ import Link from "next/link";
 import DOMPurify from "dompurify";
 import LikeButton from "../../../../components/LikeButton";
 import CommentSection from "../../../../components/CommentSection";
+import { imgSrc } from "../../../../utils/getImgSrc";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -60,10 +61,9 @@ function cleanEmptyNodes(html: string) {
     .replace(/<li><p>\s*<\/p><\/li>/g, "");
 }
 
-function getBlogImageUrl(image?: string) {
+function getBlogImageUrl(image?: string | { key?: string; url?: string }) {
   if (!image) return null;
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "";
-  return `${base}/uploads/blogs/${image}`;
+  return imgSrc(image, "blogs") ?? null;
 }
 
 /* ─── Skeleton ────────────────────────────────────────────────── */
@@ -220,7 +220,7 @@ function MetaCard({
 function HeroImage({ blog }: { blog: Blog }) {
   const [imgError, setImgError] = useState(false);
   const url = getBlogImageUrl(blog.image);
-  const isSvg = blog?.image?.endsWith(".svg");
+  const isSvg = typeof url === "string" && url.split("?")[0].toLowerCase().endsWith(".svg");
 
   if (!url || imgError) {
     return (
