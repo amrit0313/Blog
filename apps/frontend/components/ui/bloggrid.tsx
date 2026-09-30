@@ -1,9 +1,9 @@
-// components/blogs/blog-grid.tsx
+"use client";
+
 import Link from "next/link";
-import Card from "../dashboard/card";
-import { HiCalendar, HiUser, HiTag, HiArrowRight } from "react-icons/hi2";
+import { HiArrowRight } from "react-icons/hi2";
 import type { Blog } from "../../lib/blog";
-import { imgSrc } from "../../utils/getImgSrc";
+import BlogFeedCard from "../BlogFeedCard";
 
 interface BlogGridProps {
   blogs: Blog[];
@@ -13,13 +13,6 @@ interface BlogGridProps {
   search?: string;
   category?: string;
 }
-
-const getDescriptionPreview = (html: string) =>
-  html
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 
 export default function BlogGrid({
   blogs,
@@ -45,85 +38,18 @@ export default function BlogGrid({
     );
   }
 
-  return ( 
-    <>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+  return (
+    <div className="mx-auto max-w-[680px]">
+      {/* Single centered column feed */}
+      <div className="space-y-6">
         {blogs.map((blog) => (
-          <Link key={blog.slug} href={`/blogs/${blog.slug}`}>
-            <Card
-              variant="bordered"
-              padding="none"
-              className="group flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg"
-            >
-              {/* Image */}
-              <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                {blog.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={imgSrc(blog.image, "blogs")}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-secondary">
-                    <p className="text-3xl font-bold text-secondary-foreground/30">
-                      {blog.title.charAt(0).toUpperCase()}
-                    </p>
-                  </div>
-                )}
-                <div className="absolute top-2.5 left-2.5">
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      blog.status === "published"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {blog.status === "published" ? "Published" : "Draft"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="flex flex-1 flex-col p-4">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <HiTag className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">
-                    {blog.category?.title ?? "Uncategorized"}
-                  </span>
-                </div>
-                <h2 className="mt-2 line-clamp-1 text-base font-semibold text-foreground group-hover:text-primary">
-                  {blog.title}
-                </h2>
-                <p className="mt-1.5 line-clamp-2 flex-1 text-sm text-muted-foreground">
-                  {getDescriptionPreview(blog.description)}
-                </p>
-                <div className="mt-4 flex items-center justify-between gap-2 border-t border-border pt-3">
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <HiUser className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate text-xs text-muted-foreground">
-                      {blog.author?.name ?? "Unknown"}
-                    </span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-                    <HiCalendar className="h-3.5 w-3.5" />
-                    <time dateTime={blog.createdAt}>
-                      {new Date(blog.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </time>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </Link>
+          <BlogFeedCard key={blog._id} blog={blog} />
         ))}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
           {currentPage > 1 && (
             <Link
               href={pageHref(currentPage - 1)}
@@ -156,6 +82,6 @@ export default function BlogGrid({
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }

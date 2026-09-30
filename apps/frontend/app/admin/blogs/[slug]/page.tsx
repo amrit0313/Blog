@@ -26,10 +26,10 @@ function formatDate(value?: string) {
   return Number.isNaN(date.getTime())
     ? null
     : date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 }
 
 function getBlogImageUrl(image?: string) {
@@ -130,7 +130,7 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
 
   return (
     <Box sx={{ maxWidth: 960, mx: "auto", px: { xs: 2, sm: 4 }, py: { xs: 3, sm: 5 } }}>
-      
+
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => router.push("/admin/blogs")}
@@ -274,11 +274,8 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
         </Box>
       )}
 
-<<<<<<< HEAD
-=======
       {/* Verify/Reject confirmation dialog */}
       {/* Verify/Reject Confirmation Dialog */}
->>>>>>> 37314f900ec2f349697378cd05c0e0ab938a98f0
       {action && (
         <Dialog open onClose={() => !processing && setAction(null)}>
           <DialogTitle>

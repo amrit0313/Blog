@@ -17,6 +17,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { ApiError } from "../../../lib/api";
 import { blogApi, type Blog } from "../../../lib/blog";
 import { profileApi, ProfileData } from "../../../lib/profile";
+import { toast } from "sonner";
 
 function getExternalHref(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
@@ -127,9 +128,34 @@ export default function ProfilePage() {
   const drafts = blogs.filter((blog) => blog.status === "draft");
   const submittedBlogs = blogs.filter((blog) => blog.status === "submitted");
   const rejectedBlogs = blogs.filter((blog) => blog.status === "rejected");
+  const unpublishedBlogs = blogs.filter((blog) => blog.status === "unpublished");
   const socialLinks = profile?.socialLinks
     ? Object.entries(profile.socialLinks).filter(([, value]) => Boolean(value))
     : [];
+
+  const handleDeleteBlog = async (blogId: string) => {
+    if (!window.confirm("Are you sure you want to delete this blog?")) return;
+    try {
+      await blogApi.delete(blogId);
+      setBlogs((prev) => prev.filter((b) => b._id !== blogId));
+      toast.success("Blog deleted successfully");
+    } catch {
+      toast.error("Failed to delete blog. Please try again.");
+    }
+  };
+
+  const handleUnpublishBlog = async (blogId: string) => {
+    if (!window.confirm("Are you sure you want to unpublish this blog?")) return;
+    try {
+      await blogApi.unpublish(blogId);
+      setBlogs((prev) =>
+        prev.map((b) => (b._id === blogId ? { ...b, status: "unpublished" } : b))
+      );
+      toast.success("Blog unpublished successfully");
+    } catch {
+      toast.error("Failed to unpublish blog. Please try again.");
+    }
+  };
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -259,15 +285,32 @@ export default function ProfilePage() {
             </p>
           )}
           {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
-            <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 max-w-[680px] space-y-5">
               {publishedBlogs.map((blog) => (
                 <ProfileBlogCard
                   key={blog._id}
                   blog={blog}
-                  statusClassName="bg-green-100 text-green-700"
+                  onDelete={handleDeleteBlog}
+                  onUnpublish={handleUnpublishBlog}
                 />
               ))}
             </div>
+          )}
+
+          {/* Unpublished Blogs */}
+          {unpublishedBlogs.length > 0 && (
+            <>
+              <h3 className="mt-10 text-xl font-bold">Unpublished Blogs</h3>
+              <div className="mt-4 max-w-[680px] space-y-5">
+                {unpublishedBlogs.map((blog) => (
+                  <ProfileBlogCard
+                    key={blog._id}
+                    blog={blog}
+                    onDelete={handleDeleteBlog}
+                  />
+                ))}
+              </div>
+            </>
           )}
 
           {/* Submitted for Review */}
@@ -278,12 +321,12 @@ export default function ProfilePage() {
             </p>
           )}
           {!blogsLoading && !blogsError && submittedBlogs.length > 0 && (
-            <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 max-w-[680px] space-y-5">
               {submittedBlogs.map((blog) => (
                 <ProfileBlogCard
                   key={blog._id}
                   blog={blog}
-                  statusClassName="bg-yellow-100 text-yellow-700"
+                  onDelete={handleDeleteBlog}
                 />
               ))}
             </div>
@@ -294,12 +337,12 @@ export default function ProfilePage() {
             <p className="mt-3 text-muted-foreground">No rejected blogs.</p>
           )}
           {!blogsLoading && !blogsError && rejectedBlogs.length > 0 && (
-            <div className="mt-4 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-4 max-w-[680px] space-y-5">
               {rejectedBlogs.map((blog) => (
                 <ProfileBlogCard
                   key={blog._id}
                   blog={blog}
-                  statusClassName="bg-red-100 text-red-700"
+                  onDelete={handleDeleteBlog}
                 />
               ))}
             </div>

@@ -1,6 +1,6 @@
 import { apiRequest, ApiError } from "./api";
 
-export interface CommentAuthor {
+export interface CommentUser {
   _id: string;
   name?: string;
   email?: string;
@@ -9,19 +9,21 @@ export interface CommentAuthor {
 export interface Reply {
   _id: string;
   content: string;
-  author: CommentAuthor;
+  user?: CommentUser;
+  author?: CommentUser;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface Comment {
   _id: string;
   blog: string;
   content: string;
-  author: CommentAuthor;
+  user?: CommentUser;
+  author?: CommentUser;
   replies: Reply[];
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface CommentListMeta {

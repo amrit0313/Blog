@@ -91,9 +91,11 @@ export default async function BlogsPage({
         </div>
       </div>
 
-      {/* Blog Grid */}
+      {/* Blog Feed */}
       <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-        <BlogFilters categories={categories} />
+        <div className="mx-auto max-w-[680px]">
+          <BlogFilters categories={categories} />
+        </div>
         <BlogGrid
           blogs={blogs}
           currentPage={currentPage}
