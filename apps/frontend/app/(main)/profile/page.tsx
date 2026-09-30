@@ -66,7 +66,7 @@ export default function ProfilePage() {
           });
           console.log(response);
         }
-      } catch (error) {
+      } catch (error){
         if (!cancelled) {
           startTransition(() => {
             if (
