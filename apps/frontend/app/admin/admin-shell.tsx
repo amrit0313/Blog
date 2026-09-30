@@ -115,8 +115,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     </Link>
     <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1 }}>
       {user && (
-        <Typography component="span" variant="body1" sx={{ fontWeight: 700, mr: { xs: 1, sm: 4 }, color:"primary.main", display: { xs: "none", sm: "block" }}}>
-          {user.name}
+        <Typography
+          component="span"
+          variant="body1"
+          sx={{ fontWeight: 700, mr: { xs: 1, sm: 4 }, color: "primary.main", display: { xs: "none", sm: "block" } }}
+        >
+          <Link
+            href="/admin/profile" >
+            
+            {user.name}
+          </Link>
         </Typography>
       )}
       <Box
