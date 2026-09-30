@@ -47,7 +47,7 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     const slug = await generateUniqueSlug(title);
     }
 
-    // category is an ObjectId ref, so reject malformed ids as a 400 (not a 500 CastError)
+
     if (!mongoose.isValidObjectId(category)) {
       return res.status(400).json({ message: "Invalid category" });
     }
@@ -433,6 +433,37 @@ const AdminListAllBlogs = async (
     next(exception);
   }
 };
+// add to blog.controller.ts
+
+// PUT /api/blog/:id/like  (toggle like on/off)
+const toggleLike = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.id;
+    const targetBlog = await blog.findById(req.params.id);
+
+    if (!targetBlog) throw createError("Blog not found", 404);
+
+    const alreadyLiked = targetBlog.likes.some((id) => id.toString() === userId);
+
+    if (alreadyLiked) {
+      targetBlog.likes = targetBlog.likes.filter((id) => id.toString() !== userId);
+    } else {
+      targetBlog.likes.push(userId as any);
+    }
+
+    await targetBlog.save();
+
+    res.json({
+      result: { likesCount: targetBlog.likes.length, liked: !alreadyLiked },
+      message: alreadyLiked ? "Like removed" : "Blog liked",
+      meta: null,
+    });
+  } catch (exception) {
+    next(exception);
+  }
+};
+
+
 
 export {
   createBlog,
@@ -445,4 +476,5 @@ export {
   BlogDeleteById,
   GetMyBlogs,
   AdminListAllBlogs,
+  toggleLike
 };

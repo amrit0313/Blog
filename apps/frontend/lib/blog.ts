@@ -22,6 +22,7 @@ export interface Blog {
   updatedAt: string;
   author: BlogAuthor;
   category?: BlogCategory;
+  likes?: string[]; // array of user IDs who liked this blog
 }
 
 export interface BlogListMeta {
@@ -41,6 +42,11 @@ export interface ApiResponse<T> {
   result: T;
   message: string;
   meta: null;
+}
+
+export interface ToggleLikeResponse {
+  likesCount: number;
+  liked: boolean;
 }
 
 export const blogApi = {
@@ -104,10 +110,16 @@ export const blogApi = {
     });
   },
 
-
   unpublish(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}/unpublish`, {
       method: "PATCH",
+    });
+  },
+
+  // PUT /api/blog/:id/like (auth required, toggles like on/off)
+  toggleLike(id: string) {
+    return apiRequest<ApiResponse<ToggleLikeResponse>>(`/blog/${id}/like`, {
+      method: "PUT",
     });
   },
 };
