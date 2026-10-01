@@ -287,12 +287,8 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
   }, [params]);
 
   useEffect(() => {
-    if (!slug || authLoading) return;
+    if (!slug) return;
 
-    if (!user) {
-      setLoading(false);
-      return;
-    }
 
     const fetchBlog = async () => {
       try {
@@ -311,7 +307,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     };
 
     fetchBlog();
-  }, [slug, authLoading, user]);
+  }, [slug]);
 
   const isAuthor = user && blog && user.id === blog.author?._id;
 
@@ -343,23 +339,23 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   if (loading || authLoading) return <DetailSkeleton />;
 
-  if (!user) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center px-6">
-        <div className="max-w-md text-center">
-          <h1 className="text-2xl font-bold text-foreground">
-            Sign in to read this story
-          </h1>
-          <p className="mt-3 text-muted-foreground">
-            Log in to access the full blog details and join the conversation.
-          </p>
-          <Link href="/login" className="mt-6 inline-block">
-            <Button>Log in to continue</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // if (!user) {
+  //   return (
+  //     <div className="flex min-h-[60vh] items-center justify-center px-6">
+  //       <div className="max-w-md text-center">
+  //         <h1 className="text-2xl font-bold text-foreground">
+  //           Sign in to read this story
+  //         </h1>
+  //         <p className="mt-3 text-muted-foreground">
+  //           Log in to access the full blog details and join the conversation.
+  //         </p>
+  //         <Link href="/login" className="mt-6 inline-block">
+  //           <Button>Log in to continue</Button>
+  //         </Link>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (error && !blog) {
     return (

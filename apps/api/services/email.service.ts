@@ -1,9 +1,8 @@
-import { Resend } from "resend";
 import { getEnvConfig } from "../config/env.config";
 
-const { RESEND_API_KEY } = getEnvConfig();
-// Initialize Resend with your API key
-const resend = new Resend(RESEND_API_KEY);
+const { BREVO_API_KEY } = getEnvConfig();
+
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 // Export a reusable function
 export async function sendResetMail(
@@ -12,11 +11,24 @@ export async function sendResetMail(
   token: string,
 ) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: userEmail,
-      subject: `Reset you password, ${name}!`,
-      html: `
+    if (!BREVO_API_KEY) {
+      throw new Error("BREVO_API_KEY is not set");
+    }
+    const response = await fetch(BREVO_API_URL, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "Nepal Can Blog",
+          email: "workamrtz@gmail.com", // must be a verified sender in Brevo
+        },
+        to: [{ email: userEmail, name }],
+        subject: `Reset your password, ${name}!`,
+        htmlContent: `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; color: #333;">
     <h2 style="color: #dc2626; margin-bottom: 16px;">
       Reset your Nepal Can Blog password
@@ -54,16 +66,19 @@ export async function sendResetMail(
     </p>
   </div>
 `,
+      }),
     });
 
-    if (error) {
-      console.error("Failed to send email:", error);
-      return { success: false, error };
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Failed to send email:", result);
+      return { success: false, error: result };
     }
 
-    return { success: true, data };
+    return { success: true, data: result }; // result.messageId on success
   } catch (err) {
-    // console.error("Unexpected error:", err);
+    console.log(err);
     return { success: false, error: err };
   }
 }
