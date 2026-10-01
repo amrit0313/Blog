@@ -94,7 +94,7 @@ export default function HomepageSections({
         {blogs.map((post, index) => (
           <Reveal key={post._id} delay={index * 70} className="h-full">
             <Link
-              href="/blogs"
+              href={`/blogs/${post.slug}`}
               className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-background no-underline motion-safe:animate-[fadeUp_400ms_ease-out_both] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
               style={{
                 animationDelay: `${index * 80}ms`,
