@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getEnvConfig } from "../../config/env.config";
-import { sendResetMail } from "../../services/email.service";
+import { sendResetMail, sendVerificationMail } from "../../services/email.service";
 import crypto from "node:crypto";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -18,10 +18,6 @@ const refreshCookieOptions: CookieOptions = {
 
 const addUser = async (req: Request, res: Response) => {
   try {
-    const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
-    if (!JWT_SECRET || !REFRESH_SECRET) {
-      return res.status(500).json({ message: "JWT secret is not configured" });
-    }
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Fill up credentials" });
@@ -30,30 +26,61 @@ const addUser = async (req: Request, res: Response) => {
     if (existing) return res.status(400).json("User already exists");
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationTokenHash = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
 
     const user = await User.create({
       name,
       email,
       passwordHash,
+      verificationTokenHash,
+      verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
-    const payload = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
-    const refresh = jwt.sign(
-      { userId: payload.id.toString() },
-      REFRESH_SECRET,
-      { expiresIn: "7d" },
-    );
 
-    res.cookie("refreshToken", refresh, refreshCookieOptions);
+    const emailResult = await sendVerificationMail(email, name, verificationToken);
+    if (!emailResult.success) {
+      await user.deleteOne();
+      return res.status(502).json({ message: "Unable to send verification email" });
+    }
 
-    return res
-      .status(201)
-      .json({ message: "user created successfully", payload, token });
+    return res.status(201).json({
+      message: "Account created. Check your email to verify your account.",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: "Verification token is required" });
+    }
+
+    const verificationTokenHash = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+    const user = await User.findOne({
+      verificationTokenHash,
+      verificationTokenExpiresAt: { $gt: new Date() },
+    }).select("+verificationTokenHash +verificationTokenExpiresAt");
+
+    if (!user) {
+      return res.status(400).json({ message: "Verification link is invalid or expired" });
+    }
+
+    user.isVerified = true;
+    user.verificationTokenHash = undefined;
+    user.verificationTokenExpiresAt = undefined;
+    await user.save();
+
+    return res.status(200).json({ message: "Email verified successfully" });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -78,6 +105,9 @@ const loginUser = async (req: Request, res: Response) => {
 
     if (!isVerified) {
       return res.status(400).json({ message: "Credentials doesn't match" });
+    }
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Please verify your email before logging in" });
     }
 
     const payload = {
@@ -183,6 +213,9 @@ const refresh = async (req: Request, res: Response) => {
     const payload = jwt.verify(refreshToken, REFRESH_SECRET) as { userId: string };
     const user = await User.findById(payload.userId);
     if (!user) return res.status(401).json({ message: "User not found" });
+    if (!user.isVerified) {
+      return res.status(403).json({ message: "Please verify your email before logging in" });
+    }
 
     const userData = { id: user._id, name: user.name, email: user.email, role: user.role };
     const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
@@ -197,6 +230,7 @@ const refresh = async (req: Request, res: Response) => {
 
 export {
   addUser,
+  verifyEmail,
   loginUser,
   getCurrentUser,
   forgetPassword,

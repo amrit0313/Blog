@@ -1,10 +1,60 @@
 import { getEnvConfig } from "../config/env.config";
 
 const { BREVO_API_KEY } = getEnvConfig();
+const FRONTEND_URL = process.env.FRONTEND_URL?.replace(/\/+$/, "");
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
-// Export a reusable function
+export async function sendVerificationMail(
+  userEmail: string,
+  name: string,
+  token: string,
+) {
+  try {
+    if (!FRONTEND_URL) {
+      throw new Error("FRONTEND_URL is not set");
+    }
+    if (!BREVO_API_KEY) {
+      throw new Error("BREVO_API_KEY is not set");
+    }
+    const response = await fetch(BREVO_API_URL, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender: {
+          name: "Nepal Can Blog",
+          email: "jyotinayak1098@gmail.com",
+        },
+        to: [{ email: userEmail, name }],
+        subject: "Verify your Nepal Can Blog email",
+        htmlContent: `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; color: #333;">
+    <h2>Verify your email address</h2>
+    <p>Hi ${name}, confirm your email address to activate your account.</p>
+    <p><a href="${FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}">Verify email</a></p>
+    <p>This link expires in 24 hours. If you did not create this account, you can ignore this email.</p>
+  </div>
+`,
+      }),
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      console.error("Failed to send verification email:", result);
+      return { success: false, error: result };
+    }
+
+    return { success: true, data: result };
+  } catch (err) {
+    console.error("Failed to send verification email:", err);
+    return { success: false, error: err };
+  }
+}
+
 export async function sendResetMail(
   userEmail: string,
   name: string,
@@ -76,7 +126,7 @@ export async function sendResetMail(
       return { success: false, error: result };
     }
 
-    return { success: true, data: result }; // result.messageId on success
+    return { success: true, data: result };
   } catch (err) {
     console.log(err);
     return { success: false, error: err };

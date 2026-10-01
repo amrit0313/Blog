@@ -17,14 +17,26 @@ const userSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
-
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
+   
     hashedToken: {
       type: "string",
+    },
+    verificationTokenHash: {
+      type: String,
+      select: false,
+    },
+    verificationTokenExpiresAt: {
+      type: Date,
+      select: false,
     },
   },
   { timestamps: true },
