@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { blogApi, type Blog } from "../../../lib/blog";
 import { categoryApi, type Category } from "../../../lib/category";
 import BlogFilters from "../../../components/ui/blog-filters";
+import SearchBox from "../../../components/ui/search-box";
 import BlogFeedCard from "../../../components/BlogFeedCard";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ function BlogCardSkeleton() {
 }
 
 function BlogsFeed() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const search = searchParams.get("search") ?? "";
   const category = searchParams.get("category") ?? "";
@@ -50,7 +52,6 @@ function BlogsFeed() {
   const requestIdRef = useRef<number>(0);
   const isFetchingRef = useRef<boolean>(false);
 
-  // Load categories once
   useEffect(() => {
     let cancelled = false;
     categoryApi
@@ -64,7 +65,6 @@ function BlogsFeed() {
     };
   }, []);
 
-  // Fetch page 1 when search or category changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     const currentRequestId = ++requestIdRef.current;
@@ -97,7 +97,6 @@ function BlogsFeed() {
       });
   }, [search, category]);
 
-  // Load next page
   const loadMore = useCallback(async () => {
     if (loading || loadingMore || !hasMore || isFetchingRef.current) return;
     isFetchingRef.current = true;
@@ -132,7 +131,6 @@ function BlogsFeed() {
     }
   }, [loading, loadingMore, hasMore, page, search, category, limit]);
 
-  // IntersectionObserver for infinite scroll sentinel
   useEffect(() => {
     if (!hasMore || loading || loadingMore || fetchMoreError) return;
 
@@ -157,6 +155,20 @@ function BlogsFeed() {
     };
   }, [hasMore, loading, loadingMore, fetchMoreError, loadMore]);
 
+  const handleSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set("search", value);
+      } else {
+        params.delete("search");
+      }
+      params.set("page", "1");
+      router.push(`/blogs?${params.toString()}`);
+    },
+    [router, searchParams]
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <div className="relative overflow-hidden border-b border-border">
@@ -173,45 +185,30 @@ function BlogsFeed() {
               Back
             </Link>
           </div>
-          <h1 className="mt-4 text-4xl font-bold tracking-tight text-center text-primary sm:text-5xl">
+          <h1 className="mt-4 text-3xl font-bold tracking-tight text-center text-primary sm:text-4xl">
             Latest Articles
           </h1>
-          <p className="mt-4 text-center sm:text-lg">
-            Discover stories, insights, and updates from our community of writers.
-          </p>
-
-          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-center text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-foreground">
-                {totalBlogs}
-              </span>
-              <span>total articles</span>
-            </div>
-            <span className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-foreground">
-                {blogs.length}
-              </span>
-              <span>loaded</span>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Blog Feed */}
-      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
-        <div className="mx-auto max-w-[680px]">
-          <BlogFilters categories={categories} />
+      <div className="mx-auto max-w-8xl px-6 py-10 lg:px-8">
+        <div className="mx-auto max-w-[780px]">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <BlogFilters categories={categories} />
+            <SearchBox
+              initialValue={search}
+              onSearch={handleSearch}
+              placeholder="Search blogs..."
+            />
+          </div>
 
-          {/* Initial Loading Skeleton */}
           {loading && (
-            <div className="space-y-6">
+            <div className="mt-6 space-y-6">
               <BlogCardSkeleton />
               <BlogCardSkeleton />
             </div>
           )}
 
-          {/* Initial Error State */}
           {!loading && fetchError && (
             <div className="py-20 text-center">
               <h2 className="text-xl font-bold text-foreground">Unable to load blogs</h2>
@@ -242,30 +239,28 @@ function BlogsFeed() {
             </div>
           )}
 
-          {/* Empty State */}
           {!loading && !fetchError && blogs.length === 0 && (
             <div className="py-20 text-center">
-              <p className="text-lg text-muted-foreground">No blogs found.</p>
+              <p className="text-lg text-muted-foreground">
+                {search ? `No blogs matching "${search}".` : "No blogs found."}
+              </p>
             </div>
           )}
 
-          {/* Blog Cards List */}
           {!loading && blogs.length > 0 && (
-            <div className="space-y-6">
+            <div className="mt-6 space-y-6">
               {blogs.map((blog) => (
                 <BlogFeedCard key={blog._id} blog={blog} />
               ))}
             </div>
           )}
 
-          {/* Loading More Indicator */}
           {loadingMore && (
             <div className="mt-6 space-y-6">
               <BlogCardSkeleton />
             </div>
           )}
 
-          {/* Error loading next page */}
           {fetchMoreError && (
             <div className="py-6 text-center">
               <p className="text-sm text-muted-foreground mb-2">
@@ -284,14 +279,12 @@ function BlogsFeed() {
             </div>
           )}
 
-          {/* All caught up */}
           {!loading && !hasMore && blogs.length > 0 && (
             <div className="py-10 text-center text-xs text-muted-foreground">
               You&apos;re all caught up
             </div>
           )}
 
-          {/* Intersection Observer Sentinel */}
           <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
         </div>
       </div>

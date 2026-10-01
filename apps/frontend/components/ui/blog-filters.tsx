@@ -27,7 +27,7 @@ export default function BlogFilters({
   };
 
   return (
-    <div className="mb-8 flex items-center gap-3">
+    <div className="flex items-center gap-3">
       <label
         htmlFor="category-filter"
         className="text-sm font-medium text-foreground"
@@ -38,7 +38,7 @@ export default function BlogFilters({
         id="category-filter"
         value={selectedCategory}
         onChange={(event) => handleCategoryChange(event.target.value)}
-        className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+        className="h-10 rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
       >
         <option value="">All</option>
         {categories.map((category) => (
