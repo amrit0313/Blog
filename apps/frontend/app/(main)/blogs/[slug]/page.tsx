@@ -113,9 +113,12 @@ function AuthorCard({ blog }: { blog: Blog }) {
             {initial}
           </span>
           <div>
-            <p className="text-sm font-semibold text-foreground">
+            <Link
+              href={`/authors/${blog.author?._id}`}
+              className="text-sm font-semibold text-foreground hover:underline"
+            >
               {blog.author?.name ?? "Unknown"}
-            </p>
+            </Link>
             {blog.author?.email && (
               <p className="text-xs text-muted-foreground">
                 {blog.author.email}
@@ -412,9 +415,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
                 {blog.author?.name?.charAt(0).toUpperCase() ?? "?"}
               </span>
-              <span className="font-medium text-foreground">
+              <Link
+                href={`/authors/${blog.author?._id}`}
+                className="font-medium text-foreground hover:underline"
+              >
                 {blog.author?.name ?? "Unknown"}
-              </span>
+              </Link>
             </span>
 
             <span className="text-border">·</span>

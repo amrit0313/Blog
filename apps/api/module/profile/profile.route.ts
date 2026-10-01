@@ -1,6 +1,6 @@
 import express from "express";
 import { authenticateToken } from "../auth/auth.middleware";
-import { createOrUpdateProfile, getProfile } from "./profile.controller";
+import { createOrUpdateProfile, getProfile, getPublicProfile } from "./profile.controller";
 import bodyValidator from "../../services/validator.middleware";
 import { profileValidation } from "./profile.validation";
 import { imageUpload } from "../../middlewares/upload";
@@ -14,5 +14,6 @@ router.patch(
   createOrUpdateProfile,
 );
 router.get("", authenticateToken, getProfile);
+router.get("/:userId", getPublicProfile);
 
 export default router;

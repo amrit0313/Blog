@@ -5,6 +5,7 @@ import {
   createBlog,
   ListAllBlogs,
   GetMyBlogs,
+  GetBlogsByAuthor,
   BlogDetailById,
   BlogDetailBySlug,
   BlogDeleteById,
@@ -22,6 +23,7 @@ const router = express.Router();
 router.get("", ListAllBlogs);
 
 router.get("/me", authenticateToken, GetMyBlogs);
+router.get("/author/:authorId", GetBlogsByAuthor);
 router.post(
   "/create",
   authenticateToken,
