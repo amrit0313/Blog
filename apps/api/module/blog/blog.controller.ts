@@ -392,6 +392,50 @@ const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const GetBlogsByAuthor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { authorId } = req.params;
+    if (!mongoose.isValidObjectId(authorId)) {
+      throw createError("Invalid author ID", 400);
+    }
+
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = { author: authorId, status: "published" };
+
+    const [count, data] = await Promise.all([
+      blog.countDocuments(filter),
+      blog
+        .find(filter)
+        .populate("author", ["_id", "name", "email"])
+        .populate("category", ["_id", "title"])
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    res.status(200).json({
+      result: data,
+      message: "Author blogs fetched",
+      meta: {
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        totalBlogs: count,
+        limit,
+      },
+    });
+  } catch (exception) {
+    next(exception);
+  }
+};
+
 const AdminListAllBlogs = async (
   req: Request,
   res: Response,
@@ -476,6 +520,7 @@ export {
   UnpublishBlogById,
   BlogDeleteById,
   GetMyBlogs,
+  GetBlogsByAuthor,
   AdminListAllBlogs,
   toggleLike
 };

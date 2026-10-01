@@ -105,4 +105,22 @@ const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-export { createOrUpdateProfile, getProfile };
+const getPublicProfile = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const profile = await Profile.findOne({ user: userId }).populate(
+      "user",
+      "id name email",
+    );
+    if (!profile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+    return res
+      .status(200)
+      .json({ message: "Profile retrieved", profile });
+  } catch (err) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export { createOrUpdateProfile, getProfile, getPublicProfile };

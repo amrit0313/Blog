@@ -88,9 +88,12 @@ export default function BlogFeedCard({
             fallback="initials"
           />
           <div className="leading-tight">
-            <span className="font-semibold text-sm text-foreground block hover:underline">
+            <Link
+              href={`/authors/${blog.author?._id}`}
+              className="font-semibold text-sm text-foreground block hover:underline"
+            >
               {authorName}
-            </span>
+            </Link>
             <span className="text-xs text-muted-foreground">
               {formatRelative(blog.createdAt)}
             </span>

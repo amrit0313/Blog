@@ -73,6 +73,18 @@ export const blogApi = {
     return apiRequest<BlogListApiResponse>("/blog/me", { method: "GET" });
   },
 
+  getByAuthor(authorId: string, params?: { page?: number; limit?: number }) {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.limit) query.set("limit", String(params.limit));
+
+    const qs = query.toString();
+    return apiRequest<BlogListApiResponse>(
+      `/blog/author/${authorId}${qs ? `?${qs}` : ""}`,
+      { method: "GET" },
+    );
+  },
+
   create(data: FormData) {
     return apiRequest<ApiResponse<Blog>>("/blog/create", {
       method: "POST",

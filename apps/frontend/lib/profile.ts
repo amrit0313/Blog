@@ -30,6 +30,12 @@ export const profileApi = {
     return apiRequest<ProfileResponse>("/profile", { method: "GET" });
   },
 
+  getPublic(userId: string) {
+    return apiRequest<ProfileResponse>(`/profile/${userId}`, {
+      method: "GET",
+    });
+  },
+
   update(data: FormData) {
     return apiRequest<ProfileResponse>("/profile", {
       method: "PATCH",
