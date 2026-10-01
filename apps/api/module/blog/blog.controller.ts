@@ -1,7 +1,9 @@
 import slugify from "slugify";
 import blog from "./blog.model";
+import mongoose from "mongoose";
 import { Request, Response, NextFunction } from "express";
 import categoryModel from "../categories/category.model";
+
 interface IBlog {
   title: string;
   content: string;
@@ -33,7 +35,6 @@ async function generateUniqueSlug(title: string, excludeId?: string) {
 
   return slug;
 }
-import mongoose from "mongoose";
 
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
@@ -63,8 +64,8 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       description,
       category,
       slug,
-      author: req.user!.id, // from your auth middleware, NOT from req.body
-      status: "submitted", // server decides, never the client
+      author: req.user!.id, 
+      status: "submitted", 
       image: uploaded ?? undefined,
     });
 
