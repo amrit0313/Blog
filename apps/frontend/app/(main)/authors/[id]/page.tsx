@@ -188,7 +188,6 @@ export default function AuthorProfilePage({
             </section>
           </div>
 
-          {/* ── Right column: Published Blogs ── */}
           <section>
             <div className="flex items-end justify-between gap-4">
               <div>
