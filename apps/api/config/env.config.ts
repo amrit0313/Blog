@@ -6,6 +6,7 @@ export const getEnvConfig = () => {
   const JWT_SECRET = process.env.JWT_SECRET;
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   const REFRESH_SECRET = process.env.REFRESH_SECRET;
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
 
   if (!mongoUri) {
     throw new Error("MONGO_URI is not defined");
@@ -25,5 +26,6 @@ export const getEnvConfig = () => {
     JWT_SECRET,
     REFRESH_SECRET,
     RESEND_API_KEY,
+    BREVO_API_KEY,
   };
 };
