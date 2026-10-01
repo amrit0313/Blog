@@ -2,6 +2,7 @@ import express from "express";
 const router = express.Router();
 import {
   addUser,
+  verifyEmail,
   loginUser,
   getCurrentUser,
   forgetPassword,
@@ -11,6 +12,7 @@ import {
 import { authenticateToken } from "./auth.middleware";
 
 router.post("/register", addUser);
+router.post("/verify-email", verifyEmail);
 router.post("/login", loginUser);
 router.post("/me", authenticateToken, getCurrentUser);
 router.post("/forgot-password", forgetPassword);

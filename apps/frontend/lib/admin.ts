@@ -12,7 +12,7 @@ export interface AdminBlog {
   title: string;
   slug: string;
   description: string;
-  status: "draft" | "published" | "unpublished" | "rejected";
+  status: "draft" | "published" | "unpublished" | "rejected" | "submitted";
   image?: string;
   createdAt: string;
   updatedAt: string;

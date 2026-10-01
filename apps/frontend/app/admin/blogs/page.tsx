@@ -10,13 +10,15 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { toast } from "sonner";
 import { blogApi, type Blog } from "../../../lib/blog";
 import { adminApi } from "../../../lib/admin";
+import SearchBox from "../../../components/ui/search-box";
 
 export default function AdminBlogsPage() {
   const router = useRouter();
   const [rows, setRows] = useState<Blog[]>([]);
   const [rowCount, setRowCount] = useState(0);
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize:10 });
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [unpublishTarget, setUnpublishTarget] = useState<Blog | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
 
@@ -42,13 +44,17 @@ export default function AdminBlogsPage() {
   useEffect(() => {
     setLoading(true);
     adminApi
-      .listAllBlogs({ page: paginationModel.page + 1, limit: paginationModel.pageSize })
+      .listAllBlogs({
+        page: paginationModel.page + 1,
+        limit: paginationModel.pageSize,
+        search: search || undefined,
+      })
       .then((res) => {
         setRows(res.result);
         setRowCount(res.meta.totalBlogs);
       })
       .finally(() => setLoading(false));
-  }, [paginationModel]);
+  }, [paginationModel, search]);
 
   const columns: GridColDef<Blog>[] = [
     { field: "title", headerName: "Title", flex: 1, minWidth: 200 },
@@ -84,7 +90,17 @@ export default function AdminBlogsPage() {
 
   return (
     <>
-      <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>Blogs</Typography>
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "stretch", sm: "center" }, justifyContent: "space-between", gap: 2, mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 600 }}>Blogs</Typography>
+        <SearchBox
+          initialValue={search}
+          onSearch={(value) => {
+            setSearch(value);
+            setPaginationModel((prev) => ({ ...prev, page: 0 }));
+          }}
+          placeholder="Search blogs..."
+        />
+      </Box>
       <DataGrid
         rows={rows}
         columns={columns}
