@@ -50,12 +50,18 @@ export default function Navbar() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 lg:px-8">
         <Link
           href="/"
-          className="flex w-2xl items-center gap-2 text-xl font-bold  tracking-tight  hover:text-primary"
+          className="flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight hover:text-primary"
         >
-          <Image src={NepalCanLogo} className="w-8 h-8" alt="error" />
+          <Image
+            src={NepalCanLogo}
+            alt="Nepal Can logo"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0"
+            unoptimized
+          />
           Nepal Can<span className="text-black"> Blog</span>
         </Link>
-
         {isLoading ? null : user ? (
           <nav
             className="hidden items-center justify-around w-full text-sm font-medium lg:flex"
