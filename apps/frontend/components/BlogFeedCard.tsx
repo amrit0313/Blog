@@ -163,7 +163,6 @@ export default function BlogFeedCard({
         </div>
       </div>
 
-      {/* b. Body */}
       <div className="px-4 pb-3">
         <Link href={detailHref} className="group block">
           <h2 className="text-lg font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
