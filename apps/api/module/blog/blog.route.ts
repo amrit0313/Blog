@@ -29,8 +29,8 @@ router.post(
   bodyValidator(CreateBlogValidation),
   createBlog,
 );
-router.get("/slug/:slug",authenticateToken, BlogDetailBySlug);
-router.get("/:id", authenticateToken, BlogDetailById);
+router.get("/slug/:slug", BlogDetailBySlug);
+router.get("/:id", BlogDetailById);
 router.put(
   "/slug/:slug",
   authenticateToken,
