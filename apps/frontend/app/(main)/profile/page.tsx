@@ -47,6 +47,7 @@ export default function ProfilePage() {
   const [profileError, setProfileError] = useState("");
   const [profileMissing, setProfileMissing] = useState(false);
   const [blogsError, setBlogsError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("published");
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -65,7 +66,6 @@ export default function ProfilePage() {
             setProfile(response.profile ?? null);
             setProfileMissing(!response.profile);
           });
-          console.log(response);
         }
       } catch (error) {
         if (!cancelled) {
@@ -112,11 +112,9 @@ export default function ProfilePage() {
 
   if (isAuthLoading || (!isAuthenticated && !profileError)) {
     return (
-      <>
-        <main className="flex min-h-[60vh] flex-1 items-center justify-center px-6 py-16">
-          <p>Loading your profile...</p>
-        </main>
-      </>
+      <main className="flex min-h-[60vh] flex-1 items-center justify-center px-6 py-16">
+        <p>Loading your profile...</p>
+      </main>
     );
   }
 
@@ -126,9 +124,6 @@ export default function ProfilePage() {
   const displayName = profileUser?.name ?? "Your profile";
   const publishedBlogs = blogs.filter((blog) => blog.status === "published");
   const drafts = blogs.filter((blog) => blog.status === "draft");
-  const submittedBlogs = blogs.filter((blog) => blog.status === "submitted");
-  const rejectedBlogs = blogs.filter((blog) => blog.status === "rejected");
-  const unpublishedBlogs = blogs.filter((blog) => blog.status === "unpublished");
   const socialLinks = profile?.socialLinks
     ? Object.entries(profile.socialLinks).filter(([, value]) => Boolean(value))
     : [];
@@ -157,222 +152,198 @@ export default function ProfilePage() {
     }
   };
 
+  const filteredBlogs = blogs.filter((blog) => blog.status === statusFilter);
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
-        <section className="card flex flex-col gap-6 p-6 sm:p-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-center gap-5">
-              <Avatar
-                src={profile?.avatar}
-                className="h-20 w-20 text-2xl"
-              />
-              <div>
-                <p className="eyebrow">Profile</p>
-                <h1 className="mt-1 text-3xl">{displayName}</h1>
-                <p className="mt-1">{profileUser?.email}</p>
-                {profile?.isVerified && (
-                  <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
-                    <FaCheckCircle aria-hidden="true" /> Verified account
-                  </p>
-                )}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[380px_1fr] lg:items-start">
+          {/* ── Left column: profile + drafts ── */}
+          <div className="space-y-6 lg:sticky lg:top-8">
+            <section className="card flex flex-col gap-6 p-6 sm:p-8">
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-5">
+                  <Avatar src={profile?.avatar} className="h-20 w-20 text-2xl" />
+                  <div>
+                    <p className="eyebrow">Profile</p>
+                    <h1 className="mt-1 text-2xl">{displayName}</h1>
+                    <p className="mt-1 text-sm">{profileUser?.email}</p>
+                    {profile?.isVerified && (
+                      <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <FaCheckCircle aria-hidden="true" /> Verified account
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  href="/profile/edit"
+                  variant="outline"
+                  className="w-full rounded-md px-4 py-2 no-underline"
+                >
+                  Edit Profile
+                </Button>
               </div>
-            </div>
-            <Button
-              href="/profile/edit"
-              variant="outline"
-              className="rounded-md px-4 py-2 no-underline"
-            >
-              Edit Profile
-            </Button>
-          </div>
 
-          {profileMissing ? (
-            <div className="rounded-md bg-muted p-5">
-              <h2 className="text-lg">Complete your profile</h2>
-              <p className="mt-2 max-w-xl leading-7">
-                Add a bio, website, and other details to tell people more about
-                you.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 border-t pt-5">
-              {profile?.bio && (
-                <div>
-                  <p className="mb-1 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                    About
+              {profileMissing ? (
+                <div className="rounded-md bg-muted p-5">
+                  <h2 className="text-lg">Complete your profile</h2>
+                  <p className="mt-2 leading-7">
+                    Add a bio, website, and other details to tell people more
+                    about you.
                   </p>
-                  <p className="max-w-2xl leading-7">{profile.bio}</p>
+                </div>
+              ) : (
+                <div className="space-y-4 border-t pt-5">
+                  {profile?.bio && (
+                    <div>
+                      <p className="mb-1 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                        About
+                      </p>
+                      <p className="leading-7">{profile.bio}</p>
+                    </div>
+                  )}
+                  {socialLinks.length > 0 && (
+                    <div className="flex flex-wrap gap-2 text-sm">
+                      {socialLinks.map(([label, value]) => {
+                        const Icon = socialIcons[label as keyof typeof socialIcons];
+                        return (
+                          <a
+                            key={label}
+                            href={getExternalHref(value as string)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex max-w-full items-center gap-2 rounded-md border bg-white px-3 py-2 font-semibold no-underline hover:border-primary hover:text-primary"
+                          >
+                            {Icon && <Icon aria-hidden="true" />}
+                            <span className="truncate">
+                              {getLinkLabel(value as string)}
+                            </span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
-              {socialLinks.length > 0 && (
-                <div className="flex flex-wrap gap-2 text-sm">
-                  {socialLinks.map(([label, value]) => {
-                    const Icon = socialIcons[label as keyof typeof socialIcons];
-                    return (
-                      <a
-                        key={label}
-                        href={getExternalHref(value as string)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex max-w-full items-center gap-2 rounded-md border bg-white px-3 py-2 font-semibold no-underline hover:border-primary hover:text-primary"
-                      >
-                        {Icon && <Icon aria-hidden="true" />}
-                        <span className="truncate">
-                          {getLinkLabel(value as string)}
-                        </span>
-                      </a>
-                    );
-                  })}
-                </div>
+
+              {profileLoading && (
+                <p className="text-sm">Loading profile details...</p>
               )}
-            </div>
-          )}
-        </section>
+              {profileError && (
+                <p
+                  role="alert"
+                  className="rounded-md border border-primary/30 bg-secondary px-4 py-3 text-sm text-secondary-foreground"
+                >
+                  {profileError}
+                </p>
+              )}
+            </section>
 
-        {profileLoading && (
-          <p className="mt-4 text-sm">Loading profile details...</p>
-        )}
-        {profileError && (
-          <p
-            role="alert"
-            className="mt-6 rounded-md border border-primary/30 bg-secondary px-4 py-3 text-secondary-foreground"
-          >
-            {profileError}
-          </p>
-        )}
+            {!blogsLoading && !blogsError && (
+              <Link
+                href="/profile/drafts"
+                className="card flex items-center justify-between gap-4 p-6 no-underline transition-colors hover:border-primary"
+              >
+                <div>
+                  <p className="eyebrow">Private</p>
+                  <h3 className="mt-2 text-xl">Drafts</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {drafts.length === 0
+                      ? "Your unfinished blogs will appear here."
+                      : `${drafts.length} unpublished ${drafts.length === 1 ? "blog" : "blogs"} waiting for you.`}
+                  </p>
+                </div>
+                <span className="shrink-0 font-semibold text-primary">
+                  &rarr;
+                </span>
+              </Link>
+            )}
 
-        <section className="mt-12">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="eyebrow">Writing</p>
-              <h2 className="mt-2 text-3xl">Your Blogs</h2>
-            </div>
             {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
               <Button
                 href="/blogs/create"
-                className="rounded-md px-4 py-2 no-underline"
+                className="w-full rounded-md px-4 py-2 no-underline"
               >
                 Start Writing
               </Button>
             )}
           </div>
 
-          {!blogsLoading && !blogsError && (
-            <Link
-              href="/profile/drafts"
-              className="card mt-6 flex items-center justify-between gap-4 p-6 no-underline transition-colors hover:border-primary"
-            >
-              <div>
-                <p className="eyebrow">Private</p>
-                <h3 className="mt-2 text-2xl">Drafts</h3>
-                <p className="mt-2 text-muted-foreground">
-                  {drafts.length === 0
-                    ? "Your unfinished blogs will appear here."
-                    : `${drafts.length} unpublished ${drafts.length === 1 ? "blog" : "blogs"} waiting for you.`}
+          {/* ── Right column: Your Blogs ── */}
+          <section>
+            {!blogsLoading && !blogsError && (
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-2xl">Your Blogs</h2>
+
+                <div className="flex items-center gap-2">
+                  <label htmlFor="status-filter" className="text-sm font-medium">
+                    Status
+                  </label>
+                  <select
+                    id="status-filter"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="rounded-md border bg-white px-3 py-2 text-sm"
+                  >
+                    <option value="published">Published</option>
+                    <option value="unpublished">Unpublished</option>
+                    <option value="submitted">Submitted for Review</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {!blogsLoading && !blogsError && (
+              filteredBlogs.length === 0 ? (
+                <p className="mt-6 text-muted-foreground">
+                  No {statusFilter} blogs.
                 </p>
-              </div>
-              <span className="shrink-0 font-semibold text-primary">
-                Open drafts &rarr;
-              </span>
-            </Link>
-          )}
-          <h3 className="mt-8 text-xl font-bold">Published Blogs</h3>
-          {!blogsLoading && !blogsError && publishedBlogs.length === 0 && (
-            <p className="mt-3 text-muted-foreground">
-              No published blogs yet.
-            </p>
-          )}
-          {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
-            <div className="mt-4 max-w-[680px] space-y-5">
-              {publishedBlogs.map((blog) => (
-                <ProfileBlogCard
-                  key={blog._id}
-                  blog={blog}
-                  onDelete={handleDeleteBlog}
-                  onUnpublish={handleUnpublishBlog}
-                />
-              ))}
-            </div>
-          )}
+              ) : (
+                <div className="mt-4 space-y-5">
+                  {filteredBlogs.map((blog) => (
+                    <ProfileBlogCard
+                      key={blog._id}
+                      blog={blog}
+                      onDelete={handleDeleteBlog}
+                      onUnpublish={
+                        blog.status === "published"
+                          ? handleUnpublishBlog
+                          : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              )
+            )}
 
-          {/* Unpublished Blogs */}
-          {unpublishedBlogs.length > 0 && (
-            <>
-              <h3 className="mt-10 text-xl font-bold">Unpublished Blogs</h3>
-              <div className="mt-4 max-w-[680px] space-y-5">
-                {unpublishedBlogs.map((blog) => (
-                  <ProfileBlogCard
-                    key={blog._id}
-                    blog={blog}
-                    onDelete={handleDeleteBlog}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Submitted for Review */}
-          <h3 className="mt-10 text-xl font-bold">Submitted for review</h3>
-          {!blogsLoading && !blogsError && submittedBlogs.length === 0 && (
-            <p className="mt-3 text-muted-foreground">
-              No blogs submitted for review.
-            </p>
-          )}
-          {!blogsLoading && !blogsError && submittedBlogs.length > 0 && (
-            <div className="mt-4 max-w-[680px] space-y-5">
-              {submittedBlogs.map((blog) => (
-                <ProfileBlogCard
-                  key={blog._id}
-                  blog={blog}
-                  onDelete={handleDeleteBlog}
-                />
-              ))}
-            </div>
-          )}
-
-          <h3 className="mt-10 text-xl font-bold">Rejected Blogs</h3>
-          {!blogsLoading && !blogsError && rejectedBlogs.length === 0 && (
-            <p className="mt-3 text-muted-foreground">No rejected blogs.</p>
-          )}
-          {!blogsLoading && !blogsError && rejectedBlogs.length > 0 && (
-            <div className="mt-4 max-w-[680px] space-y-5">
-              {rejectedBlogs.map((blog) => (
-                <ProfileBlogCard
-                  key={blog._id}
-                  blog={blog}
-                  onDelete={handleDeleteBlog}
-                />
-              ))}
-            </div>
-          )}
-
-          {blogsLoading && <p className="mt-6">Loading your blogs...</p>}
-          {blogsError && (
-            <p
-              role="alert"
-              className="mt-6 rounded-md border border-primary/30 bg-secondary px-4 py-3 text-secondary-foreground"
-            >
-              {blogsError}
-            </p>
-          )}
-
-          {!blogsLoading && !blogsError && publishedBlogs.length === 0 && (
-            <div className="flex flex-col items-center gap-4 card mt-6 p-8 text-center sm:p-10">
-              <h3 className="text-2xl">No published blogs yet</h3>
-              <p className="mx-auto mt-3 max-w-md leading-7">
-                Publish a blog when you are ready to share your ideas with the
-                community.
-              </p>
-              <Button
-                href="/blogs/create"
-                className="mt-6 rounded-md px-5 py-3 no-underline w-40"
+            {blogsLoading && <p className="mt-6">Loading your blogs...</p>}
+            {blogsError && (
+              <p
+                role="alert"
+                className="mt-6 rounded-md border border-primary/30 bg-secondary px-4 py-3 text-secondary-foreground"
               >
-                Start Writing
-              </Button>
-            </div>
-          )}
-        </section>
+                {blogsError}
+              </p>
+            )}
+
+            {!blogsLoading && !blogsError && blogs.length === 0 && (
+              <div className="card mt-6 flex flex-col items-center gap-4 p-8 text-center sm:p-10">
+                <h3 className="text-2xl">No blogs yet</h3>
+                <p className="mx-auto mt-3 max-w-md leading-7">
+                  Start writing a blog when you are ready to share your ideas
+                  with the community.
+                </p>
+                <Button
+                  href="/blogs/create"
+                  className="mt-6 w-40 rounded-md px-5 py-3 no-underline"
+                >
+                  Start Writing
+                </Button>
+              </div>
+            )}
+          </section>
+        </div>
       </main>
     </div>
   );
