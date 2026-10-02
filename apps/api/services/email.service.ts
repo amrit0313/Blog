@@ -27,7 +27,7 @@ export async function sendVerificationMail(
       body: JSON.stringify({
         sender: {
           name: "Nepal Can Blog",
-          email: "jyotinayak1098@gmail.com",
+          email: "workamrtz@gmail.com",
         },
         to: [{ email: userEmail, name }],
         subject: "Verify your Nepal Can Blog email",
