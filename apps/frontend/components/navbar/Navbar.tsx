@@ -64,7 +64,7 @@ export default function Navbar() {
         </Link>
         {isLoading ? null : user ? (
           <nav
-            className="hidden items-center justify-around w-full text-sm font-medium lg:flex lg:w-2xl"
+            className="hidden items-center justify-center gap-8 w-full text-sm font-medium lg:flex lg:w-2xl"
             aria-label="Primary navigation"
           >
             <Link href="/" className="flex  items-center  hover:text-primary">
