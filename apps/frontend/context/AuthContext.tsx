@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function register(credentials: RegisterCredentials) {
     const response = await authApi.register(credentials);
-    toast.success(response.message ?? "Registration successful.");
+    toast.success(response.message ?? "Check your email to verify your account.");
   }
 
   function logout() {

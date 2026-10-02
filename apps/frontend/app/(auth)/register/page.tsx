@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Button from "../../../components/ui/Button";
 import Navbar from "../../../components/navbar/Navbar";
@@ -23,7 +22,6 @@ const registerSchema = Yup.object().shape({
 });
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -33,6 +31,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationSent, setRegistrationSent] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -61,7 +60,7 @@ export default function RegisterPage() {
         email: email.trim(),
         password,
       });
-      router.push("/login");
+      setRegistrationSent(true);
     } catch (submitError) {
       toast.error(
         getErrorMessage(submitError, "Unable to create your account."),
@@ -84,11 +83,23 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="card space-y-5 p-6 sm:p-8"
-            noValidate
-          >
+          {registrationSent ? (
+            <div className="card space-y-4 p-6 sm:p-8">
+              <h2 className="text-xl font-semibold">Check your email</h2>
+              <p>
+                We sent a verification link to <strong>{email.trim()}</strong>.
+                Verify your address before logging in.
+              </p>
+              <Link href="/login" className="font-semibold no-underline hover:underline">
+                Back to login
+              </Link>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="card space-y-5 p-6 sm:p-8"
+              noValidate
+            >
             <div>
               <label
                 htmlFor="name"
@@ -216,7 +227,8 @@ export default function RegisterPage() {
             >
               {isSubmitting ? "Creating account..." : "Create Account"}
             </Button>
-          </form>
+            </form>
+          )}
 
           <p className="mt-6 text-center text-sm">
             Already have an account?{" "}

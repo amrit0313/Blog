@@ -195,12 +195,19 @@ export const authApi = {
   },
 
   register(credentials: RegisterCredentials) {
-    return apiRequest<AuthResponse>("/auth/register", {
+    return apiRequest<MessageResponse>("/auth/register", {
       method: "POST",
       data: credentials,
     });
   },
-  // The current Express API exposes the authenticated-user check as POST /auth/me.
+
+  verifyEmail(token: string) {
+    return apiRequest<MessageResponse>("/auth/verify-email", {
+      method: "POST",
+      data: { token },
+    });
+  },
+
   currentUser() {
     return apiRequest<AuthResponse>("/auth/me", { method: "POST" });
   },
