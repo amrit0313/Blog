@@ -27,7 +27,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<AuthUser>;
-  register: (credentials: RegisterCredentials) => Promise<AuthUser>;
+  register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<AuthUser | null>;
 }
@@ -112,15 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function register(credentials: RegisterCredentials) {
     const response = await authApi.register(credentials);
-    if (!response.token) {
-      throw new ApiError("The authentication response was invalid.", 0);
-    }
-
-    storeToken(response.token);
-    const nextUser = toUser(response);
-    setUser(nextUser);
     toast.success(response.message ?? "Registration successful.");
-    return nextUser;
   }
 
   function logout() {

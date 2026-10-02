@@ -13,7 +13,9 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const registerSchema = Yup.object().shape({
   name: Yup.string().required("Full name is required"),
-  email: Yup.string().email("Enter a valid email address").required("Email is required"),
+  email: Yup.string()
+    .email("Enter a valid email address")
+    .required("Email is required"),
   password: Yup.string().required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords do not match")
@@ -38,7 +40,7 @@ export default function RegisterPage() {
     try {
       await registerSchema.validate(
         { name, email, password, confirmPassword },
-        { abortEarly: false }
+        { abortEarly: false },
       );
       setErrors({});
     } catch (err) {
@@ -59,7 +61,7 @@ export default function RegisterPage() {
         email: email.trim(),
         password,
       });
-      router.push("/blogs");
+      router.push("/login");
     } catch (submitError) {
       toast.error(
         getErrorMessage(submitError, "Unable to create your account."),
@@ -193,13 +195,17 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
                 >
                   {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
