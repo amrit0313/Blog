@@ -8,6 +8,7 @@ import {
   GetBlogsByAuthor,
   BlogDetailById,
   BlogDetailBySlug,
+  DraftBlogDetailBySlug,
   BlogDeleteById,
   UnpublishBlogById,
   BlogUpdateBySlug,
@@ -32,6 +33,7 @@ router.post(
   createBlog,
 );
 router.get("/slug/:slug", BlogDetailBySlug);
+router.get("/draft/slug/:slug", authenticateToken, DraftBlogDetailBySlug);
 router.get("/:id", BlogDetailById);
 router.put(
   "/slug/:slug",

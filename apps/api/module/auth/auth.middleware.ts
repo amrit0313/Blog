@@ -37,6 +37,7 @@ export const authenticateToken = (
     return res.status(401).json({ message: "unauthorized" });
   }
 };
+
 export const authorizeUser = (role: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {

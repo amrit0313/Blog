@@ -152,6 +152,32 @@ const BlogDetailBySlug = async (
     next(exception);
   }
 };
+
+const DraftBlogDetailBySlug = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const Blog = await blog
+      .findOne({ slug: req.params.slug, status: "draft" })
+      .populate("author", ["_id", "name", "email"])
+      .populate("category", ["_id", "title"]);
+
+    if (!Blog || req.user?.id !== Blog.author?._id?.toString()) {
+      throw createError("Blog not found", 404);
+    }
+
+    res.json({
+      result: Blog,
+      message: "Draft detail fetched",
+      meta: null,
+    });
+  } catch (exception) {
+    next(exception);
+  }
+};
+
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const ListAllBlogs = async (
@@ -520,6 +546,7 @@ export {
   createBlog,
   BlogDetailById,
   BlogDetailBySlug,
+  DraftBlogDetailBySlug,
   ListAllBlogs,
   AllBlogsFiltering,
   BlogUpdateBySlug,
