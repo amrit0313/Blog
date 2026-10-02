@@ -9,7 +9,7 @@ interface IBlog {
   content: string;
   slug: string;
   category: string;
-  status: "draft" | "published" | "unpublished";
+  status: "draft" | "published" | "unpublished" | "submitted" | "rejected";
   image?: string;
 }
 import { storage } from "../../storage";
@@ -40,10 +40,16 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
 
   try {
-    const { title, category, description } = req.body;
+    const { title, category, description, status } = req.body;
 
     if (!title || !category || !description) {
       return res.status(400).json({ message: "Invalid request" });}
+    if (
+      status !== "draft" &&
+      status !== "submitted"
+    ) {
+      return res.status(400).json({ message: "Invalid blog status" });
+    }
     if (title) {
     const slug = await generateUniqueSlug(title);
     }
@@ -65,13 +71,13 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       category,
       slug,
       author: req.user!.id, 
-      status: "submitted", 
+      status: status ?? "draft",
       image: uploaded ?? undefined,
     });
 
     res.status(201).json({
       result: newBlog,
-      message: "Blog submitted for review",
+      message: newBlog.status === "draft" ? "Blog saved as draft" : "Blog submitted for review",
       meta: null,
     });
   } catch (exception) {
