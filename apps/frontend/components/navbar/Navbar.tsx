@@ -46,7 +46,7 @@ export default function Navbar() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="border-b bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur sm:backdrop-blur-3xl">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 lg:px-8">
         <Link
           href="/"
@@ -64,7 +64,7 @@ export default function Navbar() {
         </Link>
         {isLoading ? null : user ? (
           <nav
-            className="hidden items-center justify-around w-full text-sm font-medium lg:flex"
+            className="hidden items-center justify-around w-full text-sm font-medium lg:flex lg:w-2xl"
             aria-label="Primary navigation"
           >
             <Link href="/" className="flex  items-center  hover:text-primary">

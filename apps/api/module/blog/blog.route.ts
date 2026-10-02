@@ -14,7 +14,6 @@ import {
   BlogUpdateBySlug,
 } from "./blog.controller";
 import { authenticateToken, authorizeUser } from "../auth/auth.middleware";
-import { blogUpload } from "../../middlewares/fileupload.middleware";
 import { imageUpload } from "../../middlewares/upload";
 import commentRoutes from "../comment/comment.routes";
 import { toggleLike } from "./blog.controller";
@@ -38,7 +37,7 @@ router.get("/:id", BlogDetailById);
 router.put(
   "/slug/:slug",
   authenticateToken,
-  blogUpload.single("image"),
+  imageUpload.single("image"),
   BlogUpdateBySlug,
 );
 router.delete("/:id", authenticateToken, BlogDeleteById);
