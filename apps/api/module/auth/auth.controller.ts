@@ -4,7 +4,10 @@ import { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getEnvConfig } from "../../config/env.config";
-import { sendResetMail, sendVerificationMail } from "../../services/email.service";
+import {
+  sendResetMail,
+  sendVerificationMail,
+} from "../../services/email.service";
 import crypto from "node:crypto";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -37,13 +40,19 @@ const addUser = async (req: Request, res: Response) => {
       email,
       passwordHash,
       verificationTokenHash,
-      verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      verificationTokenExpiresAt: new Date(Date.now() + 1 * 60 * 1000),
     });
 
-    const emailResult = await sendVerificationMail(email, name, verificationToken);
+    const emailResult = await sendVerificationMail(
+      email,
+      name,
+      verificationToken,
+    );
     if (!emailResult.success) {
       await user.deleteOne();
-      return res.status(502).json({ message: "Unable to send verification email" });
+      return res
+        .status(502)
+        .json({ message: "Unable to send verification email" });
     }
 
     return res.status(201).json({
@@ -59,7 +68,9 @@ const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.body;
     if (!token) {
-      return res.status(400).json({ message: "Verification token is required" });
+      return res
+        .status(400)
+        .json({ message: "Verification token is required" });
     }
 
     const verificationTokenHash = crypto
@@ -72,7 +83,9 @@ const verifyEmail = async (req: Request, res: Response) => {
     }).select("+verificationTokenHash +verificationTokenExpiresAt");
 
     if (!user) {
-      return res.status(400).json({ message: "Verification link is invalid or expired" });
+      return res
+        .status(400)
+        .json({ message: "Verification link is invalid or expired" });
     }
 
     user.isVerified = true;
@@ -107,7 +120,9 @@ const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Credentials doesn't match" });
     }
     if (!user.isVerified) {
-      return res.status(403).json({ message: "Please verify your email before logging in" });
+      return res
+        .status(403)
+        .json({ message: "Please verify your email before logging in" });
     }
 
     const payload = {
@@ -120,10 +135,8 @@ const loginUser = async (req: Request, res: Response) => {
     const refresh = jwt.sign({ userId: user._id.toString() }, REFRESH_SECRET, {
       expiresIn: "7d",
     });
-    console.log("2", payload);
 
     res.cookie("refreshToken", refresh, refreshCookieOptions);
-
 
     return res
       .status(200)
@@ -161,7 +174,9 @@ const forgetPassword = async (
     const token = crypto.randomBytes(32).toString("hex");
     const hashedToken = await bcrypt.hash(token, 10);
     user.hashedToken = hashedToken;
-    user.save();
+    user.hashedTokenExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+
+    await user.save();
 
     sendResetMail(email, user.name, token);
     return res.status(200).json({
@@ -184,15 +199,25 @@ const resetPassword = async (
         .status(400)
         .json({ message: "Necessary data wasn't provided" });
     }
-    const user = await User.findOne({ email });
-    if (!user?.hashedToken)
-      return res.status(400).json({ message: "Token not found" });
+    const user = await User.findOne({ email }).select(
+      "+hashedToken +hashedTokenExpiresAt",
+    );
+    if (!user || !user?.hashedToken)
+      return res.status(400).json({ message: "No request" });
+    if (!user.hashedTokenExpiresAt) {
+      return res.status(400).json({ message: " No token provided" });
+    }
+    if (Date.now() > user.hashedTokenExpiresAt.getTime()) {
+      return res.status(400).json({ message: "expired token" });
+    }
     const isVerified = await bcrypt.compare(token, user.hashedToken);
     if (!isVerified) {
       return res.status(400).json({ message: "Token didn't match" });
     }
     const passwordHash = await bcrypt.hash(password, 10);
     user.passwordHash = passwordHash;
+    user.hashedToken = undefined;
+    user.hashedTokenExpiresAt = undefined;
     await user.save();
     return res
       .status(200)
@@ -207,24 +232,41 @@ const refresh = async (req: Request, res: Response) => {
     const refreshToken = req.cookies?.refreshToken;
     const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
 
-    if (!refreshToken) return res.status(401).json({ message: "Token not provided" });
-    if (!JWT_SECRET || !REFRESH_SECRET) return res.status(500).json({ message: "Server error" });
+    if (!refreshToken)
+      return res.status(401).json({ message: "Token not provided" });
+    if (!JWT_SECRET || !REFRESH_SECRET)
+      return res.status(500).json({ message: "Server error" });
 
-    const payload = jwt.verify(refreshToken, REFRESH_SECRET) as { userId: string };
+    const payload = jwt.verify(refreshToken, REFRESH_SECRET) as {
+      userId: string;
+    };
     const user = await User.findById(payload.userId);
     if (!user) return res.status(401).json({ message: "User not found" });
     if (!user.isVerified) {
-      return res.status(403).json({ message: "Please verify your email before logging in" });
+      return res
+        .status(403)
+        .json({ message: "Please verify your email before logging in" });
     }
 
-    const userData = { id: user._id, name: user.name, email: user.email, role: user.role };
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
-    const newRefresh = jwt.sign({ userId: user._id.toString() }, REFRESH_SECRET, { expiresIn: "7d" });
+    const newRefresh = jwt.sign(
+      { userId: user._id.toString() },
+      REFRESH_SECRET,
+      { expiresIn: "7d" },
+    );
 
     res.cookie("refreshToken", newRefresh, refreshCookieOptions);
     return res.json({ token });
   } catch {
-    return res.status(401).json({ message: "Invalid or expired refresh token" });
+    return res
+      .status(401)
+      .json({ message: "Invalid or expired refresh token" });
   }
 };
 

@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index:true
+      index: true,
     },
     name: {
       type: String,
@@ -26,9 +26,13 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-   
+
     hashedToken: {
       type: "string",
+    },
+    hashedTokenExpiresAt: {
+      type: Date,
+      select: false,
     },
     verificationTokenHash: {
       type: String,
