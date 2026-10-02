@@ -17,7 +17,7 @@ export default function SearchBox({
   initialValue = "",
   onSearch,
   placeholder = "Search...",
-  delay = 1000,
+  delay = 800,
   className = "",
 }: SearchBoxProps) {
   const [value, setValue] = useState(initialValue);
