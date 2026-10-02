@@ -7,7 +7,20 @@ interface UpdateUserBody {
 
 const listUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({});
+    const filter: Record<string, unknown> = {};
+    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const role = typeof req.query.role === "string" ? req.query.role : "";
+
+    if (search) {
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      filter.name = new RegExp(escapedSearch, "i");
+    }
+
+    if (role === "admin" || role === "user") {
+      filter.role = role;
+    }
+
+    const users = await User.find(filter);
 
     return res.status(200).json(users);
   } catch (error) {

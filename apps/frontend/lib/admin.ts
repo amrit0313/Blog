@@ -56,8 +56,15 @@ export const adminApi = {
   },
 
 
-  listUsers() {
-    return apiRequest<AdminUser[]>("/user", { method: "GET" });
+  listUsers(params?: { search?: string; role?: string }) {
+    const query = new URLSearchParams();
+    if (params?.search) query.set("search", params.search);
+    if (params?.role) query.set("role", params.role);
+
+    const qs = query.toString();
+    return apiRequest<AdminUser[]>(`/user${qs ? `?${qs}` : ""}`, {
+      method: "GET",
+    });
   },
 
 
@@ -122,11 +129,19 @@ export const adminApi = {
   },
 
 
-  listAllBlogs(params?: { page?: number; limit?: number; search?: string }) {
+  listAllBlogs(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    author?: string;
+    status?: string;
+  }) {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.search) query.set("search", params.search);
+    if (params?.author) query.set("author", params.author);
+    if (params?.status) query.set("status", params.status);
 
     const qs = query.toString();
     return apiRequest<{

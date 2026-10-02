@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box, Button, Chip, Typography,
-  Dialog, DialogTitle, DialogContent, DialogActions,
+  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, TextField,
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ export default function AdminBlogsPage() {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [authorSearch, setAuthorSearch] = useState("");
+  const [status, setStatus] = useState("");
   const [unpublishTarget, setUnpublishTarget] = useState<Blog | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
 
@@ -48,13 +50,15 @@ export default function AdminBlogsPage() {
         page: paginationModel.page + 1,
         limit: paginationModel.pageSize,
         search: search || undefined,
+        author: authorSearch || undefined,
+        status: status || undefined,
       })
       .then((res) => {
         setRows(res.result);
         setRowCount(res.meta.totalBlogs);
       })
       .finally(() => setLoading(false));
-  }, [paginationModel, search]);
+  }, [paginationModel, search, authorSearch, status]);
 
   const columns: GridColDef<Blog>[] = [
     { field: "title", headerName: "Title", flex: 1, minWidth: 200 },
@@ -90,16 +94,44 @@ export default function AdminBlogsPage() {
 
   return (
     <>
-      <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "stretch", sm: "center" }, justifyContent: "space-between", gap: 2, mb: 3 }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>Blogs</Typography>
-        <SearchBox
-          initialValue={search}
-          onSearch={(value) => {
-            setSearch(value);
-            setPaginationModel((prev) => ({ ...prev, page: 0 }));
-          }}
-          placeholder="Search blogs..."
-        />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+          <SearchBox
+            initialValue={search}
+            onSearch={(value) => {
+              setSearch(value);
+              setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            }}
+            placeholder="Search blogs..."
+          />
+          <SearchBox
+            initialValue={authorSearch}
+            onSearch={(value) => {
+              setAuthorSearch(value);
+              setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            }}
+            placeholder="Search by author..."
+          />
+          <TextField
+            select
+            size="small"
+            label="Status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            }}
+            sx={{ minWidth: 160 }}
+          >
+            <MenuItem value="">All statuses</MenuItem>
+            <MenuItem value="draft">Draft</MenuItem>
+            <MenuItem value="submitted">Submitted</MenuItem>
+            <MenuItem value="published">Published</MenuItem>
+            <MenuItem value="unpublished">Unpublished</MenuItem>
+            <MenuItem value="rejected">Rejected</MenuItem>
+          </TextField>
+        </Box>
       </Box>
       <DataGrid
         rows={rows}
@@ -116,6 +148,7 @@ export default function AdminBlogsPage() {
         sx={{
           bgcolor: "background.paper",
           width: "100%",
+          height: "auto",
           "& .MuiDataGrid-row": { cursor: "pointer" },
         }}
       />

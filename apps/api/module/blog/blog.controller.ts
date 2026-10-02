@@ -3,6 +3,7 @@ import blog from "./blog.model";
 import mongoose from "mongoose";
 import { Request, Response, NextFunction } from "express";
 import categoryModel from "../categories/category.model";
+import { User } from "../user/user.model";
 
 interface IBlog {
   title: string;
@@ -191,7 +192,9 @@ const ListAllBlogs = async (
     const skip = (page - 1) * limit;
     console.log(req.query);
 
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = {
+      status: { $ne: "draft" },
+    };
 
     if (typeof req.query.search === "string" && req.query.search.trim()) {
       filter.title = new RegExp(escapeRegex(req.query.search.trim()), "i");
@@ -479,11 +482,37 @@ const AdminListAllBlogs = async (
     const skip = (page - 1) * limit;
 
     const filter: Record<string, any> = {
-      status: { $ne: "draft" },
+       status: { $ne: "draft" },
     };
 
     if (req.query.search) {
-      filter.title = new RegExp(String(req.query.search), "i");
+      filter.title = new RegExp(escapeRegex(String(req.query.search).trim()), "i");
+    }
+
+    if (req.query.author) {
+      const authorSearch = new RegExp(
+        escapeRegex(String(req.query.author).trim()),
+        "i",
+      );
+      const matchingAuthors = await User.find({
+        $or: [{ name: authorSearch }, { email: authorSearch }],
+      })
+        .select("_id")
+        .lean();
+      filter.author = { $in: matchingAuthors.map((author) => author._id) };
+    }
+
+    const allowedStatuses = [
+      "submitted",
+      "published",
+      "unpublished",
+      "rejected",
+    ];
+    if (
+      typeof req.query.status === "string" &&
+      allowedStatuses.includes(req.query.status)
+    ) {
+      filter.status = req.query.status;
     }
 
     const count = await blog.countDocuments(filter);
@@ -557,3 +586,5 @@ export {
   AdminListAllBlogs,
   toggleLike
 };
+
+
