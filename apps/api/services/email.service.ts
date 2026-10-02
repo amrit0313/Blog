@@ -36,7 +36,7 @@ export async function sendVerificationMail(
     <h2>Verify your email address</h2>
     <p>Hi ${name}, confirm your email address to activate your account.</p>
     <p><a href="${FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}">Verify email</a></p>
-    <p>This link expires in 24 hours. If you did not create this account, you can ignore this email.</p>
+    <p>This link expires in 30 minutes. If you did not create this account, you can ignore this email.</p>
   </div>
 `,
       }),
@@ -87,6 +87,7 @@ export async function sendResetMail(
     <p style="font-size: 16px; line-height: 1.6;">
       We received a request to reset your password.
       Click the button below to create a new password.
+      It expires in 15 minutes
     </p>
 
     <div style="margin: 32px 0;">

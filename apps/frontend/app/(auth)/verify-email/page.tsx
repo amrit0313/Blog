@@ -9,7 +9,9 @@ type VerificationState = "verifying" | "success" | "error";
 
 export default function VerifyEmailPage() {
   const [state, setState] = useState<VerificationState>("verifying");
-  const verificationRequest = useRef<Promise<{ message?: string }> | null>(null);
+  const verificationRequest = useRef<Promise<{ message?: string }> | null>(
+    null,
+  );
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token");
@@ -38,9 +40,20 @@ export default function VerifyEmailPage() {
         <section className="card w-full max-w-md space-y-5 p-6 text-center sm:p-8">
           <h1 className="text-2xl font-semibold">Email verification</h1>
           <p role="status">{message}</p>
-          {state !== "verifying" && (
-            <Link href="/login" className="font-semibold no-underline hover:underline">
+          {state === "success" && (
+            <Link
+              href="/login"
+              className="font-semibold no-underline hover:underline"
+            >
               Continue to login
+            </Link>
+          )}
+          {state === "error" && (
+            <Link
+              href="/register"
+              className="font-semibold no-underline hover:underline"
+            >
+              Register again
             </Link>
           )}
         </section>

@@ -18,30 +18,68 @@ const refreshCookieOptions: CookieOptions = {
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
+const VERIFICATION_TTL_MS = 30 * 60 * 1000;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const addUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const name = String(req.body.name ?? "").trim();
+    const email = String(req.body.email ?? "")
+      .trim()
+      .toLowerCase();
+    const password = String(req.body.password ?? "");
+
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Fill up credentials" });
     }
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json("User already exists");
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: "Invalid email address" });
+    }
+    if (password.length < 8 || password.length > 72) {
+      return res
+        .status(400)
+        .json({ message: "Password must be 8 to 72 characters" });
+    }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const existing = await User.findOne({ email });
+    if (existing?.isVerified) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenHash = crypto
       .createHash("sha256")
       .update(verificationToken)
       .digest("hex");
+    const verificationTokenExpiresAt = new Date(
+      Date.now() + VERIFICATION_TTL_MS,
+    );
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
-      name,
-      email,
-      passwordHash,
-      verificationTokenHash,
-      verificationTokenExpiresAt: new Date(Date.now() + 1 * 60 * 1000),
-    });
+    let user;
+    if (existing) {
+      // Unverified account: refresh credentials and token
+      existing.name = name;
+      existing.passwordHash = passwordHash;
+      existing.verificationTokenHash = verificationTokenHash;
+      existing.verificationTokenExpiresAt = verificationTokenExpiresAt;
+      user = await existing.save();
+    } else {
+      try {
+        user = await User.create({
+          name,
+          email,
+          passwordHash,
+          verificationTokenHash,
+          verificationTokenExpiresAt,
+        });
+      } catch (err: any) {
+        if (err.code === 11000) {
+          return res.status(409).json({ message: "User already exists" });
+        }
+        throw err;
+      }
+    }
 
     const emailResult = await sendVerificationMail(
       email,
@@ -49,21 +87,21 @@ const addUser = async (req: Request, res: Response) => {
       verificationToken,
     );
     if (!emailResult.success) {
-      await user.deleteOne();
-      return res
-        .status(502)
-        .json({ message: "Unable to send verification email" });
+      // Only delete if we just created it; never destroy an existing account
+      if (!existing) await user.deleteOne();
+      return res.status(502).json({
+        message: "Unable to send verification email. Please try again.",
+      });
     }
 
     return res.status(201).json({
-      message: "Account created. Check your email to verify your account.",
+      message: "Check your email to verify your account.",
     });
   } catch (error) {
-    console.log(error);
+    console.error("addUser failed:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 const verifyEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.body;
@@ -83,9 +121,7 @@ const verifyEmail = async (req: Request, res: Response) => {
     }).select("+verificationTokenHash +verificationTokenExpiresAt");
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Verification link is invalid or expired" });
+      return res.status(400).json({ message: "No user or token expired" });
     }
 
     user.isVerified = true;
@@ -174,7 +210,7 @@ const forgetPassword = async (
     const token = crypto.randomBytes(32).toString("hex");
     const hashedToken = await bcrypt.hash(token, 10);
     user.hashedToken = hashedToken;
-    user.hashedTokenExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
+    user.hashedTokenExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
     await user.save();
 
