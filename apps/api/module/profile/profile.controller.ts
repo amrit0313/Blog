@@ -5,6 +5,17 @@ import { storage } from "../../storage";
 
 const ALLOWED_SOCIAL = ["instagram", "facebook", "website"] as const;
 
+/**
+ * Creates or updates the authenticated user's profile and optional avatar.
+ * @param {Request} req - Authenticated request containing profile fields in the body and an optional avatar file.
+ * @param {Response} res - Express response used to return the saved profile.
+ * @param {NextFunction} next - Passes unexpected storage or database errors to the error middleware.
+ * @returns {Promise<Response|void>} A 200 response with the saved profile, or a validation/conflict response.
+ * @example
+ * PATCH /api/profile
+ * Authorization: Bearer <access-token>
+ * { "bio": "Writer and reader", "socialLinks": { "website": "https://example.com" } }
+ */
 const createOrUpdateProfile = async (
   req: Request,
   res: Response,
@@ -84,7 +95,19 @@ const createOrUpdateProfile = async (
     next(error);
   }
 };
-const getProfile = async (req: Request, res: Response) => {
+
+/**
+ * Retrieves the authenticated user's profile with basic user details.
+ *
+ * @param {Request} req - Authenticated request containing the current user's identity.
+ * @param {Response} res - Express response used to return the profile.
+ * @returns {Promise<Response>} A 200 response with the profile, or an error response when it is unavailable.
+ *
+ * @example
+ * GET /api/profile
+ * Authorization: Bearer <access-token>
+ */
+const getProfile = async (req: Request, res: Response): Promise<Response> => {
   try {
     const user = req.user?.id;
 
@@ -105,7 +128,17 @@ const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-const getPublicProfile = async (req: Request, res: Response) => {
+/**
+ * Retrieves a public profile by its associated user ID.
+ *
+ * @param {Request} req - Request containing the target user ID in `req.params.userId`.
+ * @param {Response} res - Express response used to return the public profile.
+ * @returns {Promise<Response>} A 200 response with the profile, or a 404/500 response.
+ *
+ * @example
+ * GET /api/profile/665f1a2b3c4d5e6f78901234
+ */
+const getPublicProfile = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { userId } = req.params;
     const profile = await Profile.findOne({ user: userId }).populate(
@@ -115,9 +148,7 @@ const getPublicProfile = async (req: Request, res: Response) => {
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
-    return res
-      .status(200)
-      .json({ message: "Profile retrieved", profile });
+    return res.status(200).json({ message: "Profile retrieved", profile });
   } catch (err) {
     return res.status(500).json({ message: "Internal Server Error" });
   }

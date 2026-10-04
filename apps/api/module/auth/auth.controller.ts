@@ -21,7 +21,19 @@ const refreshCookieOptions: CookieOptions = {
 const VERIFICATION_TTL_MS = 30 * 60 * 1000;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const addUser = async (req: Request, res: Response) => {
+/**
+ * Creates an account or refreshes an existing unverified account, then sends
+ * an email verification link.
+ *
+ * @param {Request} req - Express request containing `name`, `email`, and `password` in the body.
+ * @param {Response} res - Express response used to return the account status.
+ * @returns {Promise<Response>} `201` with a verification message, or an error response.
+ *
+ * @example
+ * POST /api/auth/register
+ * { "name": "Ada Lovelace", "email": "ada@example.com", "password": "password123" }
+ */
+const addUser = async (req: Request, res: Response): Promise<Response> => {
   try {
     const name = String(req.body.name ?? "").trim();
     const email = String(req.body.email ?? "")
@@ -102,7 +114,19 @@ const addUser = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-const verifyEmail = async (req: Request, res: Response) => {
+
+/**
+ * Verifies a user's email address using the token from the verification link.
+ *
+ * @param {Request} req - Express request containing the verification `token` in the body.
+ * @param {Response} res - Express response used to return the verification status.
+ * @returns {Promise<Response>} `200` when the email is verified, or an error response.
+ *
+ * @example
+ * POST /api/auth/verify-email
+ * { "token": "verification-token-from-email" }
+ */
+const verifyEmail = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { token } = req.body;
     if (!token) {
@@ -136,7 +160,18 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
-const loginUser = async (req: Request, res: Response) => {
+/**
+ * Authenticates a verified user and issues access and refresh tokens.
+ *
+ * @param {Request} req - Express request containing `email` and `password` in the body.
+ * @param {Response} res - Express response that receives the access token and refresh cookie.
+ * @returns {Promise<Response>} `200` with the user payload and access token, or an error response.
+ *
+ * @example
+ * POST /api/auth/login
+ * { "email": "ada@example.com", "password": "password123" }
+ */
+const loginUser = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
     if (!JWT_SECRET || !REFRESH_SECRET) {
@@ -183,7 +218,18 @@ const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-const getCurrentUser = (req: Request, res: Response) => {
+/**
+ * Returns the authenticated user's data from the request context.
+ *
+ * @param {Request} req - Express request populated by `authenticateToken`.
+ * @param {Response} res - Express response used to return the current user.
+ * @returns {Response} `200` with the authenticated user, or `400` when no user is present.
+ *
+ * @example
+ * POST /api/auth/me
+ * Authorization: Bearer <access-token>
+ */
+const getCurrentUser =(req: Request, res: Response):any => {
   try {
     const user = req.user;
     if (!user) return res.status(400).json({ message: "unauthorized" });
@@ -194,11 +240,23 @@ const getCurrentUser = (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Sends a password-reset email without revealing whether an account exists.
+ *
+ * @param {Request} req - Express request containing the account `email` in the body.
+ * @param {Response} res - Express response used to return a generic reset status.
+ * @param {NextFunction} next - Express error handler for unexpected failures.
+ * @returns {Promise<Response | void>} `200` with a generic reset message or delegates errors.
+ *
+ * @example
+ * POST /api/auth/forgot-password
+ * { "email": "ada@example.com" }
+ */
 const forgetPassword = async (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): Promise<Response | void> => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ message: "No email provided" });
@@ -223,11 +281,23 @@ const forgetPassword = async (
   }
 };
 
+/**
+ * Validates a password-reset token and updates the user's password.
+ *
+ * @param {Request} req - Express request containing `email`, `token`, and `password` in the body.
+ * @param {Response} res - Express response used to return the reset status.
+ * @param {NextFunction} next - Express error handler for unexpected failures.
+ * @returns {Promise<Response | void>} `200` when the password is updated or delegates errors.
+ *
+ * @example
+ * POST /api/auth/reset-password
+ * { "email": "ada@example.com", "token": "reset-token", "password": "newPassword123" }
+ */
 const resetPassword = async (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): Promise<Response | void> => {
   try {
     const { password, token, email } = req.body;
     if (!password || !token || !email) {
@@ -263,6 +333,17 @@ const resetPassword = async (
   }
 };
 
+/**
+ * Exchanges a valid refresh cookie for a new access and refresh token pair.
+ *
+ * @param {Request} req - Express request containing the `refreshToken` cookie.
+ * @param {Response} res - Express response that receives the new access token and refresh cookie.
+ * @returns {Promise<Response>} `200` with a new access token, or an authentication error response.
+ *
+ * @example
+ * POST /api/auth/refresh
+ * Cookie: refreshToken=<refresh-token>
+ */
 const refresh = async (req: Request, res: Response) => {
   try {
     const refreshToken = req.cookies?.refreshToken;

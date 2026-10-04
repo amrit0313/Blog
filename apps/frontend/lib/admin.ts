@@ -1,5 +1,6 @@
 import { apiRequest, ApiError } from "./api";
 
+/** User data returned by administrator endpoints. */
 export interface AdminUser {
   _id: string;
   name?: string;
@@ -7,6 +8,7 @@ export interface AdminUser {
   role?: string;
 }
 
+/** Blog data returned by administrator endpoints. */
 export interface AdminBlog {
   _id: string;
   title: string;
@@ -27,6 +29,7 @@ export interface AdminBlog {
   };
 }
 
+/** Category data returned by administrator endpoints. */
 export interface AdminCategory {
   _id: string;
   title?: string;
@@ -34,28 +37,34 @@ export interface AdminCategory {
   updatedAt?: string;
 }
 
+/** Generic response returned by administrator mutations. */
 export interface ApiResponse<T> {
   result: T;
   message: string;
   meta: null;
 }
 
+/** Client methods for administrator user, category, and blog operations. */
 export const adminApi = {
-
+  /** Deletes a blog by ID. */
   deleteBlog(id: string) {
     return apiRequest<ApiResponse<AdminBlog>>(`/admin/${id}`, {
       method: "DELETE",
     });
   },
 
-
+  /** Promotes a user to the administrator role. */
   promoteToAdmin(id: string) {
     return apiRequest<{ message: string; user: AdminUser }>(`/admin/${id}`, {
       method: "PATCH",
     });
   },
 
-
+  /**
+   * Lists users with optional search and role filters.
+   *
+   * @param params - Optional user search and role filters.
+   */
   listUsers(params?: { search?: string; role?: string }) {
     const query = new URLSearchParams();
     if (params?.search) query.set("search", params.search);
@@ -67,14 +76,18 @@ export const adminApi = {
     });
   },
 
-
+  /** Retrieves a user by ID. */
   getUser(id: string) {
     return apiRequest<{ message: string; user: AdminUser }>(`/user/${id}`, {
       method: "GET",
     });
   },
 
-
+  /**
+   * Updates the authenticated administrator's user details.
+   *
+   * @param data - Optional name and email fields.
+   */
   updateUser(data: { name?: string; email?: string }) {
     return apiRequest<{ message: string; updatedUser: AdminUser }>("/user", {
       method: "PATCH",
@@ -82,11 +95,16 @@ export const adminApi = {
     });
   },
 
-
+  /** Deletes a user by ID. */
   deleteUser(id: string) {
     return apiRequest<{ message: string }>(`/admin/user/${id}`, { method: "DELETE" });
   },
 
+  /**
+   * Creates a user with the specified role.
+   *
+   * @param data - New user details and role.
+   */
   createUser(data: { name: string; email: string; password: string; role: "admin" | "user" }) {
     return apiRequest<{ message: string; user: AdminUser }>("/admin/user/create", {
       method: "POST",
@@ -94,12 +112,12 @@ export const adminApi = {
     });
   },
 
-
+  /** Lists all categories. */
   listCategories() {
     return apiRequest<ApiResponse<AdminCategory[]>>("/category", { method: "GET" });
   },
 
-
+  /** Creates a category. */
   createCategory(data: { title: string }) {
     return apiRequest<ApiResponse<AdminCategory>>("/category/create", {
       method: "POST",
@@ -107,14 +125,14 @@ export const adminApi = {
     });
   },
 
-
+  /** Retrieves a category by ID. */
   getCategory(id: string) {
     return apiRequest<ApiResponse<AdminCategory>>(`/category/${id}`, {
       method: "GET",
     });
   },
 
-
+  /** Updates a category by ID. */
   updateCategory(id: string, data: { title: string }) {
     return apiRequest<ApiResponse<AdminCategory>>(`/category/${id}`, {
       method: "PUT",
@@ -122,13 +140,18 @@ export const adminApi = {
     });
   },
 
+  /** Deletes a category by ID. */
   deleteCategory(id: string) {
     return apiRequest<ApiResponse<AdminCategory>>(`/category/${id}`, {
       method: "DELETE",
     });
   },
 
-
+  /**
+   * Lists all blogs with optional pagination and filters.
+   *
+   * @param params - Pagination, search, author, and status filters.
+   */
   listAllBlogs(params?: {
     page?: number;
     limit?: number;
@@ -156,25 +179,28 @@ export const adminApi = {
     }>(`/admin${qs ? `?${qs}` : ""}`, { method: "GET" });
   },
 
-
+  /** Unpublishes a blog by ID. */
   unpublishBlog(id: string) {
     return apiRequest<ApiResponse<AdminBlog>>(`/blog/${id}/unpublish`, {
       method: "PATCH",
     });
   },
 
+  /** Deletes a blog by ID. */
   deleteBlogById(id: string) {
     return apiRequest<ApiResponse<AdminBlog>>(`/blog/${id}`, {
       method: "DELETE",
     });
   },
 
+  /** Verifies a submitted blog by ID. */
   verifyBlog(id: string) {
     return apiRequest<{ message: string; blog: AdminBlog }>(`/admin/blog/${id}/verify`, {
       method: "PATCH",
     });
   },
 
+  /** Rejects a submitted blog by ID. */
   rejectBlog(id: string) {
     return apiRequest<{ message: string; blog: AdminBlog }>(`/admin/blog/${id}/reject`, {
       method: "PATCH",
