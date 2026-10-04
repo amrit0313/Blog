@@ -5,6 +5,25 @@ const FRONTEND_URL = process.env.FRONTEND_URL?.replace(/\/+$/, "");
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
+/**
+ * Sends an email-verification link to a newly registered user.
+ *
+ * @param {string} userEmail - Recipient email address.
+ * @param {string} name - Recipient name displayed in the email.
+ * @param {string} token - Raw verification token included in the frontend link.
+ * @returns {Promise<{success: boolean, data?: unknown, error?: unknown}>} A result
+ * indicating whether Brevo accepted the email request.
+ *
+ * @example
+ * const result = await sendVerificationMail(
+ *   "reader@example.com",
+ *   "Reader",
+ *   verificationToken,
+ * );
+ * if (!result.success) {
+ *   await user.deleteOne();
+ * }
+ */
 export async function sendVerificationMail(
   userEmail: string,
   name: string,
@@ -55,11 +74,30 @@ export async function sendVerificationMail(
   }
 }
 
+/**
+ * Sends a password-reset link to a user.
+ *
+ * @param {string} userEmail - Recipient email address.
+ * @param {string} name - Recipient name displayed in the email.
+ * @param {string} token - Raw password-reset token included in the frontend link.
+ * @returns {Promise<{success: boolean, data?: unknown, error?: unknown}>} A result
+ * indicating whether Brevo accepted the email request.
+ *
+ * @example
+ * const result = await sendResetMail(
+ *   user.email,
+ *   user.name,
+ *   resetToken,
+ * );
+ * if (!result.success) {
+ *   console.error(result.error);
+ * }
+ */
 export async function sendResetMail(
   userEmail: string,
   name: string,
   token: string,
-) {
+): Promise<{ success: boolean; data?: unknown; error?: unknown; }> {
   try {
     if (!BREVO_API_KEY) {
       throw new Error("BREVO_API_KEY is not set");

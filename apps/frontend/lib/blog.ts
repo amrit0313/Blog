@@ -1,16 +1,19 @@
 import { apiRequest, ApiError } from "./api";
 
+/** Author information associated with a blog. */
 export interface BlogAuthor {
   _id: string;
   name?: string;
   email?: string;
 }
 
+/** Category information associated with a blog. */
 export interface BlogCategory {
   _id: string;
   title?: string;
 }
 
+/** Blog content and metadata returned by the blog endpoints. */
 export interface Blog {
   _id: string;
   title: string;
@@ -25,6 +28,7 @@ export interface Blog {
   likes?: string[]; // array of user IDs who liked this blog
 }
 
+/** Pagination metadata for a blog list. */
 export interface BlogListMeta {
   currentPage: number;
   totalPages: number;
@@ -32,24 +36,34 @@ export interface BlogListMeta {
   limit: number;
 }
 
+/** API response returned when listing blogs. */
 export interface BlogListApiResponse {
   result: Blog[];
   message: string;
   meta: BlogListMeta;
 }
 
+/** Generic response returned by blog mutations and detail requests. */
 export interface ApiResponse<T> {
   result: T;
   message: string;
   meta: null;
 }
 
+/** Result returned when a blog like is toggled. */
 export interface ToggleLikeResponse {
   likesCount: number;
   liked: boolean;
 }
 
+/** Client methods for retrieving and managing blogs. */
 export const blogApi = {
+  /**
+   * Lists blogs with optional pagination and filters.
+   *
+   * @param params - Pagination, search, and category filters.
+   * @returns A promise containing the matching blogs.
+   */
   list(params?: {
     page?: number;
     limit?: number;
@@ -68,10 +82,18 @@ export const blogApi = {
     });
   },
 
+  /** Retrieves blogs owned by the authenticated user. */
   myBlogs() {
     return apiRequest<BlogListApiResponse>("/blog/me", { method: "GET" });
   },
 
+  /**
+   * Lists blogs written by an author.
+   *
+   * @param authorId - ID of the author.
+   * @param params - Optional pagination parameters.
+   * @returns A promise containing the author's blogs.
+   */
   getByAuthor(authorId: string, params?: { page?: number; limit?: number }) {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
@@ -84,6 +106,12 @@ export const blogApi = {
     );
   },
 
+  /**
+   * Creates a blog.
+   *
+   * @param data - Form data containing the blog fields and optional image.
+   * @returns A promise containing the created blog.
+   */
   create(data: FormData) {
     return apiRequest<ApiResponse<Blog>>("/blog/create", {
       method: "POST",
@@ -91,22 +119,47 @@ export const blogApi = {
     });
   },
 
+  /**
+   * Retrieves a blog by ID.
+   *
+   * @param id - ID of the blog to retrieve.
+   * @returns A promise containing the requested blog.
+   */
   getById(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, { method: "GET" });
   },
 
+  /**
+   * Retrieves a published blog by slug.
+   *
+   * @param slug - Blog slug.
+   * @returns A promise containing the requested blog.
+   */
   getBySlug(slug: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/slug/${slug}`, {
       method: "GET",
     });
   },
 
+  /**
+   * Retrieves a draft blog by slug.
+   *
+   * @param slug - Draft blog slug.
+   * @returns A promise containing the requested draft.
+   */
   getDraftBySlug(slug: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/draft/slug/${slug}`, {
       method: "GET",
     });
   },
 
+  /**
+   * Updates a blog by ID.
+   *
+   * @param id - ID of the blog to update.
+   * @param data - Form data containing updated blog fields.
+   * @returns A promise containing the updated blog.
+   */
   update(id: string, data: FormData) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "PUT",
@@ -114,6 +167,13 @@ export const blogApi = {
     });
   },
 
+  /**
+   * Updates a blog by slug.
+   *
+   * @param slug - Slug of the blog to update.
+   * @param data - Form data containing updated blog fields.
+   * @returns A promise containing the updated blog.
+   */
   updateBySlug(slug: string, data: FormData) {
     return apiRequest<ApiResponse<Blog>>(`/blog/slug/${slug}`, {
       method: "PUT",
@@ -121,18 +181,36 @@ export const blogApi = {
     });
   },
 
+  /**
+   * Deletes a blog by ID.
+   *
+   * @param id - ID of the blog to delete.
+   * @returns A promise containing the deleted blog response.
+   */
   delete(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "DELETE",
     });
   },
 
+  /**
+   * Changes a published blog to an unpublished state.
+   *
+   * @param id - ID of the blog to unpublish.
+   * @returns A promise containing the updated blog response.
+   */
   unpublish(id: string) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}/unpublish`, {
       method: "PATCH",
     });
   },
 
+  /**
+   * Toggles the authenticated user's like on a blog.
+   *
+   * @param id - ID of the blog to like or unlike.
+   * @returns A promise containing the updated like state and count.
+   */
   toggleLike(id: string) {
     return apiRequest<ApiResponse<ToggleLikeResponse>>(`/blog/${id}/like`, {
       method: "PUT",

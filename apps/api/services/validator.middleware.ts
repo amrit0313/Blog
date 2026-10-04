@@ -1,9 +1,19 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { ObjectSchema, ValidationError } from "joi";
 
 type ErrorDetail = Record<string, string>;
 
-const bodyValidator = (schema: ObjectSchema) => {
+/**
+ * Creates middleware that validates a request body against a Joi schema.
+ *
+ * @param {ObjectSchema} schema - Joi schema used to validate `req.body`.
+ * @returns {Function} Express middleware that calls `next()` when valid or
+ * passes a `400` validation error to the error handler.
+ *
+ * @example
+ * router.post("/register", bodyValidator(registerSchema), addUser);
+ */
+const bodyValidator = (schema: ObjectSchema): RequestHandler => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body;
@@ -25,7 +35,17 @@ const bodyValidator = (schema: ObjectSchema) => {
   };
 };
 
-const paramsValidator = (schema: ObjectSchema) => {
+/**
+ * Creates middleware that validates route parameters against a Joi schema.
+ *
+ * @param {ObjectSchema} schema - Joi schema used to validate `req.params`.
+ * @returns {Function} Express middleware that calls `next()` when valid or
+ * passes a `400` validation error to the error handler.
+ *
+ * @example
+ * router.get("/blogs/:id", paramsValidator(blogIdSchema), getBlog);
+ */
+const paramsValidator = (schema: ObjectSchema): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction) => {
     const { error } = schema.validate(req.params, { abortEarly: false });
 
