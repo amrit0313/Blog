@@ -102,6 +102,12 @@ export const blogApi = {
     });
   },
 
+  getDraftBySlug(slug: string) {
+    return apiRequest<ApiResponse<Blog>>(`/blog/draft/slug/${slug}`, {
+      method: "GET",
+    });
+  },
+
   update(id: string, data: FormData) {
     return apiRequest<ApiResponse<Blog>>(`/blog/${id}`, {
       method: "PUT",

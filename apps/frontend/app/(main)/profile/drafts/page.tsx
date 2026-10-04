@@ -47,7 +47,6 @@ export default function DraftsPage() {
       .myBlogs()
       .then((response) => {
         if (!cancelled) {
-          // No schema validation needed here for GET requests
           const drafts = (response.result ?? []).filter(
             (blog) => blog.status === "draft",
           );
@@ -157,7 +156,7 @@ export default function DraftsPage() {
                     Edited {formatDate(draft.updatedAt)}
                   </span>
                   <Link
-                    href={`/profile/drafts/${draft._id}`}
+                    href={`/profile/drafts/${draft.slug}`}
                     className="font-semibold text-primary no-underline hover:underline"
                   >
                     Continue

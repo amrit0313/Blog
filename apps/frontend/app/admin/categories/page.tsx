@@ -163,7 +163,7 @@ export default function AdminCategoriesPage() {
         pageSizeOptions={[5, 10]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         disableRowSelectionOnClick
-        sx={{ bgcolor: "background.paper", width: "100%" }}
+        sx={{ bgcolor: "background.paper", width: "100%",height: "auto" }}
       />
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>

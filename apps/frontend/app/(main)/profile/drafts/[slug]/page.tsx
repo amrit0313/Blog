@@ -13,7 +13,7 @@ import { imgSrc } from "../../../../../utils/getImgSrc";
 
 export default function DraftDetailPage() {
   const router = useRouter();
-  const { id } = useParams<{ id: string }>();
+  const{slug} = useParams<{slug: string}>()
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [draft, setDraft] = useState<Blog | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function DraftDetailPage() {
 
     let cancelled = false;
     blogApi
-      .getById(id)
+      .getDraftBySlug(slug)
       .then((response) => {
         if (cancelled) return;
         if (response.result.status !== "draft") {
@@ -54,7 +54,7 @@ export default function DraftDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, isAuthLoading, isAuthenticated, router]);
+  }, [slug, isAuthLoading, isAuthenticated, router]);
 
   async function handleDelete() {
     if (!draft || !window.confirm("Delete this draft?")) return;
@@ -133,7 +133,9 @@ export default function DraftDetailPage() {
             {draft.description}
           </p>
           <div className="mt-10 flex flex-wrap gap-3 border-t border-border pt-6">
-            <Button href={`/blogs/${draft.slug}/edit`}>Continue Editing</Button>
+            <Button href={`/profile/drafts/${draft.slug}/edit`}>
+              Continue Editing
+            </Button>
             <Button
               variant="outline"
               onClick={handleDelete}

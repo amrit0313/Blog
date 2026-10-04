@@ -4,30 +4,34 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box, Button, Chip, Typography,
-  Dialog, DialogTitle, DialogContent, DialogActions,
+  Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, TextField,
 } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
 import { toast } from "sonner";
 import { adminApi, type AdminUser } from "../../../lib/admin";
+import SearchBox from "../../../components/ui/search-box";
 
 export default function AdminUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [role, setRole] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     adminApi
-      .listUsers()
+      .listUsers({ search: search || undefined, role: role || undefined })
       .then((res) => {
         const list = Array.isArray(res) ? res : [];
         setUsers(list);
       })
       .catch(() => toast.error("Failed to load users."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [search, role]);
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -103,7 +107,7 @@ export default function AdminUsersPage() {
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
+          flexWrap: "wrap",
           alignItems: { xs: "stretch", sm: "center" },
           justifyContent: "space-between",
           gap: 2,
@@ -113,13 +117,31 @@ export default function AdminUsersPage() {
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           Users
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => router.push("/admin/users/create")}
-        >
-          Create User
-        </Button>
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2 }}>
+          <SearchBox
+            onSearch={setSearch}
+            placeholder="Search by name..."
+          />
+          <TextField
+            select
+            size="small"
+            label="Role"
+            value={role}
+            onChange={(event) => setRole(event.target.value)}
+            sx={{ minWidth: 140 }}
+          >
+            <MenuItem value="">All roles</MenuItem>
+            <MenuItem value="user">User</MenuItem>
+            <MenuItem value="admin">Admin</MenuItem>
+          </TextField>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => router.push("/admin/users/create")}
+          >
+            Create User
+          </Button>
+        </Box>
       </Box>
 
       <DataGrid
@@ -127,10 +149,10 @@ export default function AdminUsersPage() {
         columns={columns}
         getRowId={(r) => r._id}
         loading={loading}
-        pageSizeOptions={[5, 10]}
+        pageSizeOptions={[5, 5]}
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         disableRowSelectionOnClick
-        sx={{ bgcolor: "background.paper", width: "100%" }}
+        sx={{ bgcolor: "background.paper", width: "100%", height: "auto" }}
       />
 
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
