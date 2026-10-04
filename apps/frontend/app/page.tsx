@@ -16,25 +16,30 @@ export default function Home() {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [isBlogsLoading, setIsBlogsLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const findBlogs = async () => {
-    const results = await Promise.allSettled([
-      blogApi.list({ page: 1, limit: 6 }),
-      categoryApi.list(),
-    ]);
+    try {
+      const results = await Promise.allSettled([
+        blogApi.list({ page: 1, limit: 6 }),
+        categoryApi.list(),
+      ]);
 
-    const [blogsResult, categoriesResult] = results;
+      const [blogsResult, categoriesResult] = results;
 
-    if (blogsResult.status === "fulfilled") {
-      setBlogs(blogsResult.value.result);
-    } else {
-      console.error("Failed to fetch blogs:", blogsResult.reason);
-    }
+      if (blogsResult.status === "fulfilled") {
+        setBlogs(blogsResult.value.result);
+      } else {
+        console.error("Failed to fetch blogs:", blogsResult.reason);
+      }
 
-    if (categoriesResult.status === "fulfilled") {
-      setCategories(categoriesResult.value.result);
-    } else {
-      console.error("Failed to fetch categories:", categoriesResult.reason);
+      if (categoriesResult.status === "fulfilled") {
+        setCategories(categoriesResult.value.result);
+      } else {
+        console.error("Failed to fetch categories:", categoriesResult.reason);
+      }
+    } finally {
+      setIsBlogsLoading(false);
     }
   };
   useEffect(() => {
@@ -90,6 +95,7 @@ export default function Home() {
       </section>
       <HomepageSections
         isAuthLoading={isAuthLoading}
+        isBlogsLoading={isBlogsLoading}
         blogs={blogs}
         categories={categories}
         onStartWriting={() =>
