@@ -50,7 +50,6 @@ export interface ToggleLikeResponse {
 }
 
 export const blogApi = {
-  // GET /api/blog
   list(params?: {
     page?: number;
     limit?: number;
@@ -134,7 +133,6 @@ export const blogApi = {
     });
   },
 
-  // PUT /api/blog/:id/like (auth required, toggles like on/off)
   toggleLike(id: string) {
     return apiRequest<ApiResponse<ToggleLikeResponse>>(`/blog/${id}/like`, {
       method: "PUT",

@@ -1,6 +1,6 @@
 // app/admin/page.tsx
 "use client";
-import { Box, Card, CardContent, Typography, CircularProgress, Chip } from "@mui/material";
+import { Box, Card, CardContent, Typography, Skeleton, Chip } from "@mui/material";
 import { BarChart, PieChart } from "@mui/x-charts";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,47 @@ interface DashboardStats {
   published: number;
   totalUsers: number;
   totalCategories: number;
+}
+
+function AdminOverviewSkeleton() {
+  return (
+    <Box aria-label="Loading dashboard" aria-busy="true">
+      <Skeleton variant="text" width={210} height={40} sx={{ mb: 2 }} />
+      <Box
+        sx={{
+          display: "grid",
+          gap: 2,
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            lg: "repeat(4, 1fr)",
+          },
+        }}
+      >
+        {[1, 2, 3, 4].map((item) => (
+          <Skeleton key={item} variant="rounded" height={100} />
+        ))}
+      </Box>
+      <Skeleton variant="text" width={110} height={32} sx={{ mt: 4, mb: 1 }} />
+      <Box
+        sx={{
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+          mb: 4,
+        }}
+      >
+        {[1, 2].map((item) => (
+          <Skeleton key={item} variant="rounded" height={250} />
+        ))}
+      </Box>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {[1, 2, 3].map((item) => (
+          <Skeleton key={item} variant="rounded" height={80} />
+        ))}
+      </Box>
+    </Box>
+  );
 }
 
 export default function AdminOverview() {
@@ -45,7 +86,6 @@ export default function AdminOverview() {
           (b: { status: string }) => b.status === "submitted"
         );
 
-        // Blogs per category — use all categories from the API, even those with zero blogs
         const categories = Array.isArray(categoriesRes.result) ? categoriesRes.result : [];
         const categoryMap: Record<string, number> = {};
         categories.forEach((c) => {
@@ -61,7 +101,6 @@ export default function AdminOverview() {
           Object.entries(categoryMap).map(([name, count]) => ({ name, count }))
         );
 
-        // Blogs by status — include all statuses even if zero
         const allStatuses = ["draft", "published", "unpublished", "submitted", "rejected"];
         const statusMap: Record<string, number> = {};
         allStatuses.forEach((s) => {
@@ -90,13 +129,13 @@ export default function AdminOverview() {
   }, [authLoading, user]);
 
   if (authLoading) {
-    return <Typography>Loading...</Typography>;
+    return <AdminOverviewSkeleton />;
   }
 
   if (user?.role !== "admin") {
     return (
       <Typography variant="h6" color="error">
-        you dont have access to this page
+        You dont have access to this page
       </Typography>
     );
   }
@@ -106,7 +145,7 @@ export default function AdminOverview() {
   }
 
   if (!stats) {
-    return <CircularProgress />;
+    return <AdminOverviewSkeleton />;
   }
 
   const statCards = [
@@ -144,7 +183,6 @@ export default function AdminOverview() {
         ))}
       </Box>
 
-      {/* Analytics */}
       <Typography variant="h6" sx={{ fontWeight: 600, mt: 5, mb: 2 }}>
         Analytics
       </Typography>
@@ -225,4 +263,3 @@ export default function AdminOverview() {
     </>
   );
 }
-
