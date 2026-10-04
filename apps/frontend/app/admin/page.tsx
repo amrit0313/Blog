@@ -101,7 +101,7 @@ export default function AdminOverview() {
           Object.entries(categoryMap).map(([name, count]) => ({ name, count }))
         );
 
-        const allStatuses = ["draft", "published", "unpublished", "submitted", "rejected"];
+        const allStatuses = [ "published", "unpublished", "submitted", "rejected"];
         const statusMap: Record<string, number> = {};
         allStatuses.forEach((s) => {
           statusMap[s] = 0;
