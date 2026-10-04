@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   AppBar,
   Box,
-  CircularProgress,
   Drawer,
   IconButton,
   List,
@@ -14,6 +13,7 @@ import {
   ListItemText,
   Toolbar,
   Typography,
+  Skeleton,
   withTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -51,7 +51,7 @@ export default function AdminShell({
 
   useEffect(() => {
     if (isLoading || isAdmin || notified.current) return;
-    notified.current = true; // stops duplicate toasts (React strict mode runs effects twice in dev)
+    notified.current = true; 
 
     if (!user) {
       toast.error("Please log in to continue.");
@@ -64,8 +64,27 @@ export default function AdminShell({
 
   if (isLoading || !isAdmin) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <CircularProgress />
+      <Box sx={{ display: "flex", minHeight: "100vh" }}>
+        <Box
+          sx={{
+            display: { xs: "none", md: "block" },
+            width: drawerWidth,
+            borderRight: 1,
+            borderColor: "divider",
+            p: 2,
+          }}
+        >
+          <Skeleton variant="rounded" height={40} sx={{ mb: 4 }} />
+          {[1, 2, 3, 4, 5].map((item) => (
+            <Skeleton key={item} variant="rounded" height={40} sx={{ mb: 1 }} />
+          ))}
+        </Box>
+        <Box sx={{ flex: 1, p: { xs: 2, sm: 3 } }}>
+          <Skeleton variant="rounded" height={56} sx={{ mb: 4 }} />
+          <Skeleton variant="text" width="30%" height={48} sx={{ mb: 2 }} />
+          <Skeleton variant="rounded" height={180} sx={{ mb: 2 }} />
+          <Skeleton variant="rounded" height={320} />
+        </Box>
       </Box>
     );
   }
