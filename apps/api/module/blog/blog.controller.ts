@@ -19,12 +19,26 @@ interface AppError extends Error {
   status?: number;
 }
 
+
+/**
+ * Creates an application error with an HTTP status code for Express error handling.
+ * @param {string} message Description of the error.
+ * @param {number} [status=500] HTTP status code to attach to the error.
+ * @returns {AppError} Error instance with its status set.
+ */
 const createError = (message: string, status = 500): AppError => {
   const err = new Error(message) as AppError;
   err.status = status;
   return err;
 };
 
+
+/**
+ * Generates a unique URL slug from a blog title.
+ * @param {string} title Blog title used as the slug source.
+ * @param {string} [excludeId] Blog ID to ignore when checking uniqueness during updates.
+ * @returns {Promise<string>} A slug that is not used by another blog.
+ */
 async function generateUniqueSlug(title: string, excludeId?: string) {
   const base = slugify(title, { lower: true, strict: true });
   let slug = base;
@@ -37,6 +51,14 @@ async function generateUniqueSlug(title: string, excludeId?: string) {
   return slug;
 }
 
+
+/**
+ * Creates a blog post or saves it as a draft for the authenticated user.
+ * @param {Request} req Express request containing blog fields, an optional image, and the authenticated user.
+ * @param {Response} res Express response used to return the created blog or a validation error.
+ * @param {NextFunction} next Express error handler for unexpected failures.
+ * @returns Resolves after sending the response or forwarding an error to Express.
+ */
 const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
 
@@ -87,6 +109,14 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+
+/**
+ * Retrieves a blog by ID, allowing drafts only for their author.
+ * @param {Request} req Express request containing the blog ID in `params.id` and optional user context.
+ * @param {Response} res Express response used to return the blog details.
+ * @param {NextFunction} next Express error handler for lookup and authorization failures.
+ * @returns Resolves after sending the blog details or forwarding an error to Express.
+ */
 const BlogDetailById = async (
   req: Request,
   res: Response,
@@ -121,6 +151,13 @@ const BlogDetailById = async (
 };
 
 
+/**
+ * Retrieves a blog by slug, allowing drafts only for their author.
+ * @param {Request} req Express request containing the slug in `params.slug` and optional user context.
+ * @param {Response} res Express response used to return the blog details.
+ * @param {NextFunction} next Express error handler for lookup and authorization failures.
+ * @returns Resolves after sending the blog details or forwarding an error to Express.
+ */
 const BlogDetailBySlug = async (
   req: Request,
   res: Response,
@@ -154,6 +191,14 @@ const BlogDetailBySlug = async (
   }
 };
 
+/**
+ * Retrieves a draft by slug for its authenticated author.
+ * @param {Request} req Express request containing the slug in `params.slug` and authenticated user context.
+ * @param {Response} res Express response used to return the draft details.
+ * @param {NextFunction} next Express error handler for lookup and authorization failures.
+ * @returns Resolves after sending the draft details or forwarding an error to Express.
+ */
+
 const DraftBlogDetailBySlug = async (
   req: Request,
   res: Response,
@@ -179,7 +224,24 @@ const DraftBlogDetailBySlug = async (
   }
 };
 
+
+/**
+ * Escapes regular-expression metacharacters in a string.
+ * @param {string} s Input string to escape.
+ * @returns {string} String safe to use as a literal regular-expression pattern.
+ */
+
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+
+/**
+ * Lists visible blogs with optional title/category filters and pagination.
+ * @param {Request} req Express request containing query filters, pagination, and optional user context.
+ * @param {Response} res Express response used to return blog results and pagination metadata.
+ * @param {NextFunction} next Express error handler for database or query failures.
+ * @returns Resolves after sending the result page or forwarding an error to Express.
+ */
+
 
 const ListAllBlogs = async (
   req: Request,
@@ -247,6 +309,16 @@ const ListAllBlogs = async (
     next(exception);
   }
 };
+
+
+/**
+ * Filters blogs using query-string fields, with access limited by the current user's visibility.
+ * @param {Request} req Express request containing filter, field selection, pagination, and optional user context.
+ * @param {Response} res Express response used to return the filtered blogs.
+ * @param {NextFunction} next Express error handler for invalid queries and database failures.
+ * @returns Resolves after sending the filtered result or forwarding an error to Express.
+ */
+
 const AllBlogsFiltering = async (
   req: Request,
   res: Response,
@@ -303,6 +375,15 @@ const AllBlogsFiltering = async (
   }
 };
 
+
+/**
+ * Updates a blog selected by slug, enforcing author/admin permissions and optionally replacing its image.
+ * @param {Request} req Express request containing the slug, update fields, optional image, and user context.
+ * @param {Response} res Express response used to return the updated blog.
+ * @param {NextFunction} next Express error handler for lookup, authorization, or update failures.
+ * @returns Resolves after sending the updated blog or forwarding an error to Express.
+ */
+
 const BlogUpdateBySlug = async (
   req: Request,
   res: Response,
@@ -352,6 +433,15 @@ const BlogUpdateBySlug = async (
   }
 };
 
+
+/**
+ * Changes a blog's status to unpublished; administrators only.
+ * @param {Request} req Express request containing the blog ID in `params.id` and authenticated user context.
+ * @param {Response} res Express response used to return the updated blog.
+ * @param {NextFunction} next Express error handler for authorization, lookup, or update failures.
+ * @returns Resolves after sending the updated blog or forwarding an error to Express.
+ */
+
 const UnpublishBlogById = async (
   req: Request,
   res: Response,
@@ -382,6 +472,15 @@ const UnpublishBlogById = async (
   }
 };
 
+
+/**
+ * Deletes a blog by ID.
+ * @param {Request} req Express request containing the blog ID in `params.id`.
+ * @param {Response} res Express response used to return the deleted blog.
+ * @param {NextFunction} next Express error handler for lookup or deletion failures.
+ * @returns Resolves after sending the deleted blog or forwarding an error to Express.
+ */
+
 const BlogDeleteById = async (
   req: Request,
   res: Response,
@@ -403,6 +502,15 @@ const BlogDeleteById = async (
     next(exception);
   }
 };
+
+
+/**
+ * Lists all blogs owned by the authenticated user.
+ * @param {Request} req Express request containing authenticated user context.
+ * @param {Response} res Express response used to return the user's blogs and count.
+ * @param {NextFunction} next Express error handler for authorization or database failures.
+ * @returns Resolves after sending the user's blogs or forwarding an error to Express.
+ */
 
 const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -426,6 +534,15 @@ const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
     next(exception);
   }
 };
+
+
+/**
+ * Lists published blogs by author with pagination.
+ * @param {Request} req Express request containing the author ID in `params.authorId` and optional pagination query values.
+ * @param {Response} res Express response used to return the author's published blogs and pagination metadata.
+ * @param {NextFunction} next Express error handler for invalid IDs or database failures.
+ * @returns Resolves after sending the result page or forwarding an error to Express.
+ */
 
 const GetBlogsByAuthor = async (
   req: Request,
@@ -470,6 +587,15 @@ const GetBlogsByAuthor = async (
     next(exception);
   }
 };
+
+
+/**
+ * Lists non-draft blogs for the admin page with title, author, and status filters.
+ * @param {Request} req Express request containing pagination and optional title, author, and status query filters.
+ * @param {Response} res Express response used to return the matching blogs and pagination metadata.
+ * @param {NextFunction} next Express error handler for query or database failures.
+ * @returns Resolves after sending the result page or forwarding an error to Express.
+ */
 
 const AdminListAllBlogs = async (
   req: Request,
@@ -539,9 +665,19 @@ const AdminListAllBlogs = async (
     next(exception);
   }
 };
+
+
 // add to blog.controller.ts
 
 // PUT /api/blog/:id/like  (toggle like on/off)
+/**
+ * Toggles the authenticated user's like on a blog.
+ * @param {Request} req Express request containing the blog ID in `params.id` and authenticated user context.
+ * @param {Response} res Express response used to return the updated like count and liked state.
+ * @param {NextFunction} next Express error handler for lookup or persistence failures.
+ * @returns Resolves after sending the like state or forwarding an error to Express.
+ */
+
 const toggleLike = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.id;
@@ -586,5 +722,4 @@ export {
   AdminListAllBlogs,
   toggleLike
 };
-
 

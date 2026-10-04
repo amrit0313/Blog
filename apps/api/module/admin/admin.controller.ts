@@ -3,6 +3,14 @@ import { Request, Response } from "express";
 import { User } from "../user/user.model";
 import bcrypt from "bcryptjs";
 
+/**
+ * Deletes a blog by its ID.
+ * @param {Request} req Express request containing the blog ID in `params.id`.
+ * @param {Response} res Express response used to return the deletion result.
+ * @returns {Promise<Response>} JSON response with success, not-found, or server-error details.
+ */
+
+
 const deleteBlogs = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -20,6 +28,12 @@ const deleteBlogs = async (req: Request, res: Response) => {
 
 
 
+/**
+ * Promotes an existing user to the admin role.
+ * @param {Request} req Express request containing the user ID in `params.id`.
+ * @param {Response} res Express response used to return the promotion result.
+ * @returns {Promise<Response>} JSON response with the updated user or an error message.
+ */
 const addAnotherAdmin = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -43,6 +57,12 @@ const addAnotherAdmin = async (req: Request, res: Response) => {
 };
 
 
+/**
+ * Deletes a user unless the target user is an admin.
+ * @param {Request} req Express request containing the user ID in `params.id`.
+ * @param {Response} res Express response used to return the deletion result.
+ * @returns {Promise<Response>} JSON response indicating success or why deletion failed.
+ */
 const deleteUser = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -62,6 +82,12 @@ const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Creates a user account with a hashed password and a user or admin role.
+ * @param {Request} req Express request whose body contains `name`, `email`, `password`, and optional `role`.
+ * @param {Response} res Express response used to return the created user or an error message.
+ * @returns {Promise<Response>} JSON response containing the new user or validation/conflict/server error details.
+ */
 const createUser = async (req: Request, res: Response) => {
   try {
     const { name, email, password, role } = req.body;
@@ -95,6 +121,12 @@ const createUser = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Publishes a submitted blog after admin review.
+ * @param {Request} req Express request containing the blog ID in `params.id`.
+ * @param {Response} res Express response used to return the verification result.
+ * @returns {Promise<Response>} JSON response containing the published blog or an error message.
+ */
 const verifyBlog = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -115,6 +147,12 @@ const verifyBlog = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Rejects a submitted blog after admin review.
+ * @param {Request} req Express request containing the blog ID in `params.id`.
+ * @param {Response} res Express response used to return the rejection result.
+ * @returns {Promise<Response>} JSON response containing the rejected blog or an error message.
+ */
 const rejectBlog = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
