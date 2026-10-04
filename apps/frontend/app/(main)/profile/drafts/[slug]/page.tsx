@@ -9,6 +9,8 @@ import { ApiError } from "../../../../../lib/api";
 import { blogApi, type Blog } from "../../../../../lib/blog";
 import { imgSrc } from "../../../../../utils/getImgSrc";
 
+
+
 export default function DraftDetailPage() {
   const router = useRouter();
   const{slug} = useParams<{slug: string}>()

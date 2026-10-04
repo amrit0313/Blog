@@ -27,7 +27,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<AuthUser>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<void>;     
   logout: () => void;
   refreshUser: () => Promise<AuthUser | null>;
 }
