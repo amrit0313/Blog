@@ -125,7 +125,6 @@ export default function AdminBlogsPage() {
             sx={{ minWidth: 160 }}
           >
             <MenuItem value="">All statuses</MenuItem>
-            <MenuItem value="draft">Draft</MenuItem>
             <MenuItem value="submitted">Submitted</MenuItem>
             <MenuItem value="published">Published</MenuItem>
             <MenuItem value="unpublished">Unpublished</MenuItem>
