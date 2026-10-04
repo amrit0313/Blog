@@ -42,6 +42,7 @@ export default function Navbar() {
 
   const avatarSource =
     avatar?.userId === user?.id ? (avatar?.value ?? null) : null;
+  const profileHref = user?.role === "admin" ? "/admin" : "/profile";
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -68,25 +69,23 @@ export default function Navbar() {
             aria-label="Primary navigation"
           >
             <Link href="/" className="flex  items-center  hover:text-primary">
-              {/* <AiOutlineHome className="w-6 h-6" /> */}
               <p>Home</p>
             </Link>
             <Link
               href="/blogs"
               className="flex items-center hover:text-primary"
             >
-              {/* <MdOutlineExplore className="w-6 h-6" /> */}
               <p>Explore</p>
             </Link>
             <Link
               href="/blogs/create"
               className="flex items-center hover:text-primary"
             >
-              {/* <AiOutlineEdit className="w-6 h-6" /> */}
               <p>Write</p>
             </Link>
+            
             <Link
-              href="/profile"
+              href={profileHref}
               className="flex flex-col items-center   max-w-32 truncate hover:text-primary"
             ></Link>
             <div className="flex items-center gap-4">
@@ -98,7 +97,8 @@ export default function Navbar() {
               >
                 Logout
               </Button>
-              <Link href="/profile" aria-label="View profile">
+            
+              <Link href={profileHref} aria-label="View profile">
                 <Avatar
                   src={avatarSource}
                   name={user.name}
@@ -107,7 +107,7 @@ export default function Navbar() {
                 />
               </Link>
             </div>
-          </nav>
+          </nav> 
         ) : (
           <nav
             className="hidden items-center gap-3 text-sm font-medium lg:flex"
@@ -185,7 +185,7 @@ export default function Navbar() {
               Write
             </Link>
             <Link
-              href="/profile"
+              href={profileHref}
               onClick={closeMenu}
               className="rounded-md px-3 py-3 hover:bg-secondary hover:text-primary"
             >
