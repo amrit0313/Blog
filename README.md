@@ -28,12 +28,12 @@ NepalCan Blog gives readers a place to browse writing and gives registered users
 - **API:** Express 5, TypeScript, Mongoose
 - **Data and auth:** MongoDB, JWT access/refresh tokens, cookie-parser, bcrypt
 - **HTTP and validation:** Axios, Joi, Yup
-- **Media and email:** Multer, local or Cloudinary storage, Resend/Brevo integrations
-- **Deployment:** Vercel
+- **Media and email:** Multer, local or Cloudinary storage, Brevo integrations
+- **Deployment:** Vercel and render
 
 ## Architecture
 
-The repository is an npm workspace containing separate frontend and API applications. The Next.js App Router renders public, authenticated, and admin pages. Client-side API modules use Axios to call the Express routes; Vercel rewrites `/api/*` requests to the API service. The API validates requests, applies JWT authentication and role checks, and persists users, blogs, categories, profiles, comments, and replies through Mongoose.
+The repository is an npm workspace containing separate frontend and API applications. The Next.js App Router renders public, authenticated, and admin pages. Client-side API modules use Axios to call the Express routes. The API validates requests, applies JWT authentication and role checks, and persists users, blogs, categories, profiles, comments, and replies through Mongoose.
 
 Authentication state is held in a React context. Blog, category, profile, comment, and admin data is fetched through dedicated API client modules and stored in page/component state. Images use local uploads in development by default and Cloudinary when the configured production storage driver is used.
 
@@ -120,4 +120,4 @@ The frontend development server runs on port 3000 and the API listens on port 50
 
 ## Deployment
 
-The project is configured for Vercel with for `frontend` (Next.js) and `api` (Express) services on render.
+The project is configured for Vercel for  `frontend` (Next.js) and `api` (Express) services on render.
