@@ -120,4 +120,4 @@ The frontend development server runs on port 3000 and the API listens on port 50
 
 ## Deployment
 
-The project is configured for Vercel with for `frontend` (Next.js) and `api` (Express) services on render.
+The project is configured for Vercel for  `frontend` (Next.js) and `api` (Express) services on render.
