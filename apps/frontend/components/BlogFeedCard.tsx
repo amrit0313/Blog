@@ -9,7 +9,13 @@ import type { Blog } from "../lib/blog";
 import { imgSrc } from "../utils/getImgSrc";
 import { toast } from "sonner";
 import { FaShare, FaRegComment, FaThumbsUp } from "react-icons/fa6";
-import { HiOutlineEllipsisVertical, HiPencilSquare, HiTrash, HiEyeSlash } from "react-icons/hi2";
+import {
+  HiOutlineEllipsisVertical,
+  HiPencilSquare,
+  HiTrash,
+  HiEyeSlash,
+} from "react-icons/hi2";
+import Highlight from "../utils/highlighter";
 
 function formatRelative(value?: string) {
   if (!value) return "";
@@ -47,6 +53,7 @@ interface BlogFeedCardProps {
   isProfile?: boolean;
   onDelete?: (blogId: string) => void;
   onUnpublish?: (blogId: string) => void;
+  search?: string;
 }
 
 export default function BlogFeedCard({
@@ -54,6 +61,7 @@ export default function BlogFeedCard({
   isProfile = false,
   onDelete,
   onUnpublish,
+  search,
 }: BlogFeedCardProps) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likesCount, setLikesCount] = useState<number>(blog.likes?.length ?? 0);
@@ -62,11 +70,16 @@ export default function BlogFeedCard({
 
   const authorName = blog.author?.name ?? "Unknown Author";
   const detailHref = `/blogs/${blog.slug}`;
-  const excerpt = blog.description ? getDescriptionPreview(blog.description) : "";
+  const excerpt = blog.description
+    ? getDescriptionPreview(blog.description)
+    : "";
   const imageUrl = blog.image ? imgSrc(blog.image, "blogs") : null;
 
   const handleShare = async () => {
-    const url = typeof window !== "undefined" ? `${window.location.origin}${detailHref}` : detailHref;
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${detailHref}`
+        : detailHref;
     try {
       if (navigator?.clipboard) {
         await navigator.clipboard.writeText(url);
@@ -92,7 +105,7 @@ export default function BlogFeedCard({
               href={`/authors/${blog.author?._id}`}
               className="font-semibold text-sm text-foreground block hover:underline"
             >
-              {authorName}
+              <Highlight text={authorName} query={search} />
             </Link>
             <span className="text-xs text-muted-foreground">
               {formatRelative(blog.createdAt)}
@@ -103,14 +116,15 @@ export default function BlogFeedCard({
         <div className="flex items-center gap-2">
           {blog.category?.title && (
             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-              {blog.category.title}
+              <Highlight text={blog.title} query={search} />
             </span>
           )}
 
           {isProfile && blog.status && (
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                statusBadgeStyles[blog.status] ?? "bg-muted text-muted-foreground"
+                statusBadgeStyles[blog.status] ??
+                "bg-muted text-muted-foreground"
               }`}
             >
               {blog.status}
@@ -169,13 +183,13 @@ export default function BlogFeedCard({
       <div className="px-4 pb-3">
         <Link href={detailHref} className="group block">
           <h2 className="text-lg font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
-            {blog.title}
+            <Highlight text={blog.title} query={search} />
           </h2>
         </Link>
 
         {excerpt && (
           <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-            {excerpt}{" "}
+            <Highlight text={excerpt} query={search} />{" "}
             <Link
               href={detailHref}
               className="font-medium text-primary hover:underline ml-1"
@@ -186,7 +200,10 @@ export default function BlogFeedCard({
         )}
 
         {imageUrl && (
-          <Link href={detailHref} className="mt-3 block overflow-hidden rounded-lg">
+          <Link
+            href={detailHref}
+            className="mt-3 block overflow-hidden rounded-lg"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
@@ -233,7 +250,9 @@ export default function BlogFeedCard({
             onClick={() => setCommentsOpen((prev) => !prev)}
             aria-label="Toggle comments"
             className={`flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-colors hover:bg-muted/60 active:scale-[0.99] ${
-              commentsOpen ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              commentsOpen
+                ? "text-primary font-semibold"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <FaRegComment className="h-4 w-4" />

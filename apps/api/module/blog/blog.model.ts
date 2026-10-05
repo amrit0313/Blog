@@ -6,13 +6,13 @@ const BlogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    slug: { 
-      type: String, 
-      required: true, 
-      unique: true, 
-      index: true 
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
     },
-    
+
     description: {
       type: String,
     },
@@ -31,10 +31,12 @@ const BlogSchema = new mongoose.Schema(
       enum: ["draft", "published", "unpublished", "submitted", "rejected"],
       default: "draft",
     },
-    likes: [{ 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User" 
-    }],
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     image: {
       key: String, // for delete/replace
       url: String, // for display
@@ -43,6 +45,11 @@ const BlogSchema = new mongoose.Schema(
   {
     timestamps: true,
   },
+);
+
+BlogSchema.index(
+  { title: "text", description: "text", author: "text" },
+  { weights: { title: 10, description: 5, author: 1 } },
 );
 
 export default mongoose.model("Blog", BlogSchema);
