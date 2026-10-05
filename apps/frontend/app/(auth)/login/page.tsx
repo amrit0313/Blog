@@ -45,9 +45,21 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const user = await login({ email: email.trim(), password });
-      if (user.role === "admin") {
+      const redirect = new URLSearchParams(window.location.search).get(
+        "redirect",
+      );
+      const safeRedirect =
+        redirect?.startsWith("/") && !redirect.startsWith("//")
+          ? redirect
+          : null;
+
+      if (safeRedirect) {
+        router.push(safeRedirect);
+      } else if (user.role === "admin") {
         router.push("/admin");
-      } else router.push("/profile");
+      } else {
+        router.push("/profile");
+      }
     } catch (submitError) {
       toast.error(getErrorMessage(submitError, "Unable to log in."));
     } finally {

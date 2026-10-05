@@ -1,4 +1,5 @@
 import { apiRequest } from "./api";
+import type { Blog } from "./blog";
 
 /**
  * Basic user information returned with a profile.
@@ -21,6 +22,7 @@ export interface ProfileData {
     facebook?: string;
     website?: string;
   };
+  savedBlogs?: Blog[];
   isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -66,6 +68,18 @@ export const profileApi = {
     return apiRequest<ProfileResponse>("/profile", {
       method: "PATCH",
       data,
+    });
+  },
+
+  saveBlog(blogId: string) {
+    return apiRequest<ProfileResponse>(`/profile/saved-blogs/${blogId}`, {
+      method: "PUT",
+    });
+  },
+
+  removeSavedBlog(blogId: string) {
+    return apiRequest<ProfileResponse>(`/profile/saved-blogs/${blogId}`, {
+      method: "DELETE",
     });
   },
 };

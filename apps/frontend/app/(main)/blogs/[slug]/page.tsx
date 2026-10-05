@@ -13,8 +13,7 @@ import DOMPurify from "dompurify";
 import LikeButton from "../../../../components/LikeButton";
 import CommentSection from "../../../../components/CommentSection";
 import { imgSrc } from "../../../../utils/getImgSrc";
-
-/* ─── Helpers ─────────────────────────────────────────────────── */
+import SaveBlogButton from "../../../../components/SaveBlogButton";
 
 function formatDate(value?: string) {
   if (!value) return null;
@@ -194,14 +193,29 @@ function MetaCard({
         >
           {copied ? (
             <>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               Copied!
             </>
           ) : (
             <>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -223,13 +237,19 @@ function MetaCard({
 function HeroImage({ blog }: { blog: Blog }) {
   const [imgError, setImgError] = useState(false);
   const url = getBlogImageUrl(blog.image);
-  const isSvg = typeof url === "string" && url.split("?")[0].toLowerCase().endsWith(".svg");
+  const isSvg =
+    typeof url === "string" && url.split("?")[0].toLowerCase().endsWith(".svg");
 
   if (!url || imgError) {
     return (
       <div className="flex h-full min-h-[260px] max-h-[380px] w-full items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 via-accent/10 to-secondary aspect-video">
         <div className="text-center">
-          <svg className="mx-auto h-16 w-16 text-muted-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="mx-auto h-16 w-16 text-muted-foreground/30"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -237,7 +257,9 @@ function HeroImage({ blog }: { blog: Blog }) {
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <p className="mt-2 text-sm text-muted-foreground/50">No cover image</p>
+          <p className="mt-2 text-sm text-muted-foreground/50">
+            No cover image
+          </p>
         </div>
       </div>
     );
@@ -288,7 +310,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   useEffect(() => {
     if (!slug) return;
-
 
     const fetchBlog = async () => {
       try {
@@ -362,13 +383,24 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
       <div className="flex min-h-[60vh] items-center justify-center px-6">
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-            <svg className="h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="h-8 w-8 text-red-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-foreground">{error}</h1>
           <p className="mt-2 text-muted-foreground">
-            The blog you&apos;re looking for doesn&apos;t exist or has been removed.
+            The blog you&apos;re looking for doesn&apos;t exist or has been
+            removed.
           </p>
           <Link href="/blogs" className="mt-6 inline-block">
             <Button variant="outline">Back to Blogs</Button>
@@ -388,8 +420,18 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             href="/blogs"
             className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
           >
-            <svg className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg
+              className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             Back to Blogs
           </Link>
@@ -435,8 +477,18 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             <div className="mt-5 flex gap-3">
               <Link href={`/blogs/${blog.slug}/edit`}>
                 <Button variant="outline">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
                   </svg>
                   Edit
                 </Button>
@@ -446,8 +498,18 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                 className="!text-red-600 hover:!border-red-300 hover:!text-red-700"
                 onClick={() => setDeleteModalOpen(true)}
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
                 </svg>
                 Delete
               </Button>
@@ -498,15 +560,22 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                   variant="detail"
                 />
               </div>
-              <button
-                type="button"
-                onClick={handleCopyLink}
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary active:scale-[0.98]"
-              >
-                {copied ? "Link Copied!" : "Share Story"}
-              </button>
+              <div className="flex items-center gap-3">
+                {blog.status === "published" && (
+                  <SaveBlogButton
+                    blogId={blog._id}
+                    className="flex-none border border-border bg-white px-4 hover:border-primary hover:text-primary"
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition-all hover:border-primary/40 hover:text-primary active:scale-[0.98]"
+                >
+                  {copied ? "Link Copied!" : "Share Story"}
+                </button>
+              </div>
             </div>
-
             <div className="mt-8">
               <h3 className="text-xl font-bold text-foreground mb-2">
                 Comments
@@ -546,7 +615,8 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         }
       >
         <p className="text-muted-foreground">
-          Are you sure you want to delete &quot;{blog?.title}&quot;? This action cannot be undone.
+          Are you sure you want to delete &quot;{blog?.title}&quot;? This action
+          cannot be undone.
         </p>
       </Modal>
 

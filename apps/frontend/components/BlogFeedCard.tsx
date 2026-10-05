@@ -9,7 +9,13 @@ import type { Blog } from "../lib/blog";
 import { imgSrc } from "../utils/getImgSrc";
 import { toast } from "sonner";
 import { FaShare, FaRegComment, FaThumbsUp } from "react-icons/fa6";
-import { HiOutlineEllipsisVertical, HiPencilSquare, HiTrash, HiEyeSlash } from "react-icons/hi2";
+import {
+  HiOutlineEllipsisVertical,
+  HiPencilSquare,
+  HiTrash,
+  HiEyeSlash,
+} from "react-icons/hi2";
+import SaveBlogButton from "./SaveBlogButton";
 
 function formatRelative(value?: string) {
   if (!value) return "";
@@ -62,11 +68,16 @@ export default function BlogFeedCard({
 
   const authorName = blog.author?.name ?? "Unknown Author";
   const detailHref = `/blogs/${blog.slug}`;
-  const excerpt = blog.description ? getDescriptionPreview(blog.description) : "";
+  const excerpt = blog.description
+    ? getDescriptionPreview(blog.description)
+    : "";
   const imageUrl = blog.image ? imgSrc(blog.image, "blogs") : null;
 
   const handleShare = async () => {
-    const url = typeof window !== "undefined" ? `${window.location.origin}${detailHref}` : detailHref;
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${detailHref}`
+        : detailHref;
     try {
       if (navigator?.clipboard) {
         await navigator.clipboard.writeText(url);
@@ -110,7 +121,8 @@ export default function BlogFeedCard({
           {isProfile && blog.status && (
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                statusBadgeStyles[blog.status] ?? "bg-muted text-muted-foreground"
+                statusBadgeStyles[blog.status] ??
+                "bg-muted text-muted-foreground"
               }`}
             >
               {blog.status}
@@ -186,7 +198,10 @@ export default function BlogFeedCard({
         )}
 
         {imageUrl && (
-          <Link href={detailHref} className="mt-3 block overflow-hidden rounded-lg">
+          <Link
+            href={detailHref}
+            className="mt-3 block overflow-hidden rounded-lg"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
@@ -233,7 +248,9 @@ export default function BlogFeedCard({
             onClick={() => setCommentsOpen((prev) => !prev)}
             aria-label="Toggle comments"
             className={`flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-colors hover:bg-muted/60 active:scale-[0.99] ${
-              commentsOpen ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+              commentsOpen
+                ? "text-primary font-semibold"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <FaRegComment className="h-4 w-4" />
@@ -249,6 +266,10 @@ export default function BlogFeedCard({
             <FaShare className="h-4 w-4" />
             <span>Share</span>
           </button>
+
+          {blog.status === "published" && !isProfile && (
+            <SaveBlogButton blogId={blog._id} />
+          )}
         </div>
       </div>
 

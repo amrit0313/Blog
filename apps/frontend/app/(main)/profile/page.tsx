@@ -124,6 +124,7 @@ export default function ProfilePage() {
   const displayName = profileUser?.name ?? "Your profile";
   const publishedBlogs = blogs.filter((blog) => blog.status === "published");
   const drafts = blogs.filter((blog) => blog.status === "draft");
+  const savedBlogs = (profile?.savedBlogs ?? []).filter(Boolean);
   const socialLinks = profile?.socialLinks
     ? Object.entries(profile.socialLinks).filter(([, value]) => Boolean(value))
     : [];
@@ -251,6 +252,26 @@ export default function ProfilePage() {
                     {drafts.length === 0
                       ? "Your unfinished blogs will appear here."
                       : `${drafts.length} unpublished ${drafts.length === 1 ? "blog" : "blogs"} waiting for you.`}
+                  </p>
+                </div>
+                <span className="shrink-0 font-semibold text-primary">
+                  &rarr;
+                </span>
+              </Link>
+            )}
+
+            {!profileLoading && (
+              <Link
+                href="/profile/saved"
+                className="card flex items-center justify-between gap-4 p-6 no-underline transition-colors hover:border-primary"
+              >
+                <div>
+                  <p className="eyebrow">Private</p>
+                  <h3 className="mt-2 text-xl">Saved Blogs</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {savedBlogs.length === 0
+                      ? "Blogs you save for later will appear here."
+                      : `${savedBlogs.length} saved ${savedBlogs.length === 1 ? "blog" : "blogs"} to read later.`}
                   </p>
                 </div>
                 <span className="shrink-0 font-semibold text-primary">

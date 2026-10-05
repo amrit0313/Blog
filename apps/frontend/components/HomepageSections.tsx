@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Chip, Stack } from "@mui/material";
 import Button from "./ui/Button";
 import type { Blog } from "../lib/blog";
 import { Category } from "../lib/category";
 import { imgSrc } from "../utils/getImgSrc";
+
+const subscribeToHydration = () => () => {};
+const getClientHydrationSnapshot = () => true;
+const getServerHydrationSnapshot = () => false;
 
 const getDescriptionPreview = (html: string) =>
   html
@@ -68,6 +72,12 @@ export default function HomepageSections({
   categories,
   onStartWriting,
 }: HomepageSectionsProps) {
+  const hasMounted = useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot,
+  );
+
   return (
     <>
       <style>{`
@@ -264,7 +274,7 @@ export default function HomepageSections({
           </h2>
           <Button
             onClick={onStartWriting}
-            disabled={isAuthLoading}
+            disabled={hasMounted && isAuthLoading}
             className="mt-8 rounded-md bg-primary px-7 py-3 font-semibold text-primary no-underline hover:bg-white hover:text-red-500! hover:border hover:border-red-500!"
           >
             Start writing
