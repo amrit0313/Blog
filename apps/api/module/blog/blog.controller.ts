@@ -19,7 +19,6 @@ interface AppError extends Error {
   status?: number;
 }
 
-
 /**
  * Creates an application error with an HTTP status code for Express error handling.
  * @param {string} message Description of the error.
@@ -32,7 +31,6 @@ const createError = (message: string, status = 500): AppError => {
   return err;
 };
 
-
 /**
  * Generates a unique URL slug from a blog title.
  * @param {string} title Blog title used as the slug source.
@@ -44,13 +42,17 @@ async function generateUniqueSlug(title: string, excludeId?: string) {
   let slug = base;
   let counter = 1;
 
-  while (await blog.exists({ slug, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+  while (
+    await blog.exists({
+      slug,
+      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+    })
+  ) {
     slug = `${base}-${counter++}`;
   }
 
   return slug;
 }
-
 
 /**
  * Creates a blog post or saves it as a draft for the authenticated user.
@@ -63,44 +65,52 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
 
   try {
-    const { title, category, description, status } = req.body;
+    const { title, category, description, status, tags } = req.body;
 
     if (!title || !category || !description) {
-      return res.status(400).json({ message: "Invalid request" });}
-    if (
-      status !== "draft" &&
-      status !== "submitted"
-    ) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+    if (status !== "draft" && status !== "submitted") {
       return res.status(400).json({ message: "Invalid blog status" });
     }
-    if (title) {
-    const slug = await generateUniqueSlug(title);
-    }
 
+    const slug = await generateUniqueSlug(title);
 
     if (!mongoose.isValidObjectId(category)) {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    const slug = await generateUniqueSlug(title);
-
     if (req?.file) {
       uploaded = await storage.upload(req?.file, { folder: "blogs" });
     }
+
+    const parsedTags =
+      typeof tags === "string"
+        ? tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : Array.isArray(tags)
+          ? tags
+          : [];
 
     const newBlog = await blog.create({
       title,
       description,
       category,
       slug,
-      author: req.user!.id, 
+      author: req.user!.id,
       status: status ?? "draft",
       image: uploaded ?? undefined,
+      tags: parsedTags,
     });
 
     res.status(201).json({
       result: newBlog,
-      message: newBlog.status === "draft" ? "Blog saved as draft" : "Blog submitted for review",
+      message:
+        newBlog.status === "draft"
+          ? "Blog saved as draft"
+          : "Blog submitted for review",
       meta: null,
     });
   } catch (exception) {
@@ -108,7 +118,6 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     next(exception);
   }
 };
-
 
 /**
  * Retrieves a blog by ID, allowing drafts only for their author.
@@ -149,7 +158,6 @@ const BlogDetailById = async (
     next(exception);
   }
 };
-
 
 /**
  * Retrieves a blog by slug, allowing drafts only for their author.
@@ -224,7 +232,6 @@ const DraftBlogDetailBySlug = async (
   }
 };
 
-
 /**
  * Escapes regular-expression metacharacters in a string.
  * @param {string} s Input string to escape.
@@ -233,7 +240,6 @@ const DraftBlogDetailBySlug = async (
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-
 /**
  * Lists visible blogs with optional title/category filters and pagination.
  * @param {Request} req Express request containing query filters, pagination, and optional user context.
@@ -241,7 +247,6 @@ const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * @param {NextFunction} next Express error handler for database or query failures.
  * @returns Resolves after sending the result page or forwarding an error to Express.
  */
-
 
 const ListAllBlogs = async (
   req: Request,
@@ -272,6 +277,13 @@ const ListAllBlogs = async (
         .lean();
 
       filter.category = { $in: matched.map((c) => c._id) };
+    }
+
+    if (typeof req.query.tag === "string" && req.query.tag.trim()) {
+      filter.tags = new RegExp(
+        escapeRegex(req.query.tag.trim().toLowerCase()),
+        "i",
+      );
     }
 
     if (req.user) {
@@ -309,7 +321,6 @@ const ListAllBlogs = async (
     next(exception);
   }
 };
-
 
 /**
  * Filters blogs using query-string fields, with access limited by the current user's visibility.
@@ -375,7 +386,6 @@ const AllBlogsFiltering = async (
   }
 };
 
-
 /**
  * Updates a blog selected by slug, enforcing author/admin permissions and optionally replacing its image.
  * @param {Request} req Express request containing the slug, update fields, optional image, and user context.
@@ -398,9 +408,11 @@ const BlogUpdateBySlug = async (
       throw createError("Blog not found", 404);
     }
 
+    if (!req.user) {
+      throw createError("Not authorized to modify this blog", 401);
+    }
 
     if (
-      req.user &&
       existing.author.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
@@ -410,6 +422,18 @@ const BlogUpdateBySlug = async (
     const data = req.body;
 
     delete data.slug;
+
+    if (data.tags !== undefined) {
+      data.tags =
+        typeof data.tags === "string"
+          ? data.tags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter(Boolean)
+          : Array.isArray(data.tags)
+            ? data.tags
+            : [];
+    }
 
     if (req.file) {
       uploaded = await storage.upload(req.file, { folder: "blogs" });
@@ -432,7 +456,6 @@ const BlogUpdateBySlug = async (
     next(exception);
   }
 };
-
 
 /**
  * Changes a blog's status to unpublished; administrators only.
@@ -472,7 +495,6 @@ const UnpublishBlogById = async (
   }
 };
 
-
 /**
  * Deletes a blog by ID.
  * @param {Request} req Express request containing the blog ID in `params.id`.
@@ -502,7 +524,6 @@ const BlogDeleteById = async (
     next(exception);
   }
 };
-
 
 /**
  * Lists all blogs owned by the authenticated user.
@@ -535,7 +556,6 @@ const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
 /**
  * Lists published blogs by author with pagination.
  * @param {Request} req Express request containing the author ID in `params.authorId` and optional pagination query values.
@@ -559,7 +579,10 @@ const GetBlogsByAuthor = async (
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = { author: authorId, status: "published" };
+    const filter: Record<string, any> = {
+      author: authorId,
+      status: "published",
+    };
 
     const [count, data] = await Promise.all([
       blog.countDocuments(filter),
@@ -588,7 +611,6 @@ const GetBlogsByAuthor = async (
   }
 };
 
-
 /**
  * Lists non-draft blogs for the admin page with title, author, and status filters.
  * @param {Request} req Express request containing pagination and optional title, author, and status query filters.
@@ -608,11 +630,14 @@ const AdminListAllBlogs = async (
     const skip = (page - 1) * limit;
 
     const filter: Record<string, any> = {
-       status: { $ne: "draft" },
+      status: { $ne: "draft" },
     };
 
     if (req.query.search) {
-      filter.title = new RegExp(escapeRegex(String(req.query.search).trim()), "i");
+      filter.title = new RegExp(
+        escapeRegex(String(req.query.search).trim()),
+        "i",
+      );
     }
 
     if (req.query.author) {
@@ -666,7 +691,6 @@ const AdminListAllBlogs = async (
   }
 };
 
-
 // add to blog.controller.ts
 
 // PUT /api/blog/:id/like  (toggle like on/off)
@@ -685,10 +709,14 @@ const toggleLike = async (req: Request, res: Response, next: NextFunction) => {
 
     if (!targetBlog) throw createError("Blog not found", 404);
 
-    const alreadyLiked = targetBlog.likes.some((id) => id.toString() === userId);
+    const alreadyLiked = targetBlog.likes.some(
+      (id) => id.toString() === userId,
+    );
 
     if (alreadyLiked) {
-      targetBlog.likes = targetBlog.likes.filter((id) => id.toString() !== userId);
+      targetBlog.likes = targetBlog.likes.filter(
+        (id) => id.toString() !== userId,
+      );
     } else {
       targetBlog.likes.push(userId as any);
     }
@@ -705,8 +733,6 @@ const toggleLike = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
-
 export {
   createBlog,
   BlogDetailById,
@@ -720,6 +746,5 @@ export {
   GetMyBlogs,
   GetBlogsByAuthor,
   AdminListAllBlogs,
-  toggleLike
+  toggleLike,
 };
-

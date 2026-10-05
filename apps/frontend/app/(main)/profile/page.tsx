@@ -290,7 +290,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* ── Right column: Your Blogs ── */}
           <section>
             {!blogsLoading && !blogsError && (
               <div className="flex flex-wrap items-center justify-between gap-4">
