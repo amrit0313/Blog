@@ -231,7 +231,7 @@ function BlogsFeed() {
           {!loading && blogs.length > 0 && (
             <div className="mt-6 space-y-6">
               {blogs.map((blog) => (
-                <BlogFeedCard key={blog._id} blog={blog} />
+                <BlogFeedCard key={blog._id} blog={blog} search={search} />
               ))}
             </div>
           )}

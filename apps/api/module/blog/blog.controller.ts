@@ -19,7 +19,6 @@ interface AppError extends Error {
   status?: number;
 }
 
-
 /**
  * Creates an application error with an HTTP status code for Express error handling.
  * @param {string} message Description of the error.
@@ -32,7 +31,6 @@ const createError = (message: string, status = 500): AppError => {
   return err;
 };
 
-
 /**
  * Generates a unique URL slug from a blog title.
  * @param {string} title Blog title used as the slug source.
@@ -44,13 +42,17 @@ async function generateUniqueSlug(title: string, excludeId?: string) {
   let slug = base;
   let counter = 1;
 
-  while (await blog.exists({ slug, ...(excludeId ? { _id: { $ne: excludeId } } : {}) })) {
+  while (
+    await blog.exists({
+      slug,
+      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+    })
+  ) {
     slug = `${base}-${counter++}`;
   }
 
   return slug;
 }
-
 
 /**
  * Creates a blog post or saves it as a draft for the authenticated user.
@@ -66,17 +68,14 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     const { title, category, description, status } = req.body;
 
     if (!title || !category || !description) {
-      return res.status(400).json({ message: "Invalid request" });}
-    if (
-      status !== "draft" &&
-      status !== "submitted"
-    ) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+    if (status !== "draft" && status !== "submitted") {
       return res.status(400).json({ message: "Invalid blog status" });
     }
     if (title) {
-    const slug = await generateUniqueSlug(title);
+      const slug = await generateUniqueSlug(title);
     }
-
 
     if (!mongoose.isValidObjectId(category)) {
       return res.status(400).json({ message: "Invalid category" });
@@ -93,14 +92,17 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       description,
       category,
       slug,
-      author: req.user!.id, 
+      author: req.user!.id,
       status: status ?? "draft",
       image: uploaded ?? undefined,
     });
 
     res.status(201).json({
       result: newBlog,
-      message: newBlog.status === "draft" ? "Blog saved as draft" : "Blog submitted for review",
+      message:
+        newBlog.status === "draft"
+          ? "Blog saved as draft"
+          : "Blog submitted for review",
       meta: null,
     });
   } catch (exception) {
@@ -108,7 +110,6 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     next(exception);
   }
 };
-
 
 /**
  * Retrieves a blog by ID, allowing drafts only for their author.
@@ -149,7 +150,6 @@ const BlogDetailById = async (
     next(exception);
   }
 };
-
 
 /**
  * Retrieves a blog by slug, allowing drafts only for their author.
@@ -224,7 +224,6 @@ const DraftBlogDetailBySlug = async (
   }
 };
 
-
 /**
  * Escapes regular-expression metacharacters in a string.
  * @param {string} s Input string to escape.
@@ -233,6 +232,17 @@ const DraftBlogDetailBySlug = async (
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const makeSnippet = (text = "", term: string, size = 80) => {
+  const i = text.toLowerCase().indexOf(term.toLowerCase());
+  if (i === -1) return "";
+  const start = Math.max(0, i - size);
+  const end = Math.min(text.length, i + term.length + size);
+  return (
+    (start > 0 ? "…" : "") +
+    text.slice(start, end) +
+    (end < text.length ? "…" : "")
+  );
+};
 
 /**
  * Lists visible blogs with optional title/category filters and pagination.
@@ -241,8 +251,6 @@ const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * @param {NextFunction} next Express error handler for database or query failures.
  * @returns Resolves after sending the result page or forwarding an error to Express.
  */
-
-
 const ListAllBlogs = async (
   req: Request,
   res: Response,
@@ -252,38 +260,51 @@ const ListAllBlogs = async (
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
     const skip = (page - 1) * limit;
-    console.log(req.query);
 
-    const filter: Record<string, any> = {
-      status: { $ne: "draft" },
-    };
+    const conditions: Record<string, any>[] = [];
 
-    if (typeof req.query.search === "string" && req.query.search.trim()) {
-      filter.title = new RegExp(escapeRegex(req.query.search.trim()), "i");
+    // visibility
+    if (req.user) {
+      conditions.push({
+        $or: [
+          { status: "published" },
+          { status: "draft", author: req.user.id },
+        ],
+      });
+    } else {
+      conditions.push({ status: "published" });
     }
 
+    // search across title, description and body
+    const search =
+      typeof req.query.search === "string" ? req.query.search.trim() : "";
+    if (search) {
+      const re = new RegExp(escapeRegex(search), "i");
+//regex works on user's name(string), so look up matching users first
+      const matchedAuthors = await User.find({ name: re }).select("_id").lean();
+      conditions.push({
+        $or: [
+          { title: re },
+          { description: re },
+          { author: { $in: matchedAuthors.map((u: any) => u._id) } },
+        ],
+      });
+    }
+
+    // category
     if (typeof req.query.category === "string" && req.query.category.trim()) {
-      console.log(req.query.category);
       const matched = await categoryModel
         .find({
           title: new RegExp(`^${escapeRegex(req.query.category.trim())}$`, "i"),
         })
         .select("_id")
         .lean();
-
-      filter.category = { $in: matched.map((c) => c._id) };
+      conditions.push({ category: { $in: matched.map((c) => c._id) } });
     }
 
-    if (req.user) {
-      filter.$or = [
-        { status: "published" },
-        { status: "draft", author: req.user.id },
-      ];
-    } else {
-      filter.status = "published";
-    }
+    const filter = { $and: conditions };
 
-    const [count, data] = await Promise.all([
+    const [count, rows] = await Promise.all([
       blog.countDocuments(filter),
       blog
         .find(filter)
@@ -294,6 +315,12 @@ const ListAllBlogs = async (
         .limit(limit)
         .lean(),
     ]);
+
+    // send a short matching snippet instead of the whole body
+    const data = rows.map(({ body, ...rest }: any) => ({
+      ...rest,
+      ...(search && { snippet: makeSnippet(body, search) }),
+    }));
 
     res.status(200).json({
       result: data,
@@ -309,7 +336,6 @@ const ListAllBlogs = async (
     next(exception);
   }
 };
-
 
 /**
  * Filters blogs using query-string fields, with access limited by the current user's visibility.
@@ -375,7 +401,6 @@ const AllBlogsFiltering = async (
   }
 };
 
-
 /**
  * Updates a blog selected by slug, enforcing author/admin permissions and optionally replacing its image.
  * @param {Request} req Express request containing the slug, update fields, optional image, and user context.
@@ -397,7 +422,6 @@ const BlogUpdateBySlug = async (
     if (!existing) {
       throw createError("Blog not found", 404);
     }
-
 
     if (
       req.user &&
@@ -432,7 +456,6 @@ const BlogUpdateBySlug = async (
     next(exception);
   }
 };
-
 
 /**
  * Changes a blog's status to unpublished; administrators only.
@@ -472,7 +495,6 @@ const UnpublishBlogById = async (
   }
 };
 
-
 /**
  * Deletes a blog by ID.
  * @param {Request} req Express request containing the blog ID in `params.id`.
@@ -502,7 +524,6 @@ const BlogDeleteById = async (
     next(exception);
   }
 };
-
 
 /**
  * Lists all blogs owned by the authenticated user.
@@ -535,7 +556,6 @@ const GetMyBlogs = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
 /**
  * Lists published blogs by author with pagination.
  * @param {Request} req Express request containing the author ID in `params.authorId` and optional pagination query values.
@@ -559,7 +579,10 @@ const GetBlogsByAuthor = async (
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 10));
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = { author: authorId, status: "published" };
+    const filter: Record<string, any> = {
+      author: authorId,
+      status: "published",
+    };
 
     const [count, data] = await Promise.all([
       blog.countDocuments(filter),
@@ -588,7 +611,6 @@ const GetBlogsByAuthor = async (
   }
 };
 
-
 /**
  * Lists non-draft blogs for the admin page with title, author, and status filters.
  * @param {Request} req Express request containing pagination and optional title, author, and status query filters.
@@ -608,11 +630,14 @@ const AdminListAllBlogs = async (
     const skip = (page - 1) * limit;
 
     const filter: Record<string, any> = {
-       status: { $ne: "draft" },
+      status: { $ne: "draft" },
     };
 
     if (req.query.search) {
-      filter.title = new RegExp(escapeRegex(String(req.query.search).trim()), "i");
+      filter.title = new RegExp(
+        escapeRegex(String(req.query.search).trim()),
+        "i",
+      );
     }
 
     if (req.query.author) {
@@ -666,7 +691,6 @@ const AdminListAllBlogs = async (
   }
 };
 
-
 // add to blog.controller.ts
 
 // PUT /api/blog/:id/like  (toggle like on/off)
@@ -685,10 +709,14 @@ const toggleLike = async (req: Request, res: Response, next: NextFunction) => {
 
     if (!targetBlog) throw createError("Blog not found", 404);
 
-    const alreadyLiked = targetBlog.likes.some((id) => id.toString() === userId);
+    const alreadyLiked = targetBlog.likes.some(
+      (id) => id.toString() === userId,
+    );
 
     if (alreadyLiked) {
-      targetBlog.likes = targetBlog.likes.filter((id) => id.toString() !== userId);
+      targetBlog.likes = targetBlog.likes.filter(
+        (id) => id.toString() !== userId,
+      );
     } else {
       targetBlog.likes.push(userId as any);
     }
@@ -705,8 +733,6 @@ const toggleLike = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
-
 export {
   createBlog,
   BlogDetailById,
@@ -720,6 +746,5 @@ export {
   GetMyBlogs,
   GetBlogsByAuthor,
   AdminListAllBlogs,
-  toggleLike
+  toggleLike,
 };
-

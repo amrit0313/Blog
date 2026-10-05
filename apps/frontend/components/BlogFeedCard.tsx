@@ -15,6 +15,7 @@ import {
   HiTrash,
   HiEyeSlash,
 } from "react-icons/hi2";
+import Highlight from "../utils/highlighter";
 import SaveBlogButton from "./SaveBlogButton";
 
 function formatRelative(value?: string) {
@@ -53,6 +54,7 @@ interface BlogFeedCardProps {
   isProfile?: boolean;
   onDelete?: (blogId: string) => void;
   onUnpublish?: (blogId: string) => void;
+  search?: string;
 }
 
 export default function BlogFeedCard({
@@ -60,6 +62,7 @@ export default function BlogFeedCard({
   isProfile = false,
   onDelete,
   onUnpublish,
+  search,
 }: BlogFeedCardProps) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [likesCount, setLikesCount] = useState<number>(blog.likes?.length ?? 0);
@@ -103,7 +106,7 @@ export default function BlogFeedCard({
               href={`/authors/${blog.author?._id}`}
               className="font-semibold text-sm text-foreground block hover:underline"
             >
-              {authorName}
+              <Highlight text={authorName} query={search} />
             </Link>
             <span className="text-xs text-muted-foreground">
               {formatRelative(blog.createdAt)}
@@ -114,7 +117,7 @@ export default function BlogFeedCard({
         <div className="flex items-center gap-2">
           {blog.category?.title && (
             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-              {blog.category.title}
+              <Highlight text={blog.title} query={search} />
             </span>
           )}
 
@@ -181,13 +184,13 @@ export default function BlogFeedCard({
       <div className="px-4 pb-3">
         <Link href={detailHref} className="group block">
           <h2 className="text-lg font-bold leading-snug text-foreground group-hover:text-primary transition-colors">
-            {blog.title}
+            <Highlight text={blog.title} query={search} />
           </h2>
         </Link>
 
         {excerpt && (
           <p className="mt-1.5 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-            {excerpt}{" "}
+            <Highlight text={excerpt} query={search} />{" "}
             <Link
               href={detailHref}
               className="font-medium text-primary hover:underline ml-1"
