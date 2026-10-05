@@ -16,6 +16,7 @@ import {
   HiEyeSlash,
 } from "react-icons/hi2";
 import Highlight from "../utils/highlighter";
+import SaveBlogButton from "./SaveBlogButton";
 
 function formatRelative(value?: string) {
   if (!value) return "";
@@ -268,6 +269,10 @@ export default function BlogFeedCard({
             <FaShare className="h-4 w-4" />
             <span>Share</span>
           </button>
+
+          {blog.status === "published" && !isProfile && (
+            <SaveBlogButton blogId={blog._id} />
+          )}
         </div>
       </div>
 

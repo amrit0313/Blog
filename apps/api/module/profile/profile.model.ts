@@ -20,10 +20,10 @@ const ProfileSchema = new mongoose.Schema(
       facebook: { type: String, default: "" },
       website: { type: String, default: "" },
     },
-    savedPosts: [
+    savedBlogs: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
+        ref: "Blog",
       },
     ],
     isVerified: {

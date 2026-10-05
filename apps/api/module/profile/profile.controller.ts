@@ -2,6 +2,8 @@ import Profile from "./profile.model";
 import { User } from "../user/user.model";
 import { Request, Response, NextFunction } from "express";
 import { storage } from "../../storage";
+import mongoose from "mongoose";
+import Blog from "../blog/blog.model";
 
 const ALLOWED_SOCIAL = ["instagram", "facebook", "website"] as const;
 
@@ -111,11 +113,16 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
   try {
     const user = req.user?.id;
 
-    const profile = await Profile.findOne({ user }).populate(
-      "user",
-      "id name email",
-    );
-    console.log(profile);
+    const profile = await Profile.findOne({ user })
+      .populate("user", "id name email")
+      .populate({
+        path: "savedBlogs",
+        select: "title slug image status createdAt author category",
+        populate: [
+          { path: "author", select: "_id name email" },
+          { path: "category", select: "_id title" },
+        ],
+      });
     if (!profile) {
       return res.status(400).json({ message: "profile doesn't exist" });
     }
@@ -125,6 +132,73 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
   } catch (err: any) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const saveBlog = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    const { blogId } = req.params;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!mongoose.isValidObjectId(blogId)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    const blogExists = await Blog.exists({ _id: blogId, status: "published" });
+    if (!blogExists) return res.status(404).json({ message: "Blog not found" });
+
+    const profile = await Profile.findOneAndUpdate(
+      { user: userId },
+      {
+        $addToSet: { savedBlogs: blogId },
+        $setOnInsert: { user: userId },
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    ).populate({
+      path: "savedBlogs",
+      select: "title slug image status createdAt author category",
+      populate: [
+        { path: "author", select: "_id name email" },
+        { path: "category", select: "_id title" },
+      ],
+    });
+
+    return res.status(200).json({ message: "Blog saved", profile });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeSavedBlog = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user?.id;
+    const { blogId } = req.params;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!mongoose.isValidObjectId(blogId)) {
+      return res.status(400).json({ message: "Invalid blog ID" });
+    }
+
+    const profile = await Profile.findOneAndUpdate(
+      { user: userId },
+      { $pull: { savedBlogs: blogId } },
+      { new: true },
+    ).populate({
+      path: "savedBlogs",
+      select: "title slug image status createdAt author category",
+      populate: [
+        { path: "author", select: "_id name email" },
+        { path: "category", select: "_id title" },
+      ],
+    });
+
+    if (!profile) return res.status(404).json({ message: "Profile not found" });
+    return res.status(200).json({ message: "Blog removed from saved blogs", profile });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -141,10 +215,9 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
 const getPublicProfile = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { userId } = req.params;
-    const profile = await Profile.findOne({ user: userId }).populate(
-      "user",
-      "id name email",
-    );
+    const profile = await Profile.findOne({ user: userId })
+      .select("-savedBlogs")
+      .populate("user", "id name email");
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
@@ -154,4 +227,10 @@ const getPublicProfile = async (req: Request, res: Response): Promise<Response> 
   }
 };
 
-export { createOrUpdateProfile, getProfile, getPublicProfile };
+export {
+  createOrUpdateProfile,
+  getProfile,
+  getPublicProfile,
+  saveBlog,
+  removeSavedBlog,
+};
