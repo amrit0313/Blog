@@ -51,6 +51,7 @@ export default function CreateBlogPage() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<"draft" | "submitted">("draft");
+  const [tagsInput, setTagsInput] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -112,9 +113,10 @@ export default function CreateBlogPage() {
       formData.append("description", description);
       formData.append("category", category);
       formData.append("status", status);
+      formData.append("tags", tagsInput);
       if (user?.id) formData.append("author", user.id);
       if (image) formData.append("image", image);
-      console.log(formData);
+
       const res = await blogApi.create(formData);
 
       toast.success("Blog created successfully!");
@@ -214,6 +216,15 @@ export default function CreateBlogPage() {
           </FormField>
         </div>
 
+        <FormField label="Tags" htmlFor="tags" hint="Separate tags with commas, e.g. travel, food, nepal">
+          <Input
+            id="tags"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="travel, food, nepal"
+          />
+        </FormField>
+
         <FormField label="Cover Image" htmlFor="image">
           <input
             id="image"
@@ -224,10 +235,11 @@ export default function CreateBlogPage() {
           />
           {imagePreview && (
             <div className="mt-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imagePreview}
                 alt="Selected cover preview"
-                className="aspect-videow-20  h-20 rounded-md border border-border object-center"
+                className="aspect-video w-20 h-20 rounded-md border border-border object-cover"
               />
             </div>
           )}

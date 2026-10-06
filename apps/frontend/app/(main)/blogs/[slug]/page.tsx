@@ -515,6 +515,15 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
               </Button>
             </div>
           )}
+          {blog.tags && blog.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {blog.tags.map((tag) => (
+                <div key={tag} className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                  {tag}
+                </div>
+              ))}
+            </div>
+          )}
         </header>
 
         <div className="mb-10 grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
@@ -550,7 +559,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             </div>
           </footer>
 
-          {/* Likes & Comments Section */}
           <section className="mt-10 border-t border-border pt-8">
             <div className="flex items-center justify-between gap-4 pb-6 border-b border-border/60">
               <div className="flex items-center gap-3">

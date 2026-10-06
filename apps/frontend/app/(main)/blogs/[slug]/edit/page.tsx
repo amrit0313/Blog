@@ -55,6 +55,7 @@ export default function EditBlogPage({
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<"draft" | "submitted">("draft");
+  const [tagsInput, setTagsInput] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
@@ -94,6 +95,7 @@ export default function EditBlogPage({
         setDescription(fetchedBlog.description);
         setCategory(fetchedBlog.category?._id ?? "");
         setStatus(fetchedBlog.status === "submitted" ? "submitted" : "draft");
+        setTagsInput((fetchedBlog.tags ?? []).join(", "));
         setCategories(categoryRes.result ?? []);
       } catch {
         setError("Failed to load blog. Please try again later.");
@@ -141,6 +143,7 @@ export default function EditBlogPage({
       formData.append("description", description);
       formData.append("category", category);
       formData.append("status", status);
+      formData.append("tags", tagsInput);
       if (image) formData.append("image", image);
 
       await blogApi.updateBySlug(slug, formData);
@@ -260,10 +263,18 @@ export default function EditBlogPage({
           </FormField>
         </div>
 
+        <FormField label="Tags" htmlFor="tags" hint="Separate tags with commas, e.g. travel, food, nepal">
+          <Input
+            id="tags"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="travel, food, nepal"
+          />
+        </FormField>
+
         <FormField label="Cover Image" htmlFor="image">
           {blog?.image && !image && (
             <div className="mb-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imgSrc(blog.image, "blogs")}
                 alt="Current cover"
@@ -283,7 +294,6 @@ export default function EditBlogPage({
           />
           {imagePreview && (
             <div className="mt-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imagePreview}
                 alt="Selected cover preview"

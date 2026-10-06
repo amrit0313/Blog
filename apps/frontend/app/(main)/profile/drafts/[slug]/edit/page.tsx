@@ -61,6 +61,7 @@ export default function EditDraft({
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
+  const [tagsInput, setTagsInput] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export default function EditDraft({
         setDescription(fetchedBlog.description);
         setCategory(fetchedBlog.category?._id ?? "");
         setStatus(fetchedBlog.status === "submitted" ? "submitted" : "draft");
+        setTagsInput((fetchedBlog.tags ?? []).join(", "));
         setCategories(categoryRes.result ?? []);
       } catch {
         setError("Failed to load blog. Please try again later.");
@@ -141,6 +143,8 @@ export default function EditDraft({
       formData.append("description", description);
       formData.append("category", category);
       formData.append("status", status);
+      formData.append("tags", tagsInput);
+
       if (image) formData.append("image", image);
 
       await blogApi.updateBySlug(slug, formData);
@@ -260,6 +264,14 @@ export default function EditDraft({
           </FormField>
         </div>
 
+        <FormField label="Tags" htmlFor="tags" hint="Separate tags with commas, e.g. travel, food, nepal">
+          <Input
+            id="tags"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder="travel, food, nepal"
+          />
+        </FormField>
         <FormField label="Cover Image" htmlFor="image">
           {blog?.image && !image && (
             <div className="mb-3">

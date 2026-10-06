@@ -36,6 +36,7 @@ function BlogsFeed() {
   const searchParams = useSearchParams();
   const search = searchParams.get("search") ?? "";
   const category = searchParams.get("category") ?? "";
+  const tag = searchParams.get("tag") ?? "";
   const limit = 7;
 
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -75,7 +76,7 @@ function BlogsFeed() {
     setPage(1);
 
     blogApi
-      .list({ page: 1, limit, search, category })
+      .list({ page: 1, limit, search, category,tag })
       .then((res) => {
         if (requestIdRef.current !== currentRequestId) return;
         const fetched = res.result ?? [];
@@ -95,7 +96,7 @@ function BlogsFeed() {
           isFetchingRef.current = false;
         }
       });
-  }, [search, category]);
+  }, [search, category,tag]);
 
   const loadMore = useCallback(async () => {
     if (loading || loadingMore || !hasMore || isFetchingRef.current) return;
@@ -107,7 +108,13 @@ function BlogsFeed() {
     const currentRequestId = requestIdRef.current;
 
     try {
-      const res = await blogApi.list({ page: nextPage, limit, search, category });
+      const res = await blogApi.list({
+        page: nextPage,
+        limit,
+        search,
+        category,
+        tag,
+      });
       if (requestIdRef.current !== currentRequestId) return;
 
       const newItems = res.result ?? [];
@@ -129,7 +136,7 @@ function BlogsFeed() {
         setLoadingMore(false);
       }
     }
-  }, [loading, loadingMore, hasMore, page, search, category, limit]);
+  }, [loading, loadingMore, hasMore, page, search, category, tag, limit]);
 
   useEffect(() => {
     if (!hasMore || loading || loadingMore || fetchMoreError) return;
@@ -141,7 +148,7 @@ function BlogsFeed() {
           void loadMore();
         }
       },
-      { rootMargin: "300px" }
+      { rootMargin: "300px" },
     );
 
     const currentSentinel = sentinelRef.current;
@@ -166,12 +173,25 @@ function BlogsFeed() {
       params.set("page", "1");
       router.push(`/blogs?${params.toString()}`);
     },
-    [router, searchParams]
+    [router, searchParams],
+  );
+
+  const handleTagSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set("tag", value);
+      } else {
+        params.delete("tag");
+      }
+      params.set("page", "1");
+      router.push(`/blogs?${params.toString()}`);
+    },
+    [router, searchParams],
   );
 
   return (
     <div className="min-h-screen bg-background">
-
       <div className="mx-auto max-w-8xl px-6 py-10 lg:px-8">
         <div className="mx-auto max-w-[780px]">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -179,7 +199,12 @@ function BlogsFeed() {
             <SearchBox
               initialValue={search}
               onSearch={handleSearch}
-              placeholder="Search blogs..."
+              placeholder="Search by title "
+            />
+            <SearchBox
+              initialValue={tag}
+              onSearch={handleTagSearch}
+              placeholder="Search by tag"
             />
           </div>
 
@@ -192,8 +217,12 @@ function BlogsFeed() {
 
           {!loading && fetchError && (
             <div className="py-20 text-center">
-              <h2 className="text-xl font-bold text-foreground">Unable to load blogs</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Please check your connection and try again.</p>
+              <h2 className="text-xl font-bold text-foreground">
+                Unable to load blogs
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Please check your connection and try again.
+              </p>
               <button
                 type="button"
                 onClick={() => {

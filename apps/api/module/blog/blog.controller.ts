@@ -65,7 +65,7 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
   let uploaded: { key: string; url: string } | null = null;
 
   try {
-    const { title, category, description, status } = req.body;
+    const { title, category, description, status, tags } = req.body;
 
     if (!title || !category || !description) {
       return res.status(400).json({ message: "Invalid request" });
@@ -81,11 +81,19 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ message: "Invalid category" });
     }
 
-    const slug = await generateUniqueSlug(title);
-
     if (req?.file) {
       uploaded = await storage.upload(req?.file, { folder: "blogs" });
     }
+
+    const parsedTags =
+      typeof tags === "string"
+        ? tags
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : Array.isArray(tags)
+          ? tags
+          : [];
 
     const newBlog = await blog.create({
       title,
@@ -95,6 +103,7 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
       author: req.user!.id,
       status: status ?? "draft",
       image: uploaded ?? undefined,
+      tags: parsedTags,
     });
 
     res.status(201).json({
@@ -251,6 +260,7 @@ const makeSnippet = (text = "", term: string, size = 80) => {
  * @param {NextFunction} next Express error handler for database or query failures.
  * @returns Resolves after sending the result page or forwarding an error to Express.
  */
+
 const ListAllBlogs = async (
   req: Request,
   res: Response,
@@ -302,6 +312,21 @@ const ListAllBlogs = async (
       conditions.push({ category: { $in: matched.map((c) => c._id) } });
     }
 
+    if (typeof req.query.tag === "string" && req.query.tag.trim()) {
+      filter.tags = new RegExp(
+        escapeRegex(req.query.tag.trim().toLowerCase()),
+        "i",
+      );
+    }
+
+    if (req.user) {
+      filter.$or = [
+        { status: "published" },
+        { status: "draft", author: req.user.id },
+      ];
+    } else {
+      filter.status = "published";
+    }
     const filter = { $and: conditions };
 
     const [count, rows] = await Promise.all([
@@ -423,8 +448,11 @@ const BlogUpdateBySlug = async (
       throw createError("Blog not found", 404);
     }
 
+    if (!req.user) {
+      throw createError("Not authorized to modify this blog", 401);
+    }
+
     if (
-      req.user &&
       existing.author.toString() !== req.user.id &&
       req.user.role !== "admin"
     ) {
@@ -434,6 +462,18 @@ const BlogUpdateBySlug = async (
     const data = req.body;
 
     delete data.slug;
+
+    if (data.tags !== undefined) {
+      data.tags =
+        typeof data.tags === "string"
+          ? data.tags
+              .split(",")
+              .map((t: string) => t.trim())
+              .filter(Boolean)
+          : Array.isArray(data.tags)
+            ? data.tags
+            : [];
+    }
 
     if (req.file) {
       uploaded = await storage.upload(req.file, { folder: "blogs" });

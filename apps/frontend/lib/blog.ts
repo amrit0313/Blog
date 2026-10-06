@@ -25,7 +25,8 @@ export interface Blog {
   updatedAt: string;
   author: BlogAuthor;
   category?: BlogCategory;
-  likes?: string[]; // array of user IDs who liked this blog
+  tags?: string[]; 
+  likes?: string[]; 
 }
 
 /** Pagination metadata for a blog list. */
@@ -69,12 +70,14 @@ export const blogApi = {
     limit?: number;
     search?: string;
     category?: string;
+    tag?: string;
   }) {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
     if (params?.limit) query.set("limit", String(params.limit));
     if (params?.search) query.set("search", params.search);
     if (params?.category) query.set("category", params.category);
+     if (params?.tag) query.set("tag", params.tag);
 
     const qs = query.toString();
     return apiRequest<BlogListApiResponse>(`/blog${qs ? `?${qs}` : ""}`, {
