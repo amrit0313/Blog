@@ -27,6 +27,7 @@ export interface AdminBlog {
     _id: string;
     title?: string;
   };
+  tags: string[];
 }
 
 /** Category data returned by administrator endpoints. */
@@ -158,6 +159,7 @@ export const adminApi = {
     search?: string;
     author?: string;
     status?: string;
+    tag?: string;
   }) {
     const query = new URLSearchParams();
     if (params?.page) query.set("page", String(params.page));
@@ -165,6 +167,7 @@ export const adminApi = {
     if (params?.search) query.set("search", params.search);
     if (params?.author) query.set("author", params.author);
     if (params?.status) query.set("status", params.status);
+    if (params?.tag) query.set("tag", params.tag);
 
     const qs = query.toString();
     return apiRequest<{
@@ -209,3 +212,5 @@ export const adminApi = {
 };
 
 export { ApiError };
+
+
