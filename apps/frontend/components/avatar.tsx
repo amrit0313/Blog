@@ -1,8 +1,8 @@
 import { FaCircleUser } from "react-icons/fa6";
-import { imgSrc } from "../utils/getImgSrc";
+import { imgSrc, type ImageReference } from "../utils/getImgSrc";
 
 interface AvatarProps {
-  src?: string | null;
+  src?: ImageReference | string | null;
   name?: string;
   className?: string;
   fallback?: "initials" | "icon";
