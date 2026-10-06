@@ -304,6 +304,7 @@ const ListAllBlogs = async (
           { title: re },
           { description: re },
           { author: { $in: matchedAuthors.map((u: any) => u._id) } },
+          {tags:re}
         ],
       });
     }
@@ -330,7 +331,11 @@ const ListAllBlogs = async (
       blog.countDocuments(filter),
       blog
         .find(filter)
-        .populate("author", ["_id", "name"])
+        .populate({
+          path: "author",
+          select: "_id name",
+          populate: { path: "profile", select: "avatar" },
+        })
         .populate("category", ["_id", "title"])
         .sort({ _id: -1 })
         .skip(skip)

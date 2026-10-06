@@ -5,6 +5,9 @@ export interface BlogAuthor {
   _id: string;
   name?: string;
   email?: string;
+  profile?: {
+    avatar?: string | { key?: string; url?: string };
+  };
 }
 
 /** Category information associated with a blog. */

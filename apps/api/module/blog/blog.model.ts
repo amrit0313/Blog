@@ -67,9 +67,8 @@ const BlogSchema = new mongoose.Schema(
 BlogSchema.index({ tags: 1 });
 
 BlogSchema.index(
-  { title: "text", description: "text", author: "text" },
-  { weights: { title: 10, description: 5, author: 1 } },
+  { title: "text", description: "text", author: "text", tags: "text" },
+  { weights: { title: 10, tags: 7, description: 5, author: 1 } },
 );
-
 export type BlogType = mongoose.InferSchemaType<typeof BlogSchema>;
 export default mongoose.model("Blog", BlogSchema);
