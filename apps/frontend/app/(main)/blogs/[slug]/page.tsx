@@ -515,16 +515,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
               </Button>
             </div>
           )}
-             {blog.tags && blog.tags.length > 0 && (
+          {blog.tags && blog.tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {blog.tags.map((tag) => (
-                <Link
-                  key={tag}
-                  href={`/blogs?tag=${encodeURIComponent(tag)}`}
-                  className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                >
+                <div key={tag} className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                   {tag}
-                </Link>
+                </div>
               ))}
             </div>
           )}
