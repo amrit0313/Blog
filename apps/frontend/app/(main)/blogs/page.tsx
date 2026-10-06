@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { blogApi, type Blog } from "../../../lib/blog";
 import { categoryApi, type Category } from "../../../lib/category";
@@ -47,7 +46,6 @@ function BlogsFeed() {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<boolean>(false);
   const [fetchMoreError, setFetchMoreError] = useState<boolean>(false);
-  const [totalBlogs, setTotalBlogs] = useState<number>(0);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef<number>(0);
@@ -67,36 +65,45 @@ function BlogsFeed() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     window.scrollTo({ top: 0, behavior: "smooth" });
     const currentRequestId = ++requestIdRef.current;
     isFetchingRef.current = true;
-    setLoading(true);
-    setFetchError(false);
-    setFetchMoreError(false);
-    setPage(1);
 
-    blogApi
-      .list({ page: 1, limit, search, category,tag })
-      .then((res) => {
+    async function loadBlogs() {
+      await Promise.resolve();
+      if (cancelled || requestIdRef.current !== currentRequestId) return;
+
+      setLoading(true);
+      setFetchError(false);
+      setFetchMoreError(false);
+      setPage(1);
+
+      try {
+        const res = await blogApi.list({ page: 1, limit, search, category, tag });
         if (requestIdRef.current !== currentRequestId) return;
         const fetched = res.result ?? [];
         setBlogs(fetched);
-        setTotalBlogs(res.meta?.totalBlogs ?? fetched.length);
         setHasMore(1 < (res.meta?.totalPages ?? 1));
         setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         if (requestIdRef.current !== currentRequestId) return;
         setLoading(false);
         setFetchError(true);
         toast.error("Unable to load blogs.");
-      })
-      .finally(() => {
+      } finally {
         if (requestIdRef.current === currentRequestId) {
           isFetchingRef.current = false;
         }
-      });
-  }, [search, category,tag]);
+      }
+    }
+
+    void loadBlogs();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [search, category, tag]);
 
   const loadMore = useCallback(async () => {
     if (loading || loadingMore || !hasMore || isFetchingRef.current) return;
@@ -213,11 +220,10 @@ function BlogsFeed() {
                   setLoading(true);
                   setFetchError(false);
                   blogApi
-                    .list({ page: 1, limit, search, category })
+                    .list({ page: 1, limit, search, category, tag })
                     .then((res) => {
                       const fetched = res.result ?? [];
                       setBlogs(fetched);
-                      setTotalBlogs(res.meta?.totalBlogs ?? fetched.length);
                       setHasMore(1 < (res.meta?.totalPages ?? 1));
                     })
                     .catch(() => {

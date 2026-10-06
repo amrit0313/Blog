@@ -76,11 +76,7 @@ export default function BlogFeedCard({
     ? getDescriptionPreview(blog.description)
     : "";
   const imageUrl = blog.image ? imgSrc(blog.image, "blogs") : null;
-  const authorAvatar =
-    typeof blog.author?.profile?.avatar === "string"
-      ? blog.author.profile.avatar
-      : (blog.author?.profile?.avatar?.url ??
-        blog.author?.profile?.avatar?.key);
+  const authorAvatar = blog.author?.profile?.avatar;
 
   const handleShare = async () => {
     const url =
