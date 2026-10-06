@@ -192,7 +192,10 @@ const BlogDetailBySlug = async (
     }
 
     // 2. Count the view only for published posts and non-authors
-    if (Blog.status === "published" && !isAuthor) {
+    if (
+      (Blog.status === "published" || Blog.status === "featured") &&
+      !isAuthor
+    ) {
       await blog.updateOne({ _id: Blog._id }, { $inc: { views: 1 } });
       Blog.views = (Blog.views ?? 0) + 1; // reflect the new count in the response
     }
@@ -283,12 +286,12 @@ const ListAllBlogs = async (
     if (req.user) {
       conditions.push({
         $or: [
-          { status: "published" },
+          { status: { $in: ["published", "featured"] } },
           { status: "draft", author: req.user.id },
         ],
       });
     } else {
-      conditions.push({ status: "published" });
+      conditions.push({ status: { $in: ["published", "featured"] } });
     }
 
     const search =
@@ -380,11 +383,11 @@ const AllBlogsFiltering = async (
 
     if (req.user) {
       parsedQuery.$or = [
-        { status: "published" },
+        { status: { $in: ["published", "featured"] } },
         { status: "draft", author: req.user.id },
       ];
     } else {
-      parsedQuery.status = "published";
+      parsedQuery.status = { $in: ["published", "featured"] };
     }
 
     let allBlogs = blog.find(parsedQuery);
@@ -615,7 +618,7 @@ const GetBlogsByAuthor = async (
 
     const filter: Record<string, any> = {
       author: authorId,
-      status: "published",
+      status: { $in: ["published", "featured"] },
     };
 
     const [count, data] = await Promise.all([
@@ -690,6 +693,7 @@ const AdminListAllBlogs = async (
     const allowedStatuses = [
       "submitted",
       "published",
+      "featured",
       "unpublished",
       "rejected",
     ];
