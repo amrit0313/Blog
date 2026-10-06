@@ -176,19 +176,7 @@ function BlogsFeed() {
     [router, searchParams],
   );
 
-  const handleTagSearch = useCallback(
-    (value: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set("tag", value);
-      } else {
-        params.delete("tag");
-      }
-      params.set("page", "1");
-      router.push(`/blogs?${params.toString()}`);
-    },
-    [router, searchParams],
-  );
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,13 +187,9 @@ function BlogsFeed() {
             <SearchBox
               initialValue={search}
               onSearch={handleSearch}
-              placeholder="Search by title "
+              placeholder="Search blogs "
             />
-            <SearchBox
-              initialValue={tag}
-              onSearch={handleTagSearch}
-              placeholder="Search by tag"
-            />
+          
           </div>
 
           {loading && (
