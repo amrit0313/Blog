@@ -73,8 +73,9 @@ const createBlog = async (req: Request, res: Response, next: NextFunction) => {
     if (status !== "draft" && status !== "submitted") {
       return res.status(400).json({ message: "Invalid blog status" });
     }
+    let slug;
     if (title) {
-      const slug = await generateUniqueSlug(title);
+      slug = await generateUniqueSlug(title);
     }
 
     if (!mongoose.isValidObjectId(category)) {
@@ -290,7 +291,7 @@ const ListAllBlogs = async (
       typeof req.query.search === "string" ? req.query.search.trim() : "";
     if (search) {
       const re = new RegExp(escapeRegex(search), "i");
-//regex works on user's name(string), so look up matching users first
+      //regex works on user's name(string), so look up matching users first
       const matchedAuthors = await User.find({ name: re }).select("_id").lean();
       conditions.push({
         $or: [
@@ -313,20 +314,11 @@ const ListAllBlogs = async (
     }
 
     if (typeof req.query.tag === "string" && req.query.tag.trim()) {
-      filter.tags = new RegExp(
-        escapeRegex(req.query.tag.trim().toLowerCase()),
-        "i",
-      );
+      conditions.push({
+        tags: new RegExp(escapeRegex(req.query.tag.trim().toLowerCase()), "i"),
+      });
     }
 
-    if (req.user) {
-      filter.$or = [
-        { status: "published" },
-        { status: "draft", author: req.user.id },
-      ];
-    } else {
-      filter.status = "published";
-    }
     const filter = { $and: conditions };
 
     const [count, rows] = await Promise.all([
