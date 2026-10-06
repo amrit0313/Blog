@@ -14,7 +14,7 @@ export interface AdminBlog {
   title: string;
   slug: string;
   description: string;
-  status: "draft" | "published" | "unpublished" | "rejected" | "submitted";
+  status: "draft" | "published" | "unpublished" | "rejected" | "submitted" | "featured";
   image?: string;
   createdAt: string;
   updatedAt: string;
@@ -209,8 +209,15 @@ export const adminApi = {
       method: "PATCH",
     });
   },
+
+  /** Promotes a published blog to the featured status. */
+  featureBlog(id: string) {
+    return apiRequest<{ message: string; updatedBlog: AdminBlog }>(
+      `/admin/blog/${id}/featured`,
+      { method: "PATCH" },
+    );
+  },
 };
 
 export { ApiError };
-
 

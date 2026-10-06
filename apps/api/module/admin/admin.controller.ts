@@ -198,20 +198,32 @@ const addFeatureBlog = async (
 ): Promise<Response> => {
   try {
     const id = req.params.id;
-    const blog = await Blog.findByIdAndUpdate(
-      { id },
-      { status: "featured" },
-      { new: true, runValidators: true },
-    );
     if (!isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid blog id" });
     }
+
+    const existingBlog = await Blog.findById(id);
+    if (!existingBlog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    if (existingBlog.status !== "published" && existingBlog.status !== "featured") {
+      return res
+        .status(400)
+        .json({ message: "Only published blogs can be featured" });
+    }
+
+    await Blog.updateMany(
+      { status: "featured", _id: { $ne: existingBlog._id } },
+      { $set: { status: "published" } },
+    );
+    existingBlog.status = "featured";
+    await existingBlog.save();
+
     return res.status(200).json({
-      message: "Blog status updated successfully",
-      updatedBlog: blog,
+      message: "Blog featured successfully",
+      updatedBlog: existingBlog,
     });
   } catch (err) {
-    console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };

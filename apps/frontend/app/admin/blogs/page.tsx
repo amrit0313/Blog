@@ -24,6 +24,8 @@ export default function AdminBlogsPage() {
   const [tag, setTag] = useState("");
   const [unpublishTarget, setUnpublishTarget] = useState<Blog | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
+  const [featureTarget, setFeatureTarget] = useState<Blog | null>(null);
+  const [featuring, setFeaturing] = useState(false);
 
   async function handleConfirmUnpublish() {
     if (!unpublishTarget) return;
@@ -41,6 +43,29 @@ export default function AdminBlogsPage() {
       toast.error("Failed to unpublish blog.");
     } finally {
       setUnpublishing(false);
+    }
+  }
+
+  async function handleConfirmFeature() {
+    if (!featureTarget) return;
+    setFeaturing(true);
+    try {
+      await adminApi.featureBlog(featureTarget._id);
+      toast.success("Blog featured");
+      setRows((prev) =>
+        prev.map((b) =>
+          b._id === featureTarget._id
+            ? { ...b, status: "featured" }
+            : b.status === "featured"
+              ? { ...b, status: "published" }
+              : b
+        )
+      );
+      setFeatureTarget(null);
+    } catch {
+      toast.error("Failed to feature blog.");
+    } finally {
+      setFeaturing(false);
     }
   }
 
@@ -68,7 +93,17 @@ export default function AdminBlogsPage() {
     {
       field: "status", headerName: "Status", width: 130,
       renderCell: (p) => (
-        <Chip size="small" label={p.value} color={p.value === "published" ? "success" : "warning"} />
+        <Chip
+          size="small"
+          label={p.value}
+          color={
+            p.value === "featured"
+              ? "info"
+              : p.value === "published"
+                ? "success"
+                : "warning"
+          }
+        />
       ),
     },
     {
@@ -76,9 +111,19 @@ export default function AdminBlogsPage() {
       valueFormatter: (v) => new Date(v).toLocaleDateString(),
     },
     {
-      field: "actions", headerName: "Actions", width: 140, sortable: false,
+      field: "actions", headerName: "Actions", width: 220, sortable: false,
       renderCell: (p) => (
         <Box sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}>
+          <Button
+            size="small"
+            disabled={p.row.status !== "published"}
+            onClick={(e) => {
+              e.stopPropagation();
+              setFeatureTarget(p.row);
+            }}
+          >
+            Feature
+          </Button>
           <Button
             size="small"
             disabled={p.row.status !== "published"}
@@ -137,6 +182,7 @@ export default function AdminBlogsPage() {
             <MenuItem value="">All statuses</MenuItem>
             <MenuItem value="submitted">Submitted</MenuItem>
             <MenuItem value="published">Published</MenuItem>
+            <MenuItem value="featured">Featured</MenuItem>
             <MenuItem value="unpublished">Unpublished</MenuItem>
             <MenuItem value="rejected">Rejected</MenuItem>
           </TextField>
@@ -183,6 +229,31 @@ export default function AdminBlogsPage() {
             disabled={unpublishing}
           >
             {unpublishing ? "Unpublishing..." : "Yes, Unpublish"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(featureTarget)}
+        onClose={() => !featuring && setFeatureTarget(null)}
+      >
+        <DialogTitle>Feature Blog</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Feature this blog on the homepage? It will replace the current featured blog.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFeatureTarget(null)} disabled={featuring}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmFeature}
+            color="primary"
+            variant="contained"
+            disabled={featuring}
+          >
+            {featuring ? "Featuring..." : "Yes, Feature"}
           </Button>
         </DialogActions>
       </Dialog>

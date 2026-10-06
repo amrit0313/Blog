@@ -59,6 +59,7 @@ export interface AnalyticsData {
 }
 
 const STATUS_COLORS: Record<Blog["status"], string> = {
+  featured: "#b91c1c",     // highlighted published post
   published: "#dc2626",    // strongest red
   rejected: "#b91c1c",     // deep, darker red
   submitted: "#ef4444",    // medium red
@@ -115,7 +116,10 @@ export function useAnalyticsData(): AnalyticsData {
   const totalPosts = blogs.length;
 
   const publishedPosts = useMemo(
-    () => blogs.filter((b) => b.status === "published").length,
+    () =>
+      blogs.filter(
+        (b) => b.status === "published" || b.status === "featured",
+      ).length,
     [blogs],
   );
 
@@ -199,6 +203,7 @@ export function useAnalyticsData(): AnalyticsData {
       counts[b.status] = (counts[b.status] ?? 0) + 1;
     });
     const labels: Record<Blog["status"], string> = {
+      featured: "Featured",
       published: "Published",
       draft: "Draft",
       unpublished: "Unpublished",

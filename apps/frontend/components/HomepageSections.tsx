@@ -69,7 +69,7 @@ export default function HomepageSections({
   onStartWriting,
 }: HomepageSectionsProps) {
   const featuredBlog = blogs.find(
-    (blog) => blog.category?.title?.toLowerCase() === "featured",
+    (blog) => blog.status === "featured",
   );
 
   return (

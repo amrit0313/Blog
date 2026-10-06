@@ -19,7 +19,7 @@ export interface Blog {
   title: string;
   slug: string;
   description: string;
-  status: "draft" | "published" | "unpublished" | "submitted" | "rejected";
+  status: "draft" | "published" | "unpublished" | "submitted" | "rejected" | "featured";
   image?: string | { key?: string; url?: string };
   createdAt: string;
   updatedAt: string;

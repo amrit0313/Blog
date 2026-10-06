@@ -15,6 +15,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { TopPost } from "./useAnalyticsData";
 
 const STATUS_COLORS: Record<string, string> = {
+  featured: "#b91c1c",
   published: "#e63946",
   draft: "#f4a261",
   unpublished: "#6b7280",
