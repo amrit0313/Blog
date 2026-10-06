@@ -21,6 +21,7 @@ export default function AdminBlogsPage() {
   const [search, setSearch] = useState("");
   const [authorSearch, setAuthorSearch] = useState("");
   const [status, setStatus] = useState("");
+  const [tag, setTag] = useState("");
   const [unpublishTarget, setUnpublishTarget] = useState<Blog | null>(null);
   const [unpublishing, setUnpublishing] = useState(false);
 
@@ -52,13 +53,14 @@ export default function AdminBlogsPage() {
         search: search || undefined,
         author: authorSearch || undefined,
         status: status || undefined,
+        tag: tag || undefined,
       })
       .then((res) => {
         setRows(res.result);
         setRowCount(res.meta.totalBlogs);
       })
       .finally(() => setLoading(false));
-  }, [paginationModel, search, authorSearch, status]);
+  }, [paginationModel, search, authorSearch, status, tag]);
 
   const columns: GridColDef<Blog>[] = [
     { field: "title", headerName: "Title", flex: 1, minWidth: 200 },
@@ -103,7 +105,7 @@ export default function AdminBlogsPage() {
               setSearch(value);
               setPaginationModel((prev) => ({ ...prev, page: 0 }));
             }}
-            placeholder="Search blogs..."
+            placeholder="Search by title"
           />
           <SearchBox
             initialValue={authorSearch}
@@ -111,7 +113,15 @@ export default function AdminBlogsPage() {
               setAuthorSearch(value);
               setPaginationModel((prev) => ({ ...prev, page: 0 }));
             }}
-            placeholder="Search by author..."
+            placeholder="Search by author"
+          />
+          <SearchBox
+            initialValue={tag}
+            onSearch={(value) => {
+              setTag(value);
+              setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            }}
+            placeholder="Search by tag"
           />
           <TextField
             select

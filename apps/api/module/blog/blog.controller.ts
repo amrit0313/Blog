@@ -274,7 +274,6 @@ const ListAllBlogs = async (
 
     const conditions: Record<string, any>[] = [];
 
-    // visibility
     if (req.user) {
       conditions.push({
         $or: [
@@ -286,12 +285,10 @@ const ListAllBlogs = async (
       conditions.push({ status: "published" });
     }
 
-    // search across title, description and body
     const search =
       typeof req.query.search === "string" ? req.query.search.trim() : "";
     if (search) {
       const re = new RegExp(escapeRegex(search), "i");
-      //regex works on user's name(string), so look up matching users first
       const matchedAuthors = await User.find({ name: re }).select("_id").lean();
       conditions.push({
         $or: [
@@ -302,7 +299,6 @@ const ListAllBlogs = async (
       });
     }
 
-    // category
     if (typeof req.query.category === "string" && req.query.category.trim()) {
       const matched = await categoryModel
         .find({
@@ -644,8 +640,8 @@ const GetBlogsByAuthor = async (
 };
 
 /**
- * Lists non-draft blogs for the admin page with title, author, and status filters.
- * @param {Request} req Express request containing pagination and optional title, author, and status query filters.
+ * Lists non-draft blogs for the admin page with title, author, status, and tag filters.
+ * @param {Request} req Express request containing pagination and optional title, author, status, and tag query filters.
  * @param {Response} res Express response used to return the matching blogs and pagination metadata.
  * @param {NextFunction} next Express error handler for query or database failures.
  * @returns Resolves after sending the result page or forwarding an error to Express.
@@ -698,6 +694,24 @@ const AdminListAllBlogs = async (
       filter.status = req.query.status;
     }
 
+    const tagConditions: Record<string, any>[] = [];
+    if (typeof req.query.tags === "string" && req.query.tags.trim()) {
+      const tagList = req.query.tags
+        .split(",")
+        .map((t) => t.trim().toLowerCase());
+      tagConditions.push({ tags: { $in: tagList } });
+    }
+    if (typeof req.query.tag === "string" && req.query.tag.trim()) {
+      tagConditions.push({
+        tags: new RegExp(escapeRegex(req.query.tag.trim().toLowerCase()), "i"),
+      });
+    }
+    if (tagConditions.length === 1) {
+      Object.assign(filter, tagConditions[0]);
+    } else if (tagConditions.length > 1) {
+      filter.$and = tagConditions;
+    }
+    
     const count = await blog.countDocuments(filter);
 
     const data = await blog
