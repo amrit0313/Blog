@@ -2,6 +2,7 @@ import Blog from "../blog/blog.model";
 import { Request, Response } from "express";
 import { User } from "../user/user.model";
 import bcrypt from "bcryptjs";
+import { isValidObjectId } from "mongoose";
 
 /**
  * Deletes a blog by its ID.
@@ -9,7 +10,6 @@ import bcrypt from "bcryptjs";
  * @param {Response} res Express response used to return the deletion result.
  * @returns {Promise<Response>} JSON response with success, not-found, or server-error details.
  */
-
 
 const deleteBlogs = async (req: Request, res: Response) => {
   try {
@@ -25,8 +25,6 @@ const deleteBlogs = async (req: Request, res: Response) => {
       .json({ message: "Server error", error: err.message });
   }
 };
-
-
 
 /**
  * Promotes an existing user to the admin role.
@@ -55,7 +53,6 @@ const addAnotherAdmin = async (req: Request, res: Response) => {
       .json({ message: "Server error", error: err.message });
   }
 };
-
 
 /**
  * Deletes a user unless the target user is an admin.
@@ -88,17 +85,21 @@ const deleteUser = async (req: Request, res: Response) => {
  * @param {Response} res Express response used to return the created user or an error message.
  * @returns {Promise<Response>} JSON response containing the new user or validation/conflict/server error details.
  */
-const createUser = async (req: Request, res: Response) => {
+const createUser = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email, and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Name, email, and password are required" });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ message: "A user with this email already exists" });
+      return res
+        .status(409)
+        .json({ message: "A user with this email already exists" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -112,7 +113,12 @@ const createUser = async (req: Request, res: Response) => {
 
     return res.status(201).json({
       message: "User created successfully",
-      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err: any) {
     return res
@@ -127,7 +133,7 @@ const createUser = async (req: Request, res: Response) => {
  * @param {Response} res Express response used to return the verification result.
  * @returns {Promise<Response>} JSON response containing the published blog or an error message.
  */
-const verifyBlog = async (req: Request, res: Response) => {
+const verifyBlog = async (req: Request, res: Response): Promise<Response> => {
   try {
     const id = req.params.id;
     const blog = await Blog.findById(id);
@@ -135,11 +141,15 @@ const verifyBlog = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Blog not found" });
     }
     if (blog.status !== "submitted") {
-      return res.status(400).json({ message: "Only submitted blogs can be verified" });
+      return res
+        .status(400)
+        .json({ message: "Only submitted blogs can be verified" });
     }
     blog.status = "published";
     await blog.save();
-    return res.status(200).json({ message: "Blog verified and published", blog });
+    return res
+      .status(200)
+      .json({ message: "Blog verified and published", blog });
   } catch (err: any) {
     return res
       .status(500)
@@ -153,7 +163,7 @@ const verifyBlog = async (req: Request, res: Response) => {
  * @param {Response} res Express response used to return the rejection result.
  * @returns {Promise<Response>} JSON response containing the rejected blog or an error message.
  */
-const rejectBlog = async (req: Request, res: Response) => {
+const rejectBlog = async (req: Request, res: Response): Promise<Response> => {
   try {
     const id = req.params.id;
     const blog = await Blog.findById(id);
@@ -161,7 +171,9 @@ const rejectBlog = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Blog not found" });
     }
     if (blog.status !== "submitted") {
-      return res.status(400).json({ message: "Only submitted blogs can be rejected" });
+      return res
+        .status(400)
+        .json({ message: "Only submitted blogs can be rejected" });
     }
     blog.status = "rejected";
     await blog.save();
@@ -173,5 +185,43 @@ const rejectBlog = async (req: Request, res: Response) => {
   }
 };
 
-export { deleteBlogs, addAnotherAdmin, deleteUser, createUser, verifyBlog, rejectBlog };
+/**
+ * Rejects a submitted blog after admin review.
+ * @param {Request} req Express request containing the blog ID in `params.id`.
+ * @param {Response} res Express response used to return the updated blog.
+ * @returns {Promise<Response>} JSON response containing the updated blog or an error message.
+ */
 
+const addFeatureBlog = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const id = req.params.id;
+    const blog = await Blog.findByIdAndUpdate(
+      { id },
+      { status: "featured" },
+      { new: true, runValidators: true },
+    );
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid blog id" });
+    }
+    return res.status(200).json({
+      message: "Blog status updated successfully",
+      updatedBlog: blog,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export {
+  deleteBlogs,
+  addAnotherAdmin,
+  deleteUser,
+  createUser,
+  verifyBlog,
+  rejectBlog,
+  addFeatureBlog,
+};

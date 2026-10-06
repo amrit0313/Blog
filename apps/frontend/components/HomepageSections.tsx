@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { Chip, Stack } from "@mui/material";
 import Button from "./ui/Button";
 import type { Blog } from "../lib/blog";
 import { Category } from "../lib/category";
 import { imgSrc } from "../utils/getImgSrc";
-
-const subscribeToHydration = () => () => {};
-const getClientHydrationSnapshot = () => true;
-const getServerHydrationSnapshot = () => false;
+import FeaturedSection from "./FeaturedSection";
 
 const getDescriptionPreview = (html: string) =>
   html
@@ -72,10 +68,8 @@ export default function HomepageSections({
   categories,
   onStartWriting,
 }: HomepageSectionsProps) {
-  const hasMounted = useSyncExternalStore(
-    subscribeToHydration,
-    getClientHydrationSnapshot,
-    getServerHydrationSnapshot,
+  const featuredBlog = blogs.find(
+    (blog) => blog.category?.title?.toLowerCase() === "featured",
   );
 
   return (
@@ -206,39 +200,11 @@ export default function HomepageSections({
               ))}
         </div>
 
-        <Reveal className="mt-28">
-          <p className="eyebrow mb-3">Find your next rabbit hole</p>
-          <h2 className="text-3xl sm:text-4xl">Explore by topic</h2>
-          <Stack
-            direction="row"
-            useFlexGap
-            spacing={1.5}
-            sx={{ mt: 3.5, flexWrap: "wrap" }}
-          >
-            {categories?.map((topic: Category) => (
-              <Chip
-                key={topic._id}
-                component={Link}
-                href={`/blogs?category=${topic.title}`}
-                clickable
-                label={topic.title}
-                className="topic-chip"
-                sx={{
-                  height: 42,
-                  borderRadius: 999,
-                  backgroundColor: "white",
-                  border: "1px solid var(--border)",
-                  fontWeight: 600,
-                  "&:hover": {
-                    borderColor: "var(--primary)",
-                    color: "var(--primary)",
-                    backgroundColor: "var(--secondary)",
-                  },
-                }}
-              />
-            ))}
-          </Stack>
-        </Reveal>
+        <FeaturedSection
+          categories={categories}
+          featuredBlog={featuredBlog}
+          isBlogsLoading={isBlogsLoading}
+        />
 
         <Reveal className="mt-28">
           <div className="max-w-2xl">
@@ -274,7 +240,7 @@ export default function HomepageSections({
           </h2>
           <Button
             onClick={onStartWriting}
-            disabled={hasMounted && isAuthLoading}
+            disabled={isAuthLoading}
             className="mt-8 rounded-md bg-primary px-7 py-3 font-semibold text-primary no-underline hover:bg-white hover:text-red-500! hover:border hover:border-red-500!"
           >
             Start writing
