@@ -117,7 +117,7 @@ export default function BlogFeedCard({
         <div className="flex items-center gap-2">
           {blog.category?.title && (
             <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-              <Highlight text={blog.title} query={search} />
+              <Highlight text={blog.category.title} query={search} />git 
             </span>
           )}
 
