@@ -28,7 +28,7 @@ const BlogSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "published", "unpublished", "submitted", "rejected"],
+      enum: ["draft", "published", "unpublished", "submitted", "rejected", "featured"],
       default: "draft",
     },
     likes: [
