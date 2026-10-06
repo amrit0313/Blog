@@ -208,7 +208,15 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
           }
         />
       </Box>
-
+{blog.tags && blog.tags.length > 0 && (
+            <div className="mt-3 mb-4 flex flex-wrap gap-2">
+              {blog.tags.map((tag) => (
+                <div key={tag} className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium  transition-colors hover:border-primary hover:text-primary">
+                  {tag}
+                </div>
+              ))}
+            </div>
+          )}
       {/* Cover image */}
       {blog.image && (
         <Box
@@ -346,3 +354,4 @@ export default function AdminBlogDetailPage({ params }: AdminBlogDetailPageProps
     </Box>
   );
 }
+
