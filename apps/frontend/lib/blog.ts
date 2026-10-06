@@ -26,7 +26,8 @@ export interface Blog {
   author: BlogAuthor;
   category?: BlogCategory;
   tags?: string[]; 
-  likes?: string[]; 
+  likes?: string[];
+  views?: number;
 }
 
 /** Pagination metadata for a blog list. */

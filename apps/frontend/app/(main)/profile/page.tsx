@@ -176,13 +176,21 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-                <Button
-                  href="/profile/edit"
-                  variant="outline"
-                  className="w-full rounded-md px-4 py-2 no-underline"
-                >
-                  Edit Profile
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    href="/profile/edit"
+                    variant="outline"
+                    className="w-full rounded-md px-4 py-2 no-underline"
+                  >
+                    Edit Profile
+                  </Button>
+                  <Button
+                    href="/profile/analytics"
+                    variant="outline"
+                    className="w-full rounded-md px-4 py-2 no-underline">
+                    Analytics
+                  </Button>
+                </div>
               </div>
 
               {profileMissing ? (
@@ -279,6 +287,9 @@ export default function ProfilePage() {
                 </span>
               </Link>
             )}
+
+
+
 
             {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
               <Button
