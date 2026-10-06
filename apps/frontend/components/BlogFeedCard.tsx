@@ -43,6 +43,7 @@ const getDescriptionPreview = (html: string) =>
 
 const statusBadgeStyles: Record<string, string> = {
   published: "bg-green-100 text-green-700",
+  featured: "bg-violet-100 text-violet-700",
   submitted: "bg-yellow-100 text-yellow-700",
   rejected: "bg-red-100 text-red-700",
   unpublished: "bg-gray-100 text-gray-700",
@@ -75,6 +76,7 @@ export default function BlogFeedCard({
     ? getDescriptionPreview(blog.description)
     : "";
   const imageUrl = blog.image ? imgSrc(blog.image, "blogs") : null;
+  const authorAvatar = blog.author?.profile?.avatar;
 
   const handleShare = async () => {
     const url =
@@ -94,17 +96,18 @@ export default function BlogFeedCard({
   return (
     <article className="rounded-xl border border-border bg-card shadow-xs transition-shadow hover:shadow-sm overflow-hidden">
       {/* a. Header */}
-      <div className="flex items-center justify-between p-4 pb-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col items-start gap-3 justify-between p-4 pb-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <Avatar
+            src={authorAvatar}
             name={authorName}
-            className="h-10 w-10 text-sm shrink-0"
+            className="h-11 w-11 shrink-0 text-sm ring-2 ring-background shadow-sm"
             fallback="initials"
           />
-          <div className="leading-tight">
+          <div className="min-w-0 leading-tight">
             <Link
               href={`/authors/${blog.author?._id}`}
-              className="font-semibold text-sm text-foreground block hover:underline"
+              className="block truncate text-sm font-semibold text-foreground transition-colors hover:text-primary"
             >
               <Highlight text={authorName} query={search} />
             </Link>
@@ -114,16 +117,21 @@ export default function BlogFeedCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {blog.category?.title && (
-            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-              <Highlight text={blog.category.title} query={search} />git 
-            </span>
-          )}
+        <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end">
+          {blog?.tags?.map((tag) => {
+            return (
+              <span
+                key={tag}
+                className="rounded-full border border-primary/15 bg-primary/8 px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/15"
+              >
+                <Highlight text={tag} query={search} />
+              </span>
+            );
+          })}
 
           {isProfile && blog.status && (
             <span
-              className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+              className={`rounded-full border border-transparent px-2.5 py-1 text-[11px] font-semibold capitalize ${
                 statusBadgeStyles[blog.status] ??
                 "bg-muted text-muted-foreground"
               }`}
