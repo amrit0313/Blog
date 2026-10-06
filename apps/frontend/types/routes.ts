@@ -18,6 +18,7 @@ export const ROUTES = {
   PROFILE: {
     VIEW: "/profile",
     EDIT: "/profile/edit",
+    ANALYTICS: "/profile/analytics",
   },
 
   ADMIN: {

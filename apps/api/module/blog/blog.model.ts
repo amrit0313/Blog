@@ -28,7 +28,14 @@ const BlogSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "published", "unpublished", "submitted", "rejected", "featured"],
+      enum: [
+        "draft",
+        "published",
+        "unpublished",
+        "submitted",
+        "rejected",
+        "featured",
+      ],
       default: "draft",
     },
     likes: [
@@ -48,6 +55,10 @@ const BlogSchema = new mongoose.Schema(
         ...new Set(tags.map((t) => t.trim().toLowerCase()).filter(Boolean)),
       ],
     },
+    views: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
@@ -60,4 +71,5 @@ BlogSchema.index(
   { weights: { title: 10, description: 5, author: 1 } },
 );
 
+export type BlogType = mongoose.InferSchemaType<typeof BlogSchema>;
 export default mongoose.model("Blog", BlogSchema);

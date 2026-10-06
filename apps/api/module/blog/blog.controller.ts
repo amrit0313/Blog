@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { Request, Response, NextFunction } from "express";
 import categoryModel from "../categories/category.model";
 import { User } from "../user/user.model";
+import { BlogType } from "./blog.model";
 
 interface IBlog {
   title: string;
@@ -174,6 +175,7 @@ const BlogDetailBySlug = async (
   next: NextFunction,
 ) => {
   try {
+    // 1. Fetch without incrementing yet, so we can run the draft check first
     const Blog = await blog
       .findOne({ slug: req.params.slug })
       .populate("author", ["_id", "name", "email"])
@@ -183,12 +185,16 @@ const BlogDetailBySlug = async (
       throw createError("Blog not found", 404);
     }
 
-    if (Blog.status === "draft") {
-      const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
+    const isAuthor = req.user && req.user.id === Blog.author?._id?.toString();
 
-      if (!isAuthor) {
-        throw createError("Blog not found", 404);
-      }
+    if (Blog.status === "draft" && !isAuthor) {
+      throw createError("Blog not found", 404);
+    }
+
+    // 2. Count the view only for published posts and non-authors
+    if (Blog.status === "published" && !isAuthor) {
+      await blog.updateOne({ _id: Blog._id }, { $inc: { views: 1 } });
+      Blog.views = (Blog.views ?? 0) + 1; // reflect the new count in the response
     }
 
     res.json({
@@ -711,7 +717,7 @@ const AdminListAllBlogs = async (
     } else if (tagConditions.length > 1) {
       filter.$and = tagConditions;
     }
-    
+
     const count = await blog.countDocuments(filter);
 
     const data = await blog
