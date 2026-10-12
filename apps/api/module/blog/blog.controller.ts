@@ -304,7 +304,7 @@ const ListAllBlogs = async (
           { title: re },
           { description: re },
           { author: { $in: matchedAuthors.map((u: any) => u._id) } },
-          {tags:re}
+          { tags: re },
         ],
       });
     }
@@ -442,7 +442,13 @@ const BlogUpdateBySlug = async (
   next: NextFunction,
 ) => {
   let uploaded: { key: string; url: string } | null = null;
-  console.log(req.method, req.originalUrl, req.headers["content-type"], req.file, req.body);
+  console.log(
+    req.method,
+    req.originalUrl,
+    req.headers["content-type"],
+    req.file,
+    req.body,
+  );
 
   try {
     const existing = await blog.findOne({ slug: req.params.slug });
@@ -662,7 +668,6 @@ const GetBlogsByAuthor = async (
  * @returns Resolves after sending the result page or forwarding an error to Express.
  */
 
-
 const AdminListAllBlogs = async (
   req: Request,
   res: Response,
@@ -679,23 +684,15 @@ const AdminListAllBlogs = async (
 
     if (typeof req.query.search === "string" && req.query.search.trim()) {
       const searchQuery = req.query.search.trim();
-      const searchRegex = new RegExp(
-        escapeRegex(searchQuery),
-        "i",
-      );
+      const searchRegex = new RegExp(escapeRegex(searchQuery), "i");
 
       const matchingAuthors = await User.find({
-        $or: [
-          { name: searchRegex },
-          { email: searchRegex },
-        ],
+        $or: [{ name: searchRegex }, { email: searchRegex }],
       })
         .select("_id")
         .lean();
 
-      const matchingAuthorIds = matchingAuthors.map(
-        (author) => author._id,
-      );
+      const matchingAuthorIds = matchingAuthors.map((author) => author._id);
 
       filter.$or = [
         { title: searchRegex },
@@ -721,10 +718,7 @@ const AdminListAllBlogs = async (
 
     const tagConditions: Record<string, any>[] = [];
 
-    if (
-      typeof req.query.tags === "string" &&
-      req.query.tags.trim()
-    ) {
+    if (typeof req.query.tags === "string" && req.query.tags.trim()) {
       const tagList = req.query.tags
         .split(",")
         .map((tag) => tag.trim().toLowerCase())
@@ -737,25 +731,16 @@ const AdminListAllBlogs = async (
       }
     }
 
-    if (
-      typeof req.query.tag === "string" &&
-      req.query.tag.trim()
-    ) {
+    if (typeof req.query.tag === "string" && req.query.tag.trim()) {
       tagConditions.push({
-        tags: new RegExp(
-          escapeRegex(req.query.tag.trim().toLowerCase()),
-          "i",
-        ),
+        tags: new RegExp(escapeRegex(req.query.tag.trim().toLowerCase()), "i"),
       });
     }
 
     if (tagConditions.length === 1) {
       Object.assign(filter, tagConditions[0]);
     } else if (tagConditions.length > 1) {
-      filter.$and = [
-        ...(filter.$and ?? []),
-        ...tagConditions,
-      ];
+      filter.$and = [...(filter.$and ?? []), ...tagConditions];
     }
 
     const count = await blog.countDocuments(filter);
