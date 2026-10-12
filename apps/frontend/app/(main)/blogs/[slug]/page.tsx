@@ -414,8 +414,9 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   return (
     <>
-      <article className="mx-auto w-full max-w-6xl px-6 py-12 lg:px-8">
-        <header className="mb-8">
+      <article className="mx-auto w-full max-w-6xl px-6 pb-12 pt-6 lg:px-8 lg:pt-8">
+        <header className="mb-6">
+          {/* Back link */}
           <Link
             href="/blogs"
             className="group inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -436,20 +437,33 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
             Back to Blogs
           </Link>
 
-          {blog.category?.title && (
-            <div className="mt-5">
-              <Badge variant="info" className="!text-xs">
-                {blog.category.title}
-              </Badge>
+          {/* Category + tags in one row */}
+          {(blog.category?.title || (blog.tags && blog.tags.length > 0)) && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {blog.category?.title && (
+                <Badge variant="info" className="!text-xs">
+                  {blog.category.title}
+                </Badge>
+              )}
+              {blog.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
 
-          <h1 className="mt-3 text-3xl font-bold leading-tight text-foreground sm:text-4xl lg:text-[2.75rem]">
+          {/* Title */}
+          <h1 className="mt-3 text-3xl font-bold leading-[1.15] tracking-tight text-foreground sm:text-4xl lg:text-[2.5rem]">
             {blog.title}
           </h1>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
+          {/* Meta row */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground">
+            <span className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-xs font-bold text-secondary-foreground">
                 {blog.author?.name?.charAt(0).toUpperCase() ?? "?"}
               </span>
@@ -461,20 +475,20 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
               </Link>
             </span>
 
-            <span className="text-border">·</span>
-
             {formatDate(blog.createdAt) && (
               <>
-                <span>{formatDate(blog.createdAt)}</span>
                 <span className="text-border">·</span>
+                <span>{formatDate(blog.createdAt)}</span>
               </>
             )}
 
+            <span className="text-border">·</span>
             <span>{readingTime(blog.description)}</span>
           </div>
 
+          {/* Author actions */}
           {isAuthor && (
-            <div className="mt-5 flex gap-3">
+            <div className="mt-4 flex gap-2">
               <Link href={`/blogs/${blog.slug}/edit`}>
                 <Button variant="outline">
                   <svg
@@ -513,15 +527,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                 </svg>
                 Delete
               </Button>
-            </div>
-          )}
-          {blog.tags && blog.tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {blog.tags.map((tag) => (
-                <div key={tag} className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary">
-                  {tag}
-                </div>
-              ))}
             </div>
           )}
         </header>
