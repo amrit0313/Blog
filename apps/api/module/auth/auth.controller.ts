@@ -202,7 +202,7 @@ const loginUser = async (req: Request, res: Response): Promise<Response> => {
       email: user.email,
       role: user.role,
     };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1m" });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "20m" });
     const refresh = jwt.sign({ userId: user._id.toString() }, REFRESH_SECRET, {
       expiresIn: "7d",
     });
@@ -344,7 +344,7 @@ const resetPassword = async (
  * POST /api/auth/refresh
  * Cookie: refreshToken=<refresh-token>
  */
-const refresh = async (req: Request, res: Response) => {
+const refresh = async (req: Request, res: Response): Promise<Response> => {
   try {
     const refreshToken = req.cookies?.refreshToken;
     const { JWT_SECRET, REFRESH_SECRET } = getEnvConfig();
@@ -371,7 +371,7 @@ const refresh = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
     };
-    const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
+    const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "20m" });
     const newRefresh = jwt.sign(
       { userId: user._id.toString() },
       REFRESH_SECRET,
