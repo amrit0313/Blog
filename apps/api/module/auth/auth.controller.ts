@@ -371,7 +371,7 @@ const refresh = async (req: Request, res: Response) => {
       email: user.email,
       role: user.role,
     };
-    const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "1m" });
+    const token = jwt.sign(userData, JWT_SECRET, { expiresIn: "20m" });
     const newRefresh = jwt.sign(
       { userId: user._id.toString() },
       REFRESH_SECRET,

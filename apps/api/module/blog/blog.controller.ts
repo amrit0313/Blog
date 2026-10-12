@@ -661,38 +661,46 @@ const GetBlogsByAuthor = async (
  * @returns Resolves after sending the result page or forwarding an error to Express.
  */
 
+
 const AdminListAllBlogs = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 10);
     const skip = (page - 1) * limit;
 
     const filter: Record<string, any> = {
       status: { $ne: "draft" },
     };
 
-    if (req.query.search) {
-      filter.title = new RegExp(
-        escapeRegex(String(req.query.search).trim()),
+    if (typeof req.query.search === "string" && req.query.search.trim()) {
+      const searchQuery = req.query.search.trim();
+      const searchRegex = new RegExp(
+        escapeRegex(searchQuery),
         "i",
       );
-    }
 
-    if (req.query.author) {
-      const authorSearch = new RegExp(
-        escapeRegex(String(req.query.author).trim()),
-        "i",
-      );
       const matchingAuthors = await User.find({
-        $or: [{ name: authorSearch }, { email: authorSearch }],
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex },
+        ],
       })
         .select("_id")
         .lean();
-      filter.author = { $in: matchingAuthors.map((author) => author._id) };
+
+      const matchingAuthorIds = matchingAuthors.map(
+        (author) => author._id,
+      );
+
+      filter.$or = [
+        { title: searchRegex },
+        { author: { $in: matchingAuthorIds } },
+        { tags: searchRegex },
+      ];
     }
 
     const allowedStatuses = [
@@ -702,6 +710,7 @@ const AdminListAllBlogs = async (
       "unpublished",
       "rejected",
     ];
+
     if (
       typeof req.query.status === "string" &&
       allowedStatuses.includes(req.query.status)
@@ -710,21 +719,42 @@ const AdminListAllBlogs = async (
     }
 
     const tagConditions: Record<string, any>[] = [];
-    if (typeof req.query.tags === "string" && req.query.tags.trim()) {
+
+    if (
+      typeof req.query.tags === "string" &&
+      req.query.tags.trim()
+    ) {
       const tagList = req.query.tags
         .split(",")
-        .map((t) => t.trim().toLowerCase());
-      tagConditions.push({ tags: { $in: tagList } });
+        .map((tag) => tag.trim().toLowerCase())
+        .filter(Boolean);
+
+      if (tagList.length) {
+        tagConditions.push({
+          tags: { $in: tagList },
+        });
+      }
     }
-    if (typeof req.query.tag === "string" && req.query.tag.trim()) {
+
+    if (
+      typeof req.query.tag === "string" &&
+      req.query.tag.trim()
+    ) {
       tagConditions.push({
-        tags: new RegExp(escapeRegex(req.query.tag.trim().toLowerCase()), "i"),
+        tags: new RegExp(
+          escapeRegex(req.query.tag.trim().toLowerCase()),
+          "i",
+        ),
       });
     }
+
     if (tagConditions.length === 1) {
       Object.assign(filter, tagConditions[0]);
     } else if (tagConditions.length > 1) {
-      filter.$and = tagConditions;
+      filter.$and = [
+        ...(filter.$and ?? []),
+        ...tagConditions,
+      ];
     }
 
     const count = await blog.countDocuments(filter);
