@@ -114,7 +114,7 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
     const user = req.user?.id;
 
     const profile = await Profile.findOne({ user })
-      .populate("user", "id name email")
+      .populate("user")
       .populate({
         path: "savedBlogs",
         select: "title slug image status createdAt author category",
@@ -196,7 +196,9 @@ const removeSavedBlog = async (
     });
 
     if (!profile) return res.status(404).json({ message: "Profile not found" });
-    return res.status(200).json({ message: "Blog removed from saved blogs", profile });
+    return res
+      .status(200)
+      .json({ message: "Blog removed from saved blogs", profile });
   } catch (error) {
     next(error);
   }
@@ -212,7 +214,10 @@ const removeSavedBlog = async (
  * @example
  * GET /api/profile/665f1a2b3c4d5e6f78901234
  */
-const getPublicProfile = async (req: Request, res: Response): Promise<Response> => {
+const getPublicProfile = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const { userId } = req.params;
     const profile = await Profile.findOne({ user: userId })
