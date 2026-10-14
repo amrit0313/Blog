@@ -79,7 +79,6 @@ const ListAllCategories = async (
 ) => {
   try {
     const data = await category.find().sort({ _id: "desc" });
-    console.log(data);
 
     res.json({
       result: data,
