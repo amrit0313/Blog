@@ -34,7 +34,7 @@ export default function AdminEditProfilePage() {
     }
 
     let cancelled = false;
-   const profile = profileApi
+    const profile = profileApi
       .get()
       .then((response) => {
         if (cancelled) return;
@@ -54,7 +54,6 @@ export default function AdminEditProfilePage() {
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
-console.log(profile)
     return () => {
       cancelled = true;
     };
@@ -101,7 +100,6 @@ console.log(profile)
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
         <div className="mb-8">
           <Link

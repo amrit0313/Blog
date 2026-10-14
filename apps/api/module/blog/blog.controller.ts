@@ -442,13 +442,6 @@ const BlogUpdateBySlug = async (
   next: NextFunction,
 ) => {
   let uploaded: { key: string; url: string } | null = null;
-  console.log(
-    req.method,
-    req.originalUrl,
-    req.headers["content-type"],
-    req.file,
-    req.body,
-  );
 
   try {
     const existing = await blog.findOne({ slug: req.params.slug });

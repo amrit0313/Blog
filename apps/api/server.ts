@@ -7,6 +7,7 @@ import profileRoutes from "./module/profile/profile.route";
 import adminRoutes from "./module/admin/admin.route";
 import categoryRoutes from "./module/categories/category.routes";
 import userRoutes from "./module/user/user.route";
+import followRoutes from "./module/follow/follow.route";
 import { connectDB } from "./config/db";
 import commentActionsRoutes from "./module/comment/comment-action.routes";
 
@@ -46,6 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/comments", commentActionsRoutes);
+app.use("/api/following", followRoutes);
 app.use(errorHandler);
 
 const startServer = async () => {

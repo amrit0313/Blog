@@ -30,6 +30,14 @@ const ProfileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    followers: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpires: { type: Date, select: false },
   },

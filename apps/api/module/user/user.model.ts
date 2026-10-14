@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    followersCount: {
+      type: Number,
+    },
+    followingCount: {
+      type: Number,
+    },
 
     hashedToken: {
       type: "string",
