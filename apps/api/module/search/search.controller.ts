@@ -19,7 +19,6 @@ const stripHtml = (html = "") =>
     .replace(/\s+/g, " ")
     .trim();
 
-// Short plain-text preview: around the first match if there is one, else the start
 const buildExcerpt = (html: string | undefined, term: string) => {
   const text = stripHtml(html);
   if (!text) return "";
@@ -35,11 +34,6 @@ const buildExcerpt = (html: string | undefined, term: string) => {
   );
 };
 
-/**
- * Searches people and blogs in one request.
- * GET /api/search?q=term
- * Public: only published/featured blogs and non-sensitive user fields are returned.
- */
 const SearchAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const raw = typeof req.query.q === "string" ? req.query.q.trim() : "";
