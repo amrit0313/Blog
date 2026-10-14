@@ -49,7 +49,7 @@ app.use("/api/blog", blogRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/comments", commentActionsRoutes);
 app.use("/api/following", followRoutes);
-app.use("api/search",searchRoutes)
+app.use("/api/search",searchRoutes)
 app.use(errorHandler);
 
 const startServer = async () => {
