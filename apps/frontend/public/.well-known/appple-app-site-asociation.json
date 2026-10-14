@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["YOUR_TEAM_ID.com.example.expoboilerplate"],
+        "components": [{ "/": "/profile/*" }, { "/": "/reset-password*" }]
+      }
+    ]
+  }
+}
