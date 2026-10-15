@@ -113,8 +113,12 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
   try {
     const userId = req.user?.id;
 
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const [user, profileDoc] = await Promise.all([
-      User.findById(userId),
+      User.findById(userId).select("-password"),
       Profile.findOne({ user: userId }).populate({
         path: "savedBlogs",
         select: "title slug image status createdAt author category",
@@ -126,11 +130,11 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
     ]);
 
     if (!user) {
-      return res.status(404).json({ message: "user not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
     // same shape as before: profile fields + populated user.
-    // if no profile doc exists yet, fall back to an empty profile shell.
+    // no profile doc yet -> empty shell with the user inside.
     const profile = {
       ...(profileDoc ? profileDoc.toObject() : { savedBlogs: [] }),
       user,
@@ -139,7 +143,7 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
     return res
       .status(200)
       .json({ message: "profile retrieve successfully", profile });
-  } catch (err: any) {
+  } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
@@ -230,14 +234,30 @@ const getPublicProfile = async (
 ): Promise<Response> => {
   try {
     const { userId } = req.params;
-    const profile = await Profile.findOne({ user: userId })
-      .select("-savedBlogs")
-      .populate("user", "id name email");
-    if (!profile) {
-      return res.status(404).json({ message: "Profile not found" });
+
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({ message: "Invalid user id" });
     }
+
+    const [user, profileDoc] = await Promise.all([
+      User.findById(userId).select("_id name email"),
+      Profile.findOne({ user: userId }).select("-savedBlogs"),
+    ]);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // same shape as before: profile fields + user (only public fields).
+    // no profile doc yet -> just the user inside an otherwise empty profile.
+    const profile = {
+      ...(profileDoc ? profileDoc.toObject() : {}),
+      user,
+    };
+
     return res.status(200).json({ message: "Profile retrieved", profile });
   } catch (err) {
+    console.log(err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
