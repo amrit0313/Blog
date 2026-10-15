@@ -22,7 +22,7 @@ const createOrUpdateProfile = async (
   req: Request,
   res: Response,
   next: NextFunction,
-) => {
+): Promise<Response | void> => {
   let uploaded: { key: string; url: string } | null = null;
 
   try {
@@ -111,21 +111,31 @@ const createOrUpdateProfile = async (
  */
 const getProfile = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const user = req.user?.id;
+    const userId = req.user?.id;
 
-    const profile = await Profile.findOne({ user })
-      .populate("user")
-      .populate({
+    const [user, profileDoc] = await Promise.all([
+      User.findById(userId),
+      Profile.findOne({ user: userId }).populate({
         path: "savedBlogs",
         select: "title slug image status createdAt author category",
         populate: [
           { path: "author", select: "_id name email" },
           { path: "category", select: "_id title" },
         ],
-      });
-    if (!profile) {
-      return res.status(400).json({ message: "profile doesn't exist" });
+      }),
+    ]);
+
+    if (!user) {
+      return res.status(404).json({ message: "user not found" });
     }
+
+    // same shape as before: profile fields + populated user.
+    // if no profile doc exists yet, fall back to an empty profile shell.
+    const profile = {
+      ...(profileDoc ? profileDoc.toObject() : { savedBlogs: [] }),
+      user,
+    };
+
     return res
       .status(200)
       .json({ message: "profile retrieve successfully", profile });
