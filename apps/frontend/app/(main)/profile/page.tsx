@@ -412,7 +412,11 @@ export default function ProfilePage() {
         </div>
       </main>
 
-      <FollowListModal {...follow.modalProps} />
+      <FollowListModal
+        {...follow.modalProps}
+        currentUserId={user?.id}
+        isOwnProfile={true}
+      />
     </div>
   );
 }

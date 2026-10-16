@@ -23,6 +23,8 @@ interface FollowListModalProps {
   /** Optional: when provided, followers get a remove (✕) button. */
   onRemoveFollower?: (user: FollowListUser) => void;
   onRetry: () => void;
+  currentUserId?: string;
+  isOwnProfile: boolean;
 }
 
 const TABS: { id: FollowTab; label: string }[] = [
@@ -87,6 +89,8 @@ export default function FollowListModal({
   onToggleFollow,
   onRemoveFollower,
   onRetry,
+  currentUserId,
+  isOwnProfile
 }: FollowListModalProps) {
   const [query, setQuery] = useState("");
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -255,53 +259,62 @@ export default function FollowListModal({
             <ul className="px-2">
               {visibleUsers.map((user) => {
                 const pending = pendingIds.has(user.id);
+                const isMe = user.id === currentUserId;
+                const followLabel =
+                  isOwnProfile && activeTab === "followers"
+                    ? "Follow back"
+                    : "Follow";
                 return (
                   <div
-                    className="flex justify-between my-2 mr-6"
+                    key={user.id}
+                    className="relative flex items-center gap-3 rounded-md px-2 py-2.5 hover:bg-muted/50"
                   >
-                    <Link
-                      key={user.id}
-                      className="flex items-center gap-3 rounded-md px-2 py-2.5 hover:bg-muted/50"
-                      href={`authors/${user.id}`}
-                    >
-                      {user.avatar ? (
-                        <Image
-                          src={user?.avatar}
-                          alt={user?.name ?? "User avatar"}
-                          width={44}
-                          height={44}
-                          className="h-11 w-11 shrink-0 rounded-full object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <FaUser className="h-10 w-10 shrink-0 rounded-full object-cover" />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">
-                          {user.name}
-                        </p>
-                      </div>
-                    </Link>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <FollowButton
-                        isFollowing={user.isFollowing}
-                        pending={pending}
-                        followLabel={
-                          activeTab === "followers" ? "Follow back" : "Follow"
-                        }
-                        onClick={() => onToggleFollow(user)}
+                    {user.avatar ? (
+                      <Image
+                        src={user.avatar}
+                        alt={user.name ?? "User avatar"}
+                        width={44}
+                        height={44}
+                        className="h-11 w-11 shrink-0 rounded-full object-cover"
+                        unoptimized
                       />
-                      {activeTab === "followers" && onRemoveFollower && (
-                        <button
-                          type="button"
-                          disabled={pending}
-                          onClick={() => onRemoveFollower?.(user)}
-                          aria-label={`Remove ${user.name} as a follower`}
-                          className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-60"
-                        >
-                          <FaTimes aria-hidden="true" />
-                        </button>
+                    ) : (
+                      <FaUser className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/authors/${user.id}`}
+                        className="block truncate text-sm font-semibold after:absolute after:inset-0 after:content-['']"
+                      >
+                        {user.name}
+                      </Link>
+                    </div>
+
+                    <div className="relative z-10 flex shrink-0 items-center gap-2">
+                      {!isMe && (
+                        <FollowButton
+                          isFollowing={user.isFollowing}
+                          pending={pending}
+                          followLabel={followLabel}
+                          onClick={() => onToggleFollow(user)}
+                        />
                       )}
+
+                      {!isMe &&
+                        activeTab === "followers" &&
+                        onRemoveFollower &&
+                        !isMe && (
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => onRemoveFollower(user)}
+                            aria-label={`Remove ${user.name} as a follower`}
+                            className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-60"
+                          >
+                            <FaTimes aria-hidden="true" />
+                          </button>
+                        )}
                     </div>
                   </div>
                 );
