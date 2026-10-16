@@ -12,8 +12,11 @@ import {
 import Button from "../../../components/ui/Button";
 import Avatar from "../../../components/avatar";
 import ProfileBlogCard from "../../../components/ProfileBlogCard";
+import ProfileStats from "../../../components/profile/ProfileStats";
+import FollowListModal from "../../../components/profile/FollowListModal";
 
 import { useAuth } from "../../../context/AuthContext";
+import { useFollowLists } from "../../hooks/useFollowLists";
 import { ApiError } from "../../../lib/api";
 import { blogApi, type Blog } from "../../../lib/blog";
 import { profileApi, ProfileData } from "../../../lib/profile";
@@ -48,6 +51,19 @@ export default function ProfilePage() {
   const [profileMissing, setProfileMissing] = useState(false);
   const [blogsError, setBlogsError] = useState("");
   const [statusFilter, setStatusFilter] = useState("published");
+
+  // Id of the profile owner (adjust to whatever your user object exposes).
+  // Must stay above the early returns below (rules of hooks).
+  const owner = (profile?.user ?? user) as unknown as {
+    _id?: string;
+    id?: string;
+  } | null;
+  const follow = useFollowLists({
+    userId: owner?._id ?? owner?.id ?? "",
+    // NOTE: add `followersCount?: number; followingCount?: number` to ProfileData.
+    followers: profile?.user?.followersCount ?? 0,
+    following: profile?.user?.followingCount ?? 0,
+  });
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -141,11 +157,14 @@ export default function ProfilePage() {
   };
 
   const handleUnpublishBlog = async (blogId: string) => {
-    if (!window.confirm("Are you sure you want to unpublish this blog?")) return;
+    if (!window.confirm("Are you sure you want to unpublish this blog?"))
+      return;
     try {
       await blogApi.unpublish(blogId);
       setBlogs((prev) =>
-        prev.map((b) => (b._id === blogId ? { ...b, status: "unpublished" } : b))
+        prev.map((b) =>
+          b._id === blogId ? { ...b, status: "unpublished" } : b,
+        ),
       );
       toast.success("Blog unpublished successfully");
     } catch {
@@ -164,7 +183,10 @@ export default function ProfilePage() {
             <section className="card flex flex-col gap-6 p-6 sm:p-8">
               <div className="flex flex-col gap-5">
                 <div className="flex items-center gap-5">
-                  <Avatar src={profile?.avatar} className="h-20 w-20 text-2xl" />
+                  <Avatar
+                    src={profile?.avatar}
+                    className="h-20 w-20 text-2xl"
+                  />
                   <div>
                     <p className="eyebrow">Profile</p>
                     <h1 className="mt-1 text-2xl">{displayName}</h1>
@@ -176,7 +198,18 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
+
+                {/* Instagram-style stats: Blogs · Followers · Following */}
+                <ProfileStats
+                  blogsCount={publishedBlogs.length}
+                  followersCount={follow.counts.followers}
+                  followingCount={follow.counts.following}
+                  onOpen={follow.open}
+                  loading={profileLoading || blogsLoading}
+                />
+
+                {/* Side by side so the new stats row doesn't make the card taller */}
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     href="/profile/edit"
                     variant="outline"
@@ -187,7 +220,8 @@ export default function ProfilePage() {
                   <Button
                     href="/profile/analytics"
                     variant="outline"
-                    className="w-full rounded-md px-4 py-2 no-underline">
+                    className="w-full rounded-md px-4 py-2 no-underline"
+                  >
                     Analytics
                   </Button>
                 </div>
@@ -214,7 +248,8 @@ export default function ProfilePage() {
                   {socialLinks.length > 0 && (
                     <div className="flex flex-wrap gap-2 text-sm">
                       {socialLinks.map(([label, value]) => {
-                        const Icon = socialIcons[label as keyof typeof socialIcons];
+                        const Icon =
+                          socialIcons[label as keyof typeof socialIcons];
                         return (
                           <a
                             key={label}
@@ -288,9 +323,6 @@ export default function ProfilePage() {
               </Link>
             )}
 
-
-
-
             {!blogsLoading && !blogsError && publishedBlogs.length > 0 && (
               <Button
                 href="/blogs/create"
@@ -307,7 +339,10 @@ export default function ProfilePage() {
                 <h2 className="text-2xl">Your Blogs</h2>
 
                 <div className="flex items-center gap-2">
-                  <label htmlFor="status-filter" className="text-sm font-medium">
+                  <label
+                    htmlFor="status-filter"
+                    className="text-sm font-medium"
+                  >
                     Status
                   </label>
                   <select
@@ -325,8 +360,9 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {!blogsLoading && !blogsError && (
-              filteredBlogs.length === 0 ? (
+            {!blogsLoading &&
+              !blogsError &&
+              (filteredBlogs.length === 0 ? (
                 <p className="mt-6 text-muted-foreground">
                   No {statusFilter} blogs.
                 </p>
@@ -345,8 +381,7 @@ export default function ProfilePage() {
                     />
                   ))}
                 </div>
-              )
-            )}
+              ))}
 
             {blogsLoading && <p className="mt-6">Loading your blogs...</p>}
             {blogsError && (
@@ -376,6 +411,8 @@ export default function ProfilePage() {
           </section>
         </div>
       </main>
+
+      <FollowListModal {...follow.modalProps} />
     </div>
   );
 }
