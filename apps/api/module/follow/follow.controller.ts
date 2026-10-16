@@ -3,8 +3,6 @@ import mongoose from "mongoose";
 import { User } from "../user/user.model";
 import Follow from "./follow";
 
-
-
 interface PublicUser {
   _id: mongoose.Types.ObjectId;
   username: string;
@@ -37,10 +35,10 @@ const getPagination = (query: Request["query"]) => {
 };
 
 // Follow a user
-/** 
-* @param {Request} req - Request object of express, has userid in user(the one who follows) and in param(the one who's followed)
-* @param {reponse} res - response object of express
-*/
+/**
+ * @param {Request} req - Request object of express, has userid in user(the one who follows) and in param(the one who's followed)
+ * @param {reponse} res - response object of express
+ */
 export const followUser = async (
   req: Request,
   res: Response,
@@ -122,10 +120,10 @@ export const followUser = async (
 };
 
 // Unfollow a user
-/** 
-* @param {Request} req - Request object of express, has userid in user(the one who unfollows) and in param(the one who's unfollowed)
-* @param {reponse} res - response object of express
-*/
+/**
+ * @param {Request} req - Request object of express, has userid in user(the one who unfollows) and in param(the one who's unfollowed)
+ * @param {reponse} res - response object of express
+ */
 export const unfollowUser = async (
   req: Request,
   res: Response,
@@ -203,7 +201,14 @@ export const getFollowers = async (
       .sort({ createdAt: -1, _id: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate<{ follower: PublicUser | null }>("follower", "username avatar")
+      .populate<{ follower: PublicUser | null }>({
+        path: "follower",
+        select: "id name",
+        populate: {
+          path: "profile",
+          select: "avatar",
+        },
+      })
       .lean();
 
     return res.status(200).json({
@@ -221,10 +226,10 @@ export const getFollowers = async (
 };
 
 // Get accounts a user follows
-/** 
-* @param {Request} req - Request object of express, has userid in req.params and page, limit in req.query
-* @param {reponse} res - response object of express
-*/
+/**
+ * @param {Request} req - Request object of express, has userid in req.params and page, limit in req.query
+ * @param {reponse} res - response object of express
+ */
 export const getFollowing = async (
   req: Request,
   res: Response,
@@ -247,10 +252,14 @@ export const getFollowing = async (
       .sort({ createdAt: -1, _id: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate<{ following: PublicUser | null }>(
-        "following",
-        "username avatar",
-      )
+      .populate<{ following: PublicUser | null }>({
+        path: "following",
+        select: "name",
+        populate: {
+          path: "profile",
+          select: "id avatar",
+        },
+      })
       .lean();
 
     return res.status(200).json({
@@ -268,10 +277,10 @@ export const getFollowing = async (
 };
 
 // Check if the logged-in user follows another user
-/** 
-* @param {Request} req - Request object of express, has userid in req.user and another user in req.params
-* @param {reponse} res - response object of express
-*/
+/**
+ * @param {Request} req - Request object of express, has userid in req.user and another user in req.params
+ * @param {reponse} res - response object of express
+ */
 export const getFollowStatus = async (
   req: Request,
   res: Response,

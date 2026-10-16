@@ -44,6 +44,8 @@ export interface FollowUser {
   following?: FollowUser;
 }
 
+export type FollowTab = "followers" | "following";
+
 /**
  * Response returned by the followers/following list endpoints.
  */
@@ -89,6 +91,70 @@ export function getFollowUsers(response: FollowUsersResponse): FollowUser[] {
     };
   });
 }
+
+/* ───────────── UI-facing shape ───────────── */
+
+/**
+ * Strict, render-ready user used by the follow list UI.
+ * Everything the components need is guaranteed to be present.
+ */
+export interface FollowListUser {
+  isSelf: boolean;
+  id: string;
+  name: string;
+  username?: string;
+  avatar?: string;
+  /** Does the authenticated user follow this person? */
+  isFollowing: boolean;
+}
+
+/** Resolves an avatar value (string or object) to a URL. */
+export function getAvatarUrl(avatar?: FollowAvatar): string | undefined {
+  if (!avatar) return undefined;
+  return typeof avatar === "string" ? avatar : avatar.url || undefined;
+}
+
+/**
+ * Converts a normalized API user into a render-ready user.
+ * Returns null when the entry has no id (it can't be followed/unfollowed).
+ *
+ * In the "following" tab every entry is followed by definition. In the
+ * "followers" tab we rely on `isFollowing` from the API (false if absent).
+ */
+export function toFollowListUser(
+  user: FollowUser,
+  tab: FollowTab,
+): FollowListUser | null {
+  const id = user.id ?? user._id;
+  if (!id) return null;
+
+  const name =
+    user.name || user.username || user.email?.split("@")[0] || "Unknown user";
+
+  return {
+    id,
+    name,
+    // Avoid showing "maya / @maya" when the name is just the username.
+    username:
+      user.username && user.username !== name ? user.username : undefined,
+    avatar: getAvatarUrl(user.avatar),
+    isFollowing: tab === "following" ? true : Boolean(user.isFollowing),
+  };
+}
+
+export interface FollowPageParams {
+  page?: number;
+  limit?: number;
+}
+
+const withPaging = (path: string, params?: FollowPageParams) => {
+  if (!params) return path;
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", String(params.page));
+  if (params.limit) query.set("limit", String(params.limit));
+  const qs = query.toString();
+  return qs ? `${path}?${qs}` : path;
+};
 
 const followPath = (userId: string) => `/following/${userId}/follow`;
 const followUsersPath = (userId: string, relation: "followers" | "following") =>
@@ -136,11 +202,12 @@ export const followApi = {
    * Retrieves the followers of a user.
    *
    * @param userId - ID of the user whose followers should be listed.
+   * @param params - Optional page/limit (backend caps limit at 50).
    * @returns A promise containing the followers response.
    */
-  getFollowers(userId: string) {
+  getFollowers(userId: string, params?: FollowPageParams) {
     return apiRequest<FollowUsersResponse>(
-      followUsersPath(userId, "followers"),
+      withPaging(followUsersPath(userId, "followers"), params),
       { method: "GET" },
     );
   },
@@ -149,12 +216,87 @@ export const followApi = {
    * Retrieves the users a given user is following.
    *
    * @param userId - ID of the user whose following list should be retrieved.
+   * @param params - Optional page/limit (backend caps limit at 50).
    * @returns A promise containing the following response.
    */
-  getFollowing(userId: string) {
+  getFollowing(userId: string, params?: FollowPageParams) {
     return apiRequest<FollowUsersResponse>(
-      followUsersPath(userId, "following"),
+      withPaging(followUsersPath(userId, "following"), params),
       { method: "GET" },
     );
   },
 };
+
+export const FOLLOW_PAGE_SIZE = 20;
+
+export interface FollowPage {
+  users: FollowListUser[];
+  /** Total number of followers/following reported by the backend. */
+  total?: number;
+  page: number;
+  hasMore: boolean;
+}
+
+/**
+ * Fetches one page of a tab's list and returns render-ready users.
+ *
+ * @param userId - ID of the profile owner.
+ * @param tab - Which list to load.
+ * @param page - 1-based page number.
+ * @param limit - Page size.
+ */
+export async function getFollowPage(
+  userId: string,
+  tab: FollowTab,
+  page = 1,
+  limit = FOLLOW_PAGE_SIZE,
+): Promise<FollowPage> {
+  const params = { page, limit };
+  const response =
+    tab === "followers"
+      ? await followApi.getFollowers(userId, params)
+      : await followApi.getFollowing(userId, params);
+
+  const users = getFollowUsers(response)
+    .map((u) => toFollowListUser(u, tab))
+    .filter((u): u is FollowListUser => u !== null);
+
+  const total = typeof response.count === "number" ? response.count : undefined;
+  const currentPage = response.page ?? page;
+  const pageSize = response.limit ?? limit;
+  const hasMore =
+    total !== undefined
+      ? currentPage * pageSize < total
+      : users.length >= pageSize;
+
+  return { users, total, page: currentPage, hasMore };
+}
+
+/**
+ * Fetches the first page of a tab's list (kept for backwards compatibility).
+ */
+export async function getFollowList(
+  userId: string,
+  tab: FollowTab,
+): Promise<FollowListUser[]> {
+  return (await getFollowPage(userId, tab)).users;
+}
+
+/**
+ * Collects the ids of everyone the profile owner follows, walking all pages.
+ * Used to work out "Follow back" vs "Following" in the Followers tab, since the
+ * followers endpoint doesn't report that itself.
+ *
+ * Only valid when `userId` is the logged-in user (their following list is
+ * exactly "people I follow").
+ */
+export async function getAllFollowingIds(userId: string): Promise<Set<string>> {
+  const ids = new Set<string>();
+  const MAX_PAGES = 100; // safety stop
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const res = await getFollowPage(userId, "following", page, 50);
+    res.users.forEach((u) => ids.add(u.id));
+    if (!res.hasMore) break;
+  }
+  return ids;
+}

@@ -2,10 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState } from "react";
-import { FaCheckCircle, FaFacebookF, FaGlobe, FaInstagram } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaFacebookF,
+  FaGlobe,
+  FaInstagram,
+} from "react-icons/fa";
 import Avatar from "../../../../components/avatar";
 import BlogFeedCard from "../../../../components/BlogFeedCard";
+import FollowButton from "../../../../components/profile/FollowButton";
+import FollowListModal from "../../../../components/profile/FollowListModal";
+import ProfileStats from "../../../../components/profile/ProfileStats";
 import { useAuth } from "../../../../context/AuthContext";
+import { useFollowLists } from "../../../hooks/useFollowLists";
+import { useFollowStatus } from "../../../hooks/useFollowStatus";
 import { ApiError } from "../../../../lib/api";
 import { blogApi, type Blog } from "../../../../lib/blog";
 import { profileApi, type ProfileData } from "../../../../lib/profile";
@@ -40,6 +50,26 @@ export default function AuthorProfilePage({
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Follow state. Must stay above the early returns below (rules of hooks).
+  const viewerId = user?.id ?? "";
+  const goToLogin = () => router.push("/login");
+
+  const follow = useFollowLists({
+    userId: authorId ?? "",
+    viewerId,
+    followers: profile?.user?.followersCount ?? 0,
+    following: profile?.user?.followingCount ?? 0,
+    onRequireAuth: goToLogin,
+  });
+
+  // The Follow / Following button for this author.
+  const authorFollow = useFollowStatus({
+    targetId: authorId ?? "",
+    viewerId,
+    onRequireAuth: goToLogin,
+    onChange: follow.adjustFollowers,
+  });
 
   useEffect(() => {
     params.then(({ id }) => setAuthorId(id));
@@ -129,27 +159,52 @@ export default function AuthorProfilePage({
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[380px_1fr] lg:items-start">
           <div className="space-y-6 lg:sticky lg:top-8">
             <section className="card flex flex-col gap-6 p-6 sm:p-8">
-              <div className="flex items-center gap-5">
-                <Avatar
-                  src={profile?.avatar}
-                  name={displayName}
-                  className="h-20 w-20 text-2xl"
-                  fallback="initials"
-                />
-                <div>
-                  <p className="eyebrow">Author</p>
-                  <h1 className="mt-1 text-2xl">{displayName}</h1>
-                  {authorUser?.email && (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {authorUser.email}
-                    </p>
-                  )}
-                  {profile?.isVerified && (
-                    <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
-                      <FaCheckCircle aria-hidden="true" /> Verified account
-                    </p>
-                  )}
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-5">
+                  <Avatar
+                    src={profile?.avatar}
+                    name={displayName}
+                    className="h-20 w-20 text-2xl"
+                    fallback="initials"
+                  />
+                  <div>
+                    <p className="eyebrow">Author</p>
+                    <h1 className="mt-1 text-2xl">{displayName}</h1>
+                    {authorUser?.email && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {authorUser.email}
+                      </p>
+                    )}
+                    {profile?.isVerified && (
+                      <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <FaCheckCircle aria-hidden="true" /> Verified account
+                      </p>
+                    )}
+                  </div>
                 </div>
+
+                {/* Instagram-style stats: Blogs · Followers · Following */}
+                <ProfileStats
+                  blogsCount={blogs.length}
+                  followersCount={follow.counts.followers}
+                  followingCount={follow.counts.following}
+                  onOpen={follow.open}
+                />
+
+                {/* Follow / Following */}
+                {authorFollow.canFollow &&
+                  (authorFollow.loading ? (
+                    <div
+                      aria-hidden="true"
+                      className="h-9 w-full animate-pulse rounded-md bg-muted"
+                    />
+                  ) : (
+                    <FollowButton
+                      isFollowing={authorFollow.isFollowing}
+                      pending={authorFollow.pending}
+                      onClick={authorFollow.toggle}
+                    />
+                  ))}
               </div>
 
               {(profile?.bio || socialLinks.length > 0) && (
@@ -165,7 +220,8 @@ export default function AuthorProfilePage({
                   {socialLinks.length > 0 && (
                     <div className="flex flex-wrap gap-2 text-sm">
                       {socialLinks.map(([label, value]) => {
-                        const Icon = socialIcons[label as keyof typeof socialIcons];
+                        const Icon =
+                          socialIcons[label as keyof typeof socialIcons];
                         return (
                           <a
                             key={label}
@@ -209,6 +265,8 @@ export default function AuthorProfilePage({
           </section>
         </div>
       </main>
+
+      <FollowListModal {...follow.modalProps} />
     </div>
   );
 }
