@@ -1,9 +1,8 @@
-// components/ui/search-box.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HiMagnifyingGlass, HiXMark } from "react-icons/hi2";
-import { useDebounce } from "../../app/hooks/useDebounce";
+import { useDebounce } from "../../app/hooks/useDebounce"; // keep your existing path
 
 interface SearchBoxProps {
   initialValue?: string;
@@ -11,33 +10,45 @@ interface SearchBoxProps {
   placeholder?: string;
   delay?: number;
   className?: string;
+  autoFocus?: boolean;
 }
 
 export default function SearchBox({
   initialValue = "",
   onSearch,
   placeholder = "Search...",
-  delay = 800,
-  className = "",
+  delay = 400,
+  className = "sm:w-64",
+  autoFocus = false,
 }: SearchBoxProps) {
   const [value, setValue] = useState(initialValue);
   const debouncedValue = useDebounce(value, delay);
-
+  const initialValueRef = useRef(initialValue);
+  const onSearchRef = useRef(onSearch);
 
   useEffect(() => {
-    setValue(initialValue);
+    initialValueRef.current = initialValue;
+    setValue((current) =>
+      current.trim() === initialValue ? current : initialValue,
+    );
   }, [initialValue]);
 
   useEffect(() => {
-    if (debouncedValue === initialValue) return;
-    onSearch(debouncedValue.trim());
+    onSearchRef.current = onSearch;
+  });
+
+  useEffect(() => {
+    const next = debouncedValue.trim();
+    if (next === initialValueRef.current) return;
+    onSearchRef.current(next);
   }, [debouncedValue]);
 
   return (
-    <div className={`relative w-full sm:w-64 ${className}`}>
+    <div className={`relative w-full ${className}`}>
       <HiMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         type="text"
+        autoFocus={autoFocus}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
