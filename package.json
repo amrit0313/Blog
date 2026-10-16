@@ -10,11 +10,6 @@
     "lint": "npm run lint -ws"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.20",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/express": "^5.0.6",
-    "@types/multer": "^2.2.0",
-    "@types/node": "^26.6.2",
     "concurrently": "^10.0.5",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
