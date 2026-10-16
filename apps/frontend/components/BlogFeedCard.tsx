@@ -8,7 +8,7 @@ import CommentSection from "./CommentSection";
 import type { Blog } from "../lib/blog";
 import { imgSrc } from "../utils/getImgSrc";
 import { toast } from "sonner";
-import { FaShare, FaRegComment, FaThumbsUp } from "react-icons/fa6";
+import { FaShare, FaRegComment, FaThumbsUp, FaHeart } from "react-icons/fa6";
 import {
   HiOutlineEllipsisVertical,
   HiPencilSquare,
@@ -95,7 +95,6 @@ export default function BlogFeedCard({
 
   return (
     <article className="rounded-xl border border-border bg-card shadow-xs transition-shadow hover:shadow-sm overflow-hidden">
-      {/* a. Header */}
       <div className="flex flex-col items-start gap-3 justify-between p-4 pb-3 sm:flex-row sm:items-center">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar
@@ -227,7 +226,7 @@ export default function BlogFeedCard({
       <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] text-white">
-            <FaThumbsUp />
+            <FaHeart />
           </span>
           <span>
             {likesCount} {likesCount === 1 ? "like" : "likes"}
@@ -245,7 +244,6 @@ export default function BlogFeedCard({
         </button>
       </div>
 
-      {/* d. Divider & Action bar */}
       <div className="border-t border-border px-2 py-1">
         <div className="flex items-center justify-around gap-1">
           <LikeButton
