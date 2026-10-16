@@ -1,5 +1,4 @@
 import { apiRequest } from "./api";
-
 /**
  * Avatar value returned by the API. Can be a plain URL or an object.
  */
@@ -134,12 +133,11 @@ export function toFollowListUser(
   return {
     id,
     name,
-    // Avoid showing "maya / @maya" when the name is just the username.
     username:
       user.username && user.username !== name ? user.username : undefined,
     avatar: getAvatarUrl(user.avatar),
     isFollowing: tab === "following" ? true : Boolean(user.isFollowing),
-    isSelf: false,
+    isSelf: false
   };
 }
 
