@@ -139,6 +139,7 @@ export function toFollowListUser(
       user.username && user.username !== name ? user.username : undefined,
     avatar: getAvatarUrl(user.avatar),
     isFollowing: tab === "following" ? true : Boolean(user.isFollowing),
+    isSelf: false,
   };
 }
 

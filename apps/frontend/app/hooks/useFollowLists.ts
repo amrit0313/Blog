@@ -11,6 +11,7 @@ import {
 } from "../../lib/follow";
 
 export interface ListState {
+  length: number;
   users: FollowListUser[];
   loading: boolean;
   /** True while fetching page 2+, so the existing rows stay on screen. */
@@ -29,6 +30,7 @@ const EMPTY_LIST: ListState = {
   loaded: false,
   page: 0,
   hasMore: false,
+  length: 0
 };
 
 interface UseFollowListsOptions {
@@ -113,7 +115,7 @@ export function useFollowLists({
       if (!userId) return;
       const append = page > 1;
 
-      setLists((p) => ({
+      setLists((p:any) => ({
         ...p,
         [tab]: { ...p[tab], loading: !append, loadingMore: append, error: "" },
       }));
@@ -128,18 +130,18 @@ export function useFollowLists({
           needIds ? ensureFollowingIds() : Promise.resolve(null),
         ]);
 
-        const incoming = res.users.map((u) => ({
+        const incoming = res.users.map((u:any) => ({
           ...u,
           isFollowing: skipLookup ? true : ids ? ids.has(u.id) : false,
           isSelf: Boolean(viewerId) && u.id === viewerId,
         }));
 
-        setLists((p) => {
+        setLists((p:any) => {
           const previous = append ? p[tab].users : [];
-          const seen = new Set(previous.map((u) => u.id));
+          const seen = new Set(previous.map((u:any) => u.id));
           const merged = [
             ...previous,
-            ...incoming.filter((u) => !seen.has(u.id)),
+            ...incoming.filter((u:any) => !seen.has(u.id)),
           ];
           return {
             ...p,
@@ -158,7 +160,7 @@ export function useFollowLists({
         // The backend's total is the source of truth for the tab's count.
         if (!append && res.total !== undefined) {
           const total = res.total;
-          setCounts((c) => ({ ...c, [tab]: total }));
+          setCounts((c:any) => ({ ...c, [tab]: total }));
         }
       } catch {
         if (append) {
