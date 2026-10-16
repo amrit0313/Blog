@@ -182,12 +182,11 @@ export default function AuthorProfilePage({
                     )}
                   </div>
                 </div>
-
                 {/* Instagram-style stats: Blogs · Followers · Following */}
                 <ProfileStats
                   blogsCount={blogs.length}
-                  followersCount={follow.counts.followers}
-                  followingCount={follow.counts.following}
+                  followersCount={profile?.user?.followersCount || 0}
+                  followingCount={profile?.user?.followingCount || 0}
                   onOpen={follow.open}
                 />
 
@@ -266,7 +265,11 @@ export default function AuthorProfilePage({
         </div>
       </main>
 
-      <FollowListModal {...follow.modalProps} />
+      <FollowListModal
+        {...follow.modalProps}
+        currentUserId={user?.id}
+        isOwnProfile={false}
+      />
     </div>
   );
 }

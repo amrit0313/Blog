@@ -123,7 +123,10 @@ const getProfile = async (req: Request, res: Response): Promise<Response> => {
         path: "savedBlogs",
         select: "title slug image status createdAt author category",
         populate: [
-          { path: "author", select: "_id name email" },
+          {
+            path: "author",
+            select: "_id name email followersCount followingCount",
+          },
           { path: "category", select: "_id title" },
         ],
       }),
@@ -240,7 +243,9 @@ const getPublicProfile = async (
     }
 
     const [user, profileDoc] = await Promise.all([
-      User.findById(userId).select("_id name email"),
+      User.findById(userId).select(
+        "_id name email followersCount followingCount",
+      ),
       Profile.findOne({ user: userId }).select("-savedBlogs"),
     ]);
 

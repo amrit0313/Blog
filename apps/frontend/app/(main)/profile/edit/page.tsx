@@ -94,20 +94,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 lg:px-8 lg:py-16">
-        <div className="mb-8">
-          <Link
-            href="/profile"
-            className="text-sm font-semibold no-underline hover:underline"
-          >
-            &lt;- Back to profile
-          </Link>
-          <p className="eyebrow mt-8">Profile settings</p>
-          <h1 className="mt-2 text-3xl">Edit Profile</h1>
-          <p className="mt-3">Keep your profile details up to date.</p>
-        </div>
-
         <form onSubmit={handleSubmit} className="card space-y-6 p-6 sm:p-8">
           <div>
             <p className="text-sm font-semibold text-foreground">Account</p>

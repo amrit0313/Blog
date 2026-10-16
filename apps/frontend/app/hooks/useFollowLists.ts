@@ -316,5 +316,5 @@ export function useFollowLists({
     ],
   );
 
-  return { counts, open, modalProps, isOwnProfile, adjustFollowers };
+  return { counts, open, modalProps, adjustFollowers };
 }
