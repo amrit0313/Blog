@@ -271,6 +271,7 @@ export default function FollowListModal({
                           width={44}
                           height={44}
                           className="h-11 w-11 shrink-0 rounded-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <FaUser className="h-10 w-10 shrink-0 rounded-full object-cover" />
