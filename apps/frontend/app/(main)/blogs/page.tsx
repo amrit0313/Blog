@@ -2,19 +2,64 @@
 
 import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
+import {
+  HiMagnifyingGlass,
+  HiOutlineDocumentText,
+  HiOutlineExclamationCircle,
+  HiXMark,
+} from "react-icons/hi2";
+
 import { blogApi, type Blog } from "../../../lib/blog";
 import { categoryApi, type Category } from "../../../lib/category";
 import BlogFilters from "../../../components/ui/blog-filters";
-import SearchBox from "../../../components/ui/search-box";
 import BlogFeedCard from "../../../components/BlogFeedCard";
-import { toast } from "sonner";
+
+
+function CategoryChips({
+  categories,
+  selected,
+  onSelect,
+}: {
+  categories: Category[];
+  selected: string;
+  onSelect: (title: string) => void;
+}) {
+  const items = [{ _id: "", title: "All" }, ...categories];
+
+  return (
+    <div className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {items.map((item) => {
+        const isSelected = item._id ? selected === item.title : !selected;
+
+        return (
+          <button
+            key={item._id || "all"}
+            type="button"
+            aria-pressed={isSelected}
+            onClick={() => onSelect(item._id ? item.title : "")}
+            className={`h-8 shrink-0 rounded-full border px-3 text-xs transition-colors ${
+              isSelected
+                ? "border-primary bg-primary font-semibold text-primary-foreground"
+                : "border-border bg-card font-medium text-foreground hover:border-primary hover:text-primary"
+            }`}
+          >
+            {item.title}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 
 function BlogCardSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-xs animate-pulse space-y-4">
+    <div className="animate-pulse space-y-4 rounded-xl border border-border bg-card p-4 shadow-xs">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
-        <div className="space-y-1.5 flex-1">
+        <div className="h-10 w-10 shrink-0 rounded-full bg-muted" />
+        <div className="flex-1 space-y-1.5">
           <div className="h-4 w-32 rounded bg-muted" />
           <div className="h-3 w-20 rounded bg-muted" />
         </div>
@@ -29,6 +74,38 @@ function BlogCardSkeleton() {
     </div>
   );
 }
+
+function EmptyState({
+  icon,
+  title,
+  message,
+  action,
+  onAction,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  message: string;
+  action?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-16 text-center">
+      <span className="text-muted-foreground">{icon}</span>
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      <p className="max-w-sm text-sm text-muted-foreground">{message}</p>
+      {action && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-2 inline-flex items-center rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
+        >
+          {action}
+        </button>
+      )}
+    </div>
+  );
+}
+
 
 function BlogsFeed() {
   const router = useRouter();
@@ -46,6 +123,7 @@ function BlogsFeed() {
   const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<boolean>(false);
   const [fetchMoreError, setFetchMoreError] = useState<boolean>(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef<number>(0);
@@ -80,7 +158,13 @@ function BlogsFeed() {
       setPage(1);
 
       try {
-        const res = await blogApi.list({ page: 1, limit, search, category, tag });
+        const res = await blogApi.list({
+          page: 1,
+          limit,
+          search,
+          category,
+          tag,
+        });
         if (requestIdRef.current !== currentRequestId) return;
         const fetched = res.result ?? [];
         setBlogs(fetched);
@@ -88,6 +172,8 @@ function BlogsFeed() {
         setLoading(false);
       } catch {
         if (requestIdRef.current !== currentRequestId) return;
+        setBlogs([]);
+        setHasMore(false);
         setLoading(false);
         setFetchError(true);
         toast.error("Unable to load blogs.");
@@ -103,7 +189,7 @@ function BlogsFeed() {
     return () => {
       cancelled = true;
     };
-  }, [search, category, tag]);
+  }, [search, category, tag, reloadKey]);
 
   const loadMore = useCallback(async () => {
     if (loading || loadingMore || !hasMore || isFetchingRef.current) return;
@@ -169,34 +255,73 @@ function BlogsFeed() {
     };
   }, [hasMore, loading, loadingMore, fetchMoreError, loadMore]);
 
-  const handleSearch = useCallback(
-    (value: string) => {
+  const updateFilters = useCallback(
+    (next: { category?: string; tag?: string }) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set("search", value);
-      } else {
-        params.delete("search");
+
+      if (next.category !== undefined) {
+        if (next.category) params.set("category", next.category);
+        else params.delete("category");
       }
-      params.set("page", "1");
-      router.push(`/blogs?${params.toString()}`);
+      if (next.tag !== undefined) {
+        if (next.tag) params.set("tag", next.tag);
+        else params.delete("tag");
+      }
+
+      const query = params.toString();
+      router.push(query ? `/blogs?${query}` : "/blogs");
     },
     [router, searchParams],
   );
 
-
+  const hasFilters = Boolean(search || category || tag);
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-8xl px-6 py-10 lg:px-8">
+      <div className="mx-auto max-w-8xl px-6 py-6 lg:px-8 lg:py-10">
         <div className="mx-auto max-w-[780px]">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <BlogFilters categories={categories} />
-            <SearchBox
-              initialValue={search}
-              onSearch={handleSearch}
-              placeholder="Search blogs "
-            />
-          
+          {/* Header: search + category (dropdown on desktop, chips on mobile) */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Link
+                href="/search"
+                aria-label="Search blogs and people"
+                className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm transition-colors hover:border-primary"
+              >
+                <HiMagnifyingGlass className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span
+                  className={`truncate ${
+                    search ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {search || "Search blogs and people"}
+                </span>
+              </Link>
+
+              <div className="hidden shrink-0 sm:block">
+                <BlogFilters categories={categories} />
+              </div>
+            </div>
+
+            <div className="sm:hidden">
+              <CategoryChips
+                categories={categories}
+                selected={category}
+                onSelect={(title) => updateFilters({ category: title })}
+              />
+            </div>
+
+            {tag && (
+              <button
+                type="button"
+                onClick={() => updateFilters({ tag: "" })}
+                aria-label={`Remove tag filter ${tag}`}
+                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/15"
+              >
+                #{tag}
+                <HiXMark className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
           {loading && (
@@ -207,44 +332,27 @@ function BlogsFeed() {
           )}
 
           {!loading && fetchError && (
-            <div className="py-20 text-center">
-              <h2 className="text-xl font-bold text-foreground">
-                Unable to load blogs
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Please check your connection and try again.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoading(true);
-                  setFetchError(false);
-                  blogApi
-                    .list({ page: 1, limit, search, category, tag })
-                    .then((res) => {
-                      const fetched = res.result ?? [];
-                      setBlogs(fetched);
-                      setHasMore(1 < (res.meta?.totalPages ?? 1));
-                    })
-                    .catch(() => {
-                      setFetchError(true);
-                      toast.error("Unable to load blogs.");
-                    })
-                    .finally(() => setLoading(false));
-                }}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary transition-colors"
-              >
-                Retry
-              </button>
-            </div>
+            <EmptyState
+              icon={<HiOutlineExclamationCircle className="h-9 w-9" />}
+              title="Unable to load blogs"
+              message="Please check your connection and try again."
+              action="Retry"
+              onAction={() => setReloadKey((key) => key + 1)}
+            />
           )}
 
           {!loading && !fetchError && blogs.length === 0 && (
-            <div className="py-20 text-center">
-              <p className="text-lg text-muted-foreground">
-                {search ? `No blogs matching "${search}".` : "No blogs found."}
-              </p>
-            </div>
+            <EmptyState
+              icon={<HiOutlineDocumentText className="h-9 w-9" />}
+              title="No blogs found"
+              message={
+                search
+                  ? `No blogs matching "${search}". Try another search.`
+                  : "There are no stories to show for these filters yet."
+              }
+              action={hasFilters ? "Clear filters" : undefined}
+              onAction={hasFilters ? () => router.push("/blogs") : undefined}
+            />
           )}
 
           {!loading && blogs.length > 0 && (
@@ -263,7 +371,7 @@ function BlogsFeed() {
 
           {fetchMoreError && (
             <div className="py-6 text-center">
-              <p className="text-sm text-muted-foreground mb-2">
+              <p className="mb-2 text-sm text-muted-foreground">
                 Could not load more articles.
               </p>
               <button
@@ -272,7 +380,7 @@ function BlogsFeed() {
                   setFetchMoreError(false);
                   void loadMore();
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:border-primary hover:text-primary transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:border-primary hover:text-primary"
               >
                 Retry
               </button>

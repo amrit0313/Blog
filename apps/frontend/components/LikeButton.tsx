@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FaThumbsUp, FaRegThumbsUp } from "react-icons/fa6";
+import { FaThumbsUp, FaRegThumbsUp, FaHeart, FaRegHeart } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext";
 import { blogApi } from "../lib/blog";
 import { toast } from "sonner";
@@ -50,7 +50,6 @@ export default function LikeButton({
 
     if (isSubmitting) return;
 
-    // Optimistic toggle
     const prevLiked = liked;
     const prevCount = likesCount;
     const nextLiked = !prevLiked;
@@ -70,7 +69,6 @@ export default function LikeButton({
       setLikesCount(serverCount);
       onLikedChange?.(serverCount, serverLiked);
     } catch (error) {
-      // Revert on error
       setLiked(prevLiked);
       setLikesCount(prevCount);
       onLikedChange?.(prevCount, prevLiked);
@@ -94,9 +92,9 @@ export default function LikeButton({
         } ${className}`}
       >
         {liked ? (
-          <FaThumbsUp className="h-3.5 w-3.5" />
+          <FaHeart className="h-3.5 w-3.5" />
         ) : (
-          <FaRegThumbsUp className="h-3.5 w-3.5" />
+          <FaRegHeart className="h-3.5 w-3.5" />
         )}
         <span>{likesCount}</span>
       </button>
@@ -117,9 +115,9 @@ export default function LikeButton({
         } ${className}`}
       >
         {liked ? (
-          <FaThumbsUp className="h-4 w-4 text-primary" />
+          <FaHeart className="h-4 w-4 text-primary" />
         ) : (
-          <FaRegThumbsUp className="h-4 w-4 text-muted-foreground" />
+          <FaRegHeart className="h-4 w-4 text-muted-foreground" />
         )}
         <span>{liked ? "Liked" : "Like"}</span>
         <span className="ml-1 rounded-full bg-background px-2 py-0.5 text-xs font-bold text-foreground">
@@ -129,7 +127,6 @@ export default function LikeButton({
     );
   }
 
-  // "feed" action bar button: Facebook-style equal-width button
   return (
     <button
       type="button"
@@ -141,9 +138,9 @@ export default function LikeButton({
       } ${className}`}
     >
       {liked ? (
-        <FaThumbsUp className="h-4 w-4 text-primary" />
+        <FaHeart className="h-4 w-4 text-primary" />
       ) : (
-        <FaRegThumbsUp className="h-4 w-4" />
+        <FaRegHeart className="h-4 w-4" />
       )}
       <span>Like</span>
     </button>

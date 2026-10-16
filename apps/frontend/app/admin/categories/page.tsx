@@ -224,7 +224,6 @@ export default function AdminCategoriesPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
         <DialogTitle>Delete Category</DialogTitle>
         <DialogContent>
@@ -249,3 +248,5 @@ export default function AdminCategoriesPage() {
     </>
   );
 }
+
+

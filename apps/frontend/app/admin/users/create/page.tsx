@@ -129,7 +129,6 @@ export default function CreateUserPage() {
         Back to Users
       </Button>
 
-      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography
           component="span"

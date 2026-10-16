@@ -143,31 +143,16 @@ export default function AdminBlogsPage() {
     <>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>Blogs</Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          <SearchBox
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <SearchBox className="w-5xl"
             initialValue={search}
             onSearch={(value) => {
               setSearch(value);
               setPaginationModel((prev) => ({ ...prev, page: 0 }));
             }}
-            placeholder="Search by title"
+            placeholder="Search by title, author, tag"
           />
-          <SearchBox
-            initialValue={authorSearch}
-            onSearch={(value) => {
-              setAuthorSearch(value);
-              setPaginationModel((prev) => ({ ...prev, page: 0 }));
-            }}
-            placeholder="Search by author"
-          />
-          <SearchBox
-            initialValue={tag}
-            onSearch={(value) => {
-              setTag(value);
-              setPaginationModel((prev) => ({ ...prev, page: 0 }));
-            }}
-            placeholder="Search by tag"
-          />
+         
           <TextField
             select
             size="small"
