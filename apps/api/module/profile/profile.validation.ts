@@ -4,10 +4,7 @@ const profileValidation = Joi.object({
   name: Joi.string().optional(),
   email: Joi.string().email().optional(),
   bio: Joi.string().max(250).allow("").optional(),
-  avatar: Joi.string()
-    .pattern(/^data:image\/(png|jpe?g|webp|gif);base64,/)
-    .allow("", null)
-    .optional(),
+  avatar: Joi.any(),
   socialLinks: Joi.object({
     instagram: Joi.string().uri().allow(""),
     facebook: Joi.string().uri().allow(""),
