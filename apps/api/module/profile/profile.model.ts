@@ -38,8 +38,6 @@ const ProfileSchema = new mongoose.Schema(
         },
       },
     ],
-    resetPasswordToken: { type: String, select: false },
-    resetPasswordExpires: { type: Date, select: false },
   },
   {
     timestamps: true,

@@ -4,11 +4,10 @@ const profileValidation = Joi.object({
   name: Joi.string().optional(),
   email: Joi.string().email().optional(),
   bio: Joi.string().max(250).allow('').optional(),
+  avatar: Joi.string().uri().allow('', null).optional(),
   socialLinks: Joi.object({
     instagram: Joi.string().uri().allow(""),
     facebook: Joi.string().uri().allow(""),
     website: Joi.string().uri().allow(""),
   }),
 }).unknown(false);
-
-export { profileValidation };
