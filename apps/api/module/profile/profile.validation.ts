@@ -11,3 +11,6 @@ const profileValidation = Joi.object({
     website: Joi.string().uri().allow(""),
   }),
 }).unknown(false);
+
+export { profileValidation };
+
